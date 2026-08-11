@@ -163,7 +163,7 @@
   }
   .hub-avatar-img {
     width: 100%; height: 100%; border-radius: 50%;
-    object-fit: cover; object-position: center 18%;
+    object-fit: cover;
     border: 1.5px solid rgba(212,168,67,0.5);
   }
   /* 名字 */
@@ -788,7 +788,7 @@ function initHub() {
   function refreshHub() {
     nameEl.textContent = player.name || '逍遥仙';
     powerEl.textContent = formatNum(calcCombatPower(player));
-    avatarEl.src = art.hero.src || '';
+    avatarEl.src = 'assets/select/avatar_head.png?v=1';
     // 境界
     const realmEl = document.getElementById('hub-realm');
     if (realmEl && window.CULTIVATION) {
