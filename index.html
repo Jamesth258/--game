@@ -30,10 +30,24 @@
   button:disabled { opacity: 0.4; cursor: default; }
   .hint { font-size: 12px; color: var(--mut); margin-top: 12px; line-height: 1.6; }
   .hint b { color: var(--ink); font-weight: 500; }
+  /* 在线层 UI */
+  .topbar { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 13px; }
+  .topbar .ob-actions { display: flex; gap: 8px; }
+  .topbar button { flex: 0 0 auto; padding: 6px 12px; font-size: 12px; }
+  .modal { position: fixed; inset: 0; background: rgba(44,44,42,0.5); display: flex; align-items: center; justify-content: center; z-index: 50; }
+  .modal[hidden] { display: none; }
+  .modal-box { background: #fff; border-radius: 12px; padding: 20px 24px; width: min(360px, 90vw); box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+  .modal-box h3 { margin: 0 0 12px; font-size: 16px; font-weight: 500; }
+  .modal-box label { display: block; font-size: 13px; margin: 10px 0; }
+  .modal-box input, .modal-box select { width: 100%; margin-top: 4px; padding: 8px; border: 0.5px solid var(--line); border-radius: 6px; font-size: 13px; }
+  .modal-box button { width: 100%; margin-top: 14px; padding: 10px; background: var(--blue); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
+  .modal-box ol.board { padding-left: 20px; font-size: 13px; line-height: 1.9; max-height: 50vh; overflow: auto; }
+  .modal-box p { font-size: 13px; line-height: 1.7; }
 </style>
 </head>
 <body>
 <div class="wrap">
+  <div id="online-root"></div>
   <h1>江湖行 · 回合制武侠 Demo</h1>
   <p class="sub">节点地图探索 + 一场回合制战斗（纯 HTML5 Canvas，零依赖）</p>
 
@@ -55,6 +69,8 @@
   </p>
 </div>
 
+<script src="assets/vendor/tcb.js"></script>
+<script src="config.js"></script>
 <script>
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -82,6 +98,7 @@ const player = {
   name: '少年侠客', isEnemy: false,
   maxHp: 150, hp: 150, maxMp: 60, mp: 60,
   atk: 30, def: 12, spd: 18, potions: 3, defending: false,
+  sect: '', score: 0,
 };
 
 // ---- 地图节点 ----
@@ -232,6 +249,9 @@ function endBattle(win) {
   setButtons(false);
   if (win) {
     battle.node.cleared = true;
+    const gain = 100 * battle.node.id;            // 战绩分：按节点难度递增
+    player.score = (player.score || 0) + gain;
+    if (window.Online && window.Online.onProgress) window.Online.onProgress(player.score);
     player.hp = Math.min(player.maxHp, player.hp + 40); // 胜利回血
     player.mp = player.maxMp;
     state = (battle.node.id === nodes.length - 1) ? 'clear' : 'win';
@@ -404,8 +424,10 @@ function render() {
   }
   requestAnimationFrame(render);
 }
+window.GAME = { player, nodes }; // 暴露给 online.js 做云端存档/排行榜
 setButtons(false); // 地图阶段禁用战斗指令
 render();
 </script>
+<script src="online.js"></script>
 </body>
 </html>
