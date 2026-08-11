@@ -162,7 +162,8 @@
     mask-composite: exclude;
   }
   .hub-avatar-img {
-    width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+    width: 100%; height: 100%; border-radius: 50%;
+    object-fit: cover; object-position: center 18%;
     border: 1.5px solid rgba(212,168,67,0.5);
   }
   /* 名字 */
@@ -181,9 +182,18 @@
     font-size: 16px; font-weight: 700; color: #E87B7B;
     text-shadow: 0 0 8px rgba(232,123,123,0.3);
   }
+  /* 境界 */
+  .hub-realm {
+    font-size: 12px; font-weight: 600; color: #9B6BCC;
+    white-space: nowrap; letter-spacing: 0.5px;
+    padding: 2px 6px;
+    background: rgba(155,107,204,0.1);
+    border-radius: 4px;
+    border: 0.5px solid rgba(155,107,204,0.25);
+  }
   /* 菜单按钮容器 */
   .hub-menu {
-    display: flex; gap: 4px; margin-left: auto;
+    display: flex; gap: 4px;
     flex-wrap: nowrap; overflow-x: auto;
   }
   .hub-menu::-webkit-scrollbar { display: none; }
@@ -326,6 +336,8 @@
     <div class="hub-power">
       战力<span class="hub-power-num" id="hub-power-num">1,234</span>
     </div>
+    <!-- 境界 -->
+    <div class="hub-realm" id="hub-realm">炼气境 第一重天</div>
     <!-- 功能按钮 -->
     <div class="hub-menu" id="hub-menu"></div>
   </div>
@@ -777,6 +789,12 @@ function initHub() {
     nameEl.textContent = player.name || '逍遥仙';
     powerEl.textContent = formatNum(calcCombatPower(player));
     avatarEl.src = art.hero.src || '';
+    // 境界
+    const realmEl = document.getElementById('hub-realm');
+    if (realmEl && window.CULTIVATION) {
+      const r = CULTIVATION.realmFromXp(player.xp);
+      realmEl.textContent = r.label || '凡人';
+    }
     // 角色展示：优先用视频，没有则用静态立绘
     if (charVideo.canPlayType) {
       charStatic.removeAttribute('hidden');
