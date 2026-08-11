@@ -111,10 +111,6 @@
   .char-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.3); }
   .char-card.selected { border-color: #D4A843; box-shadow: 0 0 22px rgba(212,168,67,0.2); transform: translateY(-3px); }
   .char-card img { width: 100%; height: 260px; object-fit: cover; object-position: top center; display: block; }
-  /* 逐图微调人物居中（即梦生成时构图不一致，用 object-position 补正） */
-  .char-card img[src*="m2_young"] { object-position: 56% center; }
-  .char-card img[src*="m3_daoist"] { object-position: 42% 3%; }
-  .char-card img[src*="f1_loli"]  { object-position: 54% center; }
   .char-name { font-size: 13px; padding: 8px 4px 10px; font-weight: 500; color: rgba(241,239,232,0.85); }
 
   /* 公共按钮 */
@@ -590,11 +586,11 @@ window.GAME = { player, nodes }; // 暴露给 online.js 做云端存档/排行�
 const CHARACTERS = {
   male: [
     { id: 'm1', name: '铁骨武者',   img: 'assets/select/m1_warrior.png', desc: '强壮刚毅，体修入道' },
-    { id: 'm2', name: '少年侠客',   img: 'assets/select/m2_young.png',  desc: '年轻俊朗，天赋异禀' },
-    { id: 'm3', name: '道骨仙风',   img: 'assets/select/m3_daoist.png', desc: '中年大叔，道法深厚' },
+    { id: 'm2', name: '少年侠客',   img: 'assets/select/m2_young.png',  desc: '年轻俊朗，天赋异禀', pos: '56% center' },
+    { id: 'm3', name: '道骨仙风',   img: 'assets/select/m3_daoist.png', desc: '中年大叔，道法深厚', pos: '42% 3%' },
   ],
   female: [
-    { id: 'f1', name: '灵气萝莉',   img: 'assets/select/f1_loli.png',   desc: '可爱灵动，根骨奇佳' },
+    { id: 'f1', name: '灵气萝莉',   img: 'assets/select/f1_loli.png',   desc: '可爱灵动，根骨奇佳', pos: '54% center' },
     { id: 'f2', name: '绝代佳人',   img: 'assets/select/f2_hot.png',    desc: '性感热辣，魅惑众生' },
     { id: 'f3', name: '温婉御姐',   img: 'assets/select/f3_mature.png', desc: '成熟丰满，气质出众' },
   ],
@@ -650,7 +646,7 @@ function renderAvatarGrid(gender) {
   const list = CHARACTERS[gender] || [];
   charGrid.innerHTML = list.map(c =>
     `<div class="char-card" data-id="${c.id}">
-      <img src="${c.img}" alt="${c.name}" loading="lazy">
+      <img src="${c.img}" alt="${c.name}" loading="lazy"${c.pos ? ` style="object-position:${c.pos}"` : ''}>
       <div class="char-name">${c.name}</div>
     </div>`
   ).join('');
