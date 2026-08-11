@@ -71,6 +71,7 @@
 
 <script src="assets/vendor/tcb.js"></script>
 <script src="config.js"></script>
+<script src="cultivation.js"></script>
 <script>
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -98,8 +99,10 @@ const player = {
   name: '少年侠客', isEnemy: false,
   maxHp: 150, hp: 150, maxMp: 60, mp: 60,
   atk: 30, def: 12, spd: 18, potions: 3, defending: false,
-  sect: '', score: 0,
+  sect: '', score: 0, xp: 0,
 };
+CULTIVATION.recalc(player); // 初始化派生属性（xp=0 → 炼气境 第一重天）
+player.hp = player.maxHp; player.mp = player.maxMp;
 
 // ---- 地图节点 ----
 const nodes = [
@@ -249,15 +252,24 @@ function endBattle(win) {
   setButtons(false);
   if (win) {
     battle.node.cleared = true;
+    const before = CULTIVATION.realmFromXp(player.xp).globalIndex;
     const gain = 100 * battle.node.id;            // 战绩分：按节点难度递增
-    player.score = (player.score || 0) + gain;
+    player.xp += gain;
+    player.score = player.xp;                     // 战绩分=累计修为，排行榜可直接显示境界
     if (window.Online && window.Online.onProgress) window.Online.onProgress(player.score);
-    player.hp = Math.min(player.maxHp, player.hp + 40); // 胜利回血
+    const after = CULTIVATION.realmFromXp(player.xp);
+    const oldMax = player.maxHp;
+    CULTIVATION.recalc(player);                   // 境界提升 → 属性增强
+    player.hp = Math.min(player.maxHp, (player.hp || 0) + (player.maxHp - oldMax) + 40); // 突破增益 + 胜利回血
     player.mp = player.maxMp;
     state = (battle.node.id === nodes.length - 1) ? 'clear' : 'win';
-    toast = battle.node.id === nodes.length - 1
-      ? '你击败了魔教教主，江湖太平！点击返回地图。'
-      : '胜利！点击地图前往下一段旅程。';
+    const broke = after.globalIndex > before;
+    const realmUp = after.realmIndex > CULTIVATION.FLAT[before].realmIndex;
+    let toastMsg = battle.node.id === nodes.length - 1
+      ? '你击败了魔教教主，江湖太平！'
+      : '胜利！';
+    if (broke) toastMsg = (realmUp ? '★ 突破大境界！晋升【' : '突破！晋升【') + after.label + '】';
+    toast = toastMsg + ' 点击地图继续。';
   } else {
     state = 'lose';
     toast = '你倒下了…点击地图重新挑战。';
@@ -337,7 +349,7 @@ function drawMap() {
   ctx.fillStyle = '#2C2C2A';
   ctx.font = '13px sans-serif';
   ctx.textAlign = 'left';
-  ctx.fillText('江湖地图 — 点击蓝色地点启程', 20, 30);
+  ctx.fillText('江湖地图 · ' + CULTIVATION.realmFromXp(player.xp).label + ' — 点击蓝色地点启程', 20, 30);
 }
 
 function drawBattle() {
@@ -362,7 +374,7 @@ function drawBattle() {
   // 血条/内力条
   ctx.textAlign = 'left';
   ctx.fillStyle = '#2C2C2A'; ctx.font = '12px sans-serif';
-  ctx.fillText(p.name, p._x - 50, p._y - 80);
+  ctx.fillText(p.name + '　' + CULTIVATION.realmFromXp(p.xp).label, p._x - 50, p._y - 80);
   bar(p._x - 50, p._y - 74, 100, p.hp / p.maxHp, '#639922');
   bar(p._x - 50, p._y - 64, 100, p.mp / p.maxMp, '#378ADD');
 

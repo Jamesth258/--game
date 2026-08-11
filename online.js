@@ -87,14 +87,14 @@
     db.collection(COL).orderBy('score', 'desc').limit(50).get().then(r => {
       const list = (r.data || []).filter(d => d.score > 0).slice(0, 50);
       openModal(`<h3>江湖排行榜</h3>` + (list.length
-        ? `<ol class="board">${list.map(d => `<li><b>${esc(d.name)}</b> · ${esc(d.sect || '')} — ${d.score}</li>`).join('')}</ol>`
+        ? `<ol class="board">${list.map(d => `<li><b>${esc(d.name)}</b> · ${esc(d.sect || '')} — ${CULTIVATION.realmFromXp(d.score).label}（修为 ${d.score}）</li>`).join('')}</ol>`
         : `<p>暂无战绩，快去扬名立万！</p>`) + `<button id="ob-close">关闭</button>`);
       document.getElementById('ob-close').onclick = closeModal;
     }).catch(e => openModal(`<p>排行榜加载失败：${(e && e.message) || e}</p><button id="ob-close">关闭</button>`));
   };
   charBtn.onclick = () => {
     if (!Online.char) return;
-    openModal(`<h3>我的侠客</h3><p>名号：${esc(Online.char.name)}</p><p>门派：${esc(Online.char.sect)}</p><p>战绩分：${Online.char.score || 0}</p><button id="ob-close">关闭</button>`);
+    openModal(`<h3>我的侠客</h3><p>名号：${esc(Online.char.name)}</p><p>门派：${esc(Online.char.sect)}</p><p>境界：${CULTIVATION.realmFromXp(Online.char.score || 0).label}</p><p>修为：${Online.char.score || 0}</p><button id="ob-close">关闭</button>`);
     document.getElementById('ob-close').onclick = closeModal;
   };
 
