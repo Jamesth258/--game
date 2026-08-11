@@ -130,6 +130,106 @@
   .step-dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: all 0.25s; }
   .step-dot.active { background: #185FA5; box-shadow: 0 0 8px rgba(24,143,165,0.5); }
   .step-dot.done { background: #639922; }
+
+  /* ===== 游戏主页（人物展示 + 顶部菜单栏） ===== */
+  #hub-screen {
+    position: fixed; inset: 0; z-index: 90;
+    display: flex; flex-direction: column;
+    background: #0a0a0c; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    color: #F1EFE8; overflow: hidden;
+  }
+  #hub-screen[hidden] { display: none; }
+
+  /* 顶部信息+菜单栏 */
+  .hub-topbar {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 14px 6px;
+    background: linear-gradient(180deg, rgba(20,18,16,0.95), rgba(20,18,16,0.85));
+    border-bottom: 0.5px solid rgba(212,168,67,0.2);
+    flex-shrink: 0;
+    min-height: 52px;
+  }
+  /* 头像区 */
+  .hub-avatar-wrap {
+    position: relative; width: 42px; height: 42px; flex-shrink: 0;
+  }
+  .hub-avatar-frame {
+    position: absolute; inset: -3px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    background: linear-gradient(135deg, #D4A843, #8B6914, #D4A843) border-box;
+    -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+  }
+  .hub-avatar-img {
+    width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+    border: 1.5px solid rgba(212,168,67,0.5);
+  }
+  /* 名字 */
+  .hub-name {
+    font-size: 15px; font-weight: 600; color: #F1EFE8;
+    min-width: 70px; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    letter-spacing: 1px;
+  }
+  /* 战力 */
+  .hub-power {
+    display: flex; align-items: baseline; gap: 2px;
+    font-size: 12px; color: rgba(241,239,232,0.6);
+    min-width: 72px;
+  }
+  .hub-power-num {
+    font-size: 16px; font-weight: 700; color: #E87B7B;
+    text-shadow: 0 0 8px rgba(232,123,123,0.3);
+  }
+  /* 菜单按钮容器 */
+  .hub-menu {
+    display: flex; gap: 4px; margin-left: auto;
+    flex-wrap: nowrap; overflow-x: auto;
+  }
+  .hub-menu::-webkit-scrollbar { display: none; }
+  .hub-btn {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; padding: 5px 7px; min-width: 52px;
+    background: rgba(255,255,255,0.06); border: 0.5px solid rgba(255,255,255,0.1);
+    border-radius: 8px; cursor: pointer; transition: all 0.15s; color: rgba(241,239,232,0.8);
+    flex-shrink: 0;
+  }
+  .hub-btn:hover { background: rgba(24,143,165,0.15); border-color: rgba(24,143,165,0.4); color: #fff; transform: translateY(-1px); }
+  .hub-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+  .hub-btn span { font-size: 10.5px; white-space: nowrap; line-height: 1.1; }
+
+  /* 中央人物动图区域 */
+  .hub-char-area {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+    background: radial-gradient(ellipse at 50% 60%, rgba(30,25,40,0.9) 0%, rgba(10,10,12,1) 70%);
+  }
+  .hub-char-video {
+    max-height: 85%; max-width: 75%;
+    object-fit: contain;
+    filter: drop-shadow(0 0 30px rgba(212,168,67,0.08));
+    animation: charBreathe 3s ease-in-out infinite;
+  }
+  @keyframes charBreathe {
+    0%, 100% { transform: scale(1) translateY(0); }
+    50% { transform: scale(1.008) translateY(-3px); }
+  }
+  /* 视频不存在时用静态图 */
+  .hub-char-static {
+    max-height: 80%; max-width: 65%;
+    object-fit: contain;
+    filter: drop-shadow(0 0 30px rgba(212,168,67,0.08));
+    animation: charBreathe 3s ease-in-out infinite;
+  }
+  /* 底部提示 */
+  .hub-footer {
+    text-align: center; font-size: 11px; color: rgba(241,239,232,0.3);
+    padding: 6px; flex-shrink: 0;
+  }
+
+  /* 主页弹窗复用 modal 样式 */
+  .hub-modal-title { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .hub-modal-title svg { width: 22px; height: 22px; flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -209,6 +309,36 @@
       </div>
     </div>
   </div>
+</div>
+
+<!-- ===== 游戏主页（人物展示 + 菜单栏） ===== -->
+<div id="hub-screen" hidden>
+  <!-- 顶部菜单栏 -->
+  <div class="hub-topbar">
+    <!-- 头像 -->
+    <div class="hub-avatar-wrap">
+      <div class="hub-avatar-frame"></div>
+      <img class="hub-avatar-img" id="hub-avatar" src="" alt="">
+    </div>
+    <!-- 名字 -->
+    <div class="hub-name" id="hub-name">逍遥仙</div>
+    <!-- 战力 -->
+    <div class="hub-power">
+      战力<span class="hub-power-num" id="hub-power-num">1,234</span>
+    </div>
+    <!-- 功能按钮 -->
+    <div class="hub-menu" id="hub-menu"></div>
+  </div>
+
+  <!-- 中央人物动图区 -->
+  <div class="hub-char-area" id="hub-char-area">
+    <!-- 有视频时用 video，没有时用 img 静态立绘 -->
+    <video class="hub-char-video" id="hub-char-video" autoplay loop muted playsinline hidden></video>
+    <img class="hub-char-static" id="hub-char-static" src="" alt="">
+  </div>
+
+  <!-- 底部 -->
+  <div class="hub-footer">点击上方按钮开始你的修仙之旅</div>
 </div>
 
 <script src="assets/vendor/tcb.js"></script>
@@ -433,9 +563,12 @@ canvas.addEventListener('click', e => {
         return;
       }
     }
+    // 点击空白区域 → 返回主页
+    if (window.HUB) { window.HUB.show(); }
   } else if (state === 'win' || state === 'lose' || state === 'clear') {
-    state = 'map';
-    toast = '';
+    // 战斗结束 → 返回主页
+    if (window.HUB) { window.HUB.refresh(); window.HUB.show(); }
+    else { state = 'map'; toast = ''; }
   }
 });
 
@@ -491,7 +624,7 @@ function drawMap() {
   ctx.fillStyle = '#2C2C2A';
   ctx.font = '13px sans-serif';
   ctx.textAlign = 'left';
-  ctx.fillText('江湖地图 · ' + CULTIVATION.realmFromXp(player.xp).label + ' — 点击蓝色地点启程', 20, 30);
+  ctx.fillText('江湖地图 · ' + CULTIVATION.realmFromXp(player.xp).label + ' — 点击蓝色地点启程（空白处返回主页）', 20, 30);
 }
 
 function drawBattle() {
@@ -580,6 +713,101 @@ function render() {
   }
   requestAnimationFrame(render);
 }
+// ===== 游戏主页系统（人物展示 + 菜单栏） =====
+const HUB_MENU_ITEMS = [
+  { id: 'attr',   label: '属性', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="7" r="4"/><path d="M5 21v-2a7 7 0 0114 0v2"/><path d="M16 11h4M18 9v4M3 15h4M5 13v4"/></svg>', action: 'modal_attr' },
+  { id: 'equip',   label: '装备', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L4 7l8 5 8-5-8-5zM4 12l8 5 8-5M4 17l8 5 8-5"/></svg>', action: 'modal_coming' },
+  { id: 'bag',    label: '背包', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="12" y1="11" x2="12" y2="15"/></svg>', action: 'modal_coming' },
+  { id: 'skill',  label: '功法', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><path d="M8 7h8M8 11h6"/></svg>', action: 'modal_coming' },
+  { id: 'story',  label: '剧情', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><circle cx="10" cy="8" r="1.5" fill="currentColor"/><circle cx="14" cy="12" r="1.5" fill="currentColor"/></svg>', action: 'go_map' },
+  { id: 'shop',   label: '商店', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>', action: 'modal_coming' },
+  { id: 'event',  label: '活动', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>', action: 'modal_coming' },
+  { id: 'daily',  label: '每日奖励', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 16l2 2 4-4"/></svg>', action: 'modal_coming' },
+  { id: 'rank',   label: '排行榜', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="5"/><path d="M8 21h8M12 13v8"/><path d="M7 4l2 2M17 4l-2 2"/></svg>', action: 'go_rank' },
+  { id: 'arena',  label: '竞技场', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6M17 15l4 4M3 3l18 18"/></svg>', action: 'modal_coming' },
+];
+
+function calcCombatPower(p) {
+  return Math.floor((p.maxHp * 1.2) + (p.atk * 15) + (p.def * 12) + (p.spd * 8) + (p.maxMp * 2));
+}
+
+function formatNum(n) { return n.toLocaleString('zh-CN'); }
+
+function initHub() {
+  const hub = document.getElementById('hub-screen');
+  const menuContainer = document.getElementById('hub-menu');
+  const avatarEl = document.getElementById('hub-avatar');
+  const nameEl = document.getElementById('hub-name');
+  const powerEl = document.getElementById('hub-power-num');
+  const charVideo = document.getElementById('hub-char-video');
+  const charStatic = document.getElementById('hub-char-static');
+
+  // 渲染菜单按钮
+  menuContainer.innerHTML = HUB_MENU_ITEMS.map(item =>
+    `<button class="hub-btn" data-hub="${item.id}" title="${item.label}">${item.icon}<span>${item.label}</span></button>`
+  ).join('');
+
+  // 绑定按钮事件
+  menuContainer.querySelectorAll('.hub-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = HUB_MENU_ITEMS.find(i => i.id === btn.dataset.hub);
+      if (!item) return;
+      switch (item.action) {
+        case 'go_map':
+          hub.setAttribute('hidden', '');
+          state = 'map';
+          setButtons(false);
+          render();
+          break;
+        case 'go_rank':
+          if (window.Online && window.Online.showBoard) window.Online.showBoard();
+          else openModal('<h3>排行榜</h3><p>联网功能尚未开启，完成腾讯云配置后即可查看全服排行榜。</p><button onclick="closeModal()">关闭</button>');
+          break;
+        case 'modal_attr':
+          showAttrModal();
+          break;
+        default:
+          openModal(`<h3>${item.label}</h3><p>「${item.label}」功能正在开发中，敬请期待！</p><button onclick="closeModal()">关闭</button>`);
+      }
+    });
+  });
+
+  // 更新主页数据
+  function refreshHub() {
+    nameEl.textContent = player.name || '逍遥仙';
+    powerEl.textContent = formatNum(calcCombatPower(player));
+    avatarEl.src = art.hero.src || '';
+    // 角色展示：优先用视频，没有则用静态立绘
+    if (charVideo.canPlayType) {
+      charStatic.removeAttribute('hidden');
+      charStatic.src = art.hero.src || '';
+    }
+  }
+
+  // 属性弹窗
+  function showAttrModal() {
+    const r = CULTIVATION.realmFromXp(player.xp);
+    openModal(`
+      <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M5 21v-2a7 7 0 0114 0v2"/></svg>
+      <h3 style="margin:0">角色属性</h3></div>
+      <p style="margin:4px 0"><b>${esc(player.name)}</b> · ${esc(r.label)} (${r.progress}%)</p>
+      <table style="width:100%;font-size:13px;border-collapse:collapse;margin-top:8px">
+        <tr><td style="padding:4px;color:#E87B7B">❤ 气血</td><td style="text-align:right">${player.hp} / ${player.maxHp}</td></tr>
+        <tr><td style="padding:4px;color:#185FA5">✦ 内力</td><td style="text-align:right">${player.mp} / ${player.maxMp}</td></tr>
+        <tr><td style="padding:4px;color:#D4A843">⚔ 攻击</td><td style="text-align:right">${player.atk}</td></tr>
+        <tr><td style="padding:4px;color:#639922">🛡 防御</td><td style="text-align:right">${player.def}</td></tr>
+        <tr><td style="padding:4px;color:#9B6BCC">💨 速度</td><td style="text-align:right">${player.spd}</td></tr>
+        <tr><td style="padding:4px;color:#E87B7B;font-weight:600">⚡ 战力</td><td style="text-align:right;font-weight:600">${formatNum(calcCombatPower(player))}</td></tr>
+        <tr><td style="padding:4px;color:rgba(241,239,232,0.5)">☯ 修为</td><td style="text-align:right">${player.xp}</td></tr>
+      </table>
+      <button onclick="closeModal()" style="margin-top:14px">关闭</button>`);
+  }
+
+  // 暴露刷新接口
+  window.HUB = { refresh: refreshHub, show: () => { hub.removeAttribute('hidden'); refreshHub(); }, hide: () => hub.setAttribute('hidden', '') };
+  refreshHub();
+}
+
 window.GAME = { player, nodes }; // 暴露给 online.js 做云端存档/排行榜
 
 // ===== 角色创建系统 =====
@@ -678,10 +906,10 @@ document.getElementById('avatar-confirm').addEventListener('click', () => {
   CULTIVATION.recalc(player);
   player.hp = player.maxHp; player.mp = player.maxMp;
 
-  // 隐藏创建界面，显示游戏
+  // 隐藏创建界面，显示主页
   createScreen.setAttribute('hidden', '');
-  state = 'map';
-  toast = '欢迎来到江湖，' + player.name + '！点击蓝色地点启程。';
+  initHub();
+  window.HUB.show(); // 进入主页（而非直接进地图）
 
   // 存入 localStorage（下次打开不再重复创建）
   try {
@@ -708,6 +936,9 @@ function checkSavedCharacter() {
       CULTIVATION.recalc(player);
       player.hp = player.maxHp; player.mp = player.maxMp;
       createScreen.setAttribute('hidden', '');
+      // 有存档 → 初始化并进入主页
+      initHub();
+      window.HUB.show();
       return true;
     }
   } catch(e) {}
