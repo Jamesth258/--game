@@ -585,14 +585,14 @@ window.GAME = { player, nodes }; // 暴露给 online.js 做云端存档/排行�
 // ===== 角色创建系统 =====
 const CHARACTERS = {
   male: [
-    { id: 'm1', name: '铁骨武者',   img: 'assets/select/m1_warrior.png', desc: '强壮刚毅，体修入道' },
-    { id: 'm2', name: '少年侠客',   img: 'assets/select/m2_young.png',  desc: '年轻俊朗，天赋异禀' },
-    { id: 'm3', name: '道骨仙风',   img: 'assets/select/m3_daoist.png', desc: '中年大叔，道法深厚' },
+    { id: 'm1', name: '铁骨武者',   img: 'assets/select/m1_warrior.png?v=2', desc: '强壮刚毅，体修入道' },
+    { id: 'm2', name: '少年侠客',   img: 'assets/select/m2_young.png?v=2',  desc: '年轻俊朗，天赋异禀' },
+    { id: 'm3', name: '道骨仙风',   img: 'assets/select/m3_daoist.png?v=2', desc: '中年大叔，道法深厚' },
   ],
   female: [
-    { id: 'f1', name: '灵气萝莉',   img: 'assets/select/f1_loli.png',   desc: '可爱灵动，根骨奇佳' },
-    { id: 'f2', name: '绝代佳人',   img: 'assets/select/f2_hot.png',    desc: '性感热辣，魅惑众生' },
-    { id: 'f3', name: '温婉御姐',   img: 'assets/select/f3_mature.png', desc: '成熟丰满，气质出众' },
+    { id: 'f1', name: '灵气萝莉',   img: 'assets/select/f1_loli.png?v=2',   desc: '可爱灵动，根骨奇佳' },
+    { id: 'f2', name: '绝代佳人',   img: 'assets/select/f2_hot.png?v=2',    desc: '性感热辣，魅惑众生' },
+    { id: 'f3', name: '温婉御姐',   img: 'assets/select/f3_mature.png?v=2', desc: '成熟丰满，气质出众' },
   ],
 };
 
@@ -701,7 +701,9 @@ function checkSavedCharacter() {
       player.sect = saved.sect || '';
       player.xp = saved.xp || 0;
       player.score = saved.score || 0;
-      art.hero.src = saved.avatarImg;
+      const _all = CHARACTERS.male.concat(CHARACTERS.female);
+      const _ch = _all.find(c => c.id === saved.avatarId);
+      art.hero.src = _ch ? _ch.img : saved.avatarImg;
       art.hero.failed = false;
       CULTIVATION.recalc(player);
       player.hp = player.maxHp; player.mp = player.maxMp;
