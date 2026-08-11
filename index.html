@@ -43,6 +43,93 @@
   .modal-box button { width: 100%; margin-top: 14px; padding: 10px; background: var(--blue); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
   .modal-box ol.board { padding-left: 20px; font-size: 13px; line-height: 1.9; max-height: 50vh; overflow: auto; }
   .modal-box p { font-size: 13px; line-height: 1.7; }
+
+  /* ===== 角色创建界面 ===== */
+  #create-screen {
+    position: fixed; inset: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    background: #111; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  #create-screen[hidden] { display: none; }
+  #create-bg {
+    position: absolute; inset: 0;
+    background: url('assets/select/bg_login.jpg') center/cover no-repeat;
+    filter: brightness(0.55);
+  }
+  #create-panel {
+    position: relative; z-index: 1;
+    width: min(680px, 92vw); max-height: 90vh; overflow-y: auto;
+    background: rgba(20,20,18,0.72);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 16px; padding: 32px 28px 24px;
+    color: #F1EFE8;
+  }
+  #create-panel h2 {
+    margin: 0 0 4px; font-size: 22px; font-weight: 600;
+    text-align: center; letter-spacing: 2px;
+  }
+  #create-panel .create-sub {
+    text-align: center; font-size: 13px; color: rgba(241,239,232,0.55);
+    margin: 0 0 24px;
+  }
+  .create-step { display: none; }
+  .create-step.active { display: block; }
+
+  /* Step 1: 名字输入 */
+  .name-input-wrap { margin-top: 8px; }
+  .name-input-wrap input {
+    width: 100%; padding: 14px 16px; font-size: 18px;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 10px; color: #fff; outline: none; text-align: center;
+    letter-spacing: 1px;
+  }
+  .name-input-wrap input:focus { border-color: rgba(135,180,235,0.7); }
+  .name-input-wrap input::placeholder { color: rgba(255,255,255,0.3); }
+  .name-err { font-size: 12px; color: #E87B7B; margin-top: 6px; text-align: center; min-height: 18px; }
+  .name-hint { font-size: 12px; color: rgba(241,239,232,0.45); margin-top: 8px; text-align: center; }
+
+  /* Step 2: 性别选择 */
+  .gender-row { display: flex; gap: 16px; justify-content: center; margin-top: 12px; }
+  .gender-card {
+    width: 160px; padding: 24px 12px; text-align: center;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px; cursor: pointer; transition: all 0.2s;
+  }
+  .gender-card:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.25); }
+  .gender-card.selected { background: rgba(24,143,165,0.2); border-color: #185FA5; box-shadow: 0 0 20px rgba(24,143,165,0.15); }
+  .gender-icon { font-size: 36px; margin-bottom: 8px; }
+  .gender-label { font-size: 16px; font-weight: 500; }
+
+  /* Step 3: 形象选择 */
+  .char-grid { display: flex; gap: 14px; justify-content: center; margin-top: 10px; flex-wrap: wrap; }
+  .char-card {
+    width: 175px; text-align: center;
+    background: rgba(255,255,255,0.05); border: 1.5px solid rgba(255,255,255,0.1);
+    border-radius: 12px; cursor: pointer; transition: all 0.2s; overflow: hidden;
+  }
+  .char-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.3); }
+  .char-card.selected { border-color: #D4A843; box-shadow: 0 0 22px rgba(212,168,67,0.2); transform: translateY(-3px); }
+  .char-card img { width: 100%; height: 260px; object-fit: cover; object-position: top center; display: block; }
+  .char-name { font-size: 13px; padding: 8px 4px 10px; font-weight: 500; color: rgba(241,239,232,0.85); }
+
+  /* 公共按钮 */
+  .create-btn-row { display: flex; gap: 12px; justify-content: center; margin-top: 24px; }
+  .create-btn-row button {
+    padding: 11px 32px; font-size: 14px; border-radius: 10px; cursor: pointer;
+    border: none; font-weight: 500; transition: all 0.15s;
+  }
+  .btn-primary { background: linear-gradient(135deg,#185FA5,#124a82); color: #fff; }
+  .btn-primary:hover:not(:disabled) { background: linear-gradient(135deg,#1d6fc0,#155a96); }
+  .btn-secondary { background: rgba(255,255,255,0.1); color: rgba(241,239,232,0.8); border: 1px solid rgba(255,255,255,0.15); }
+  .btn-secondary:hover { background: rgba(255,255,255,0.16); }
+  button:disabled { opacity: 0.35; cursor: default; }
+
+  /* 步骤指示器 */
+  .step-dots { display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; }
+  .step-dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: all 0.25s; }
+  .step-dot.active { background: #185FA5; box-shadow: 0 0 8px rgba(24,143,165,0.5); }
+  .step-dot.done { background: #639922; }
 </style>
 </head>
 <body>
@@ -67,6 +154,61 @@
     <b>美术替换：</b>把即梦生成的立绘放进 <code>assets/</code> 目录，
     命名为 <code>hero.png</code>（我方）、<code>enemy.png</code>（敌方）、<code>bg_battle.png</code>（战斗背景）即可自动生效，未放入时显示占位图。
   </p>
+</div>
+
+<!-- ===== 角色创建界面 ===== -->
+<div id="create-screen">
+  <div id="create-bg"></div>
+  <div id="create-panel">
+    <h2>✦ 江湖行 ✦</h2>
+    <p class="create-sub">踏入仙途，开启你的修真之旅</p>
+
+    <div class="step-dots">
+      <div class="step-dot active" data-s="0"></div>
+      <div class="step-dot" data-s="1"></div>
+      <div class="step-dot" data-s="2"></div>
+    </div>
+
+    <!-- Step 1: 名字 -->
+    <div class="create-step active" id="step-name">
+      <p style="text-align:center;font-size:14px;color:rgba(241,239,232,0.75);margin-bottom:4px;">为你的侠客起一个名号</p>
+      <div class="name-input-wrap">
+        <input type="text" id="char-name" placeholder="输入角色名（仅限汉字或字母）" maxlength="12" autocomplete="off">
+        <div class="name-err" id="name-err"></div>
+      </div>
+      <p class="name-hint">名号将伴随你的整个江湖旅程，不可更改</p>
+      <div class="create-btn-row"><button class="btn-primary" id="name-next" disabled>下一步</button></div>
+    </div>
+
+    <!-- Step 2: 性别 -->
+    <div class="create-step" id="step-gender">
+      <p style="text-align:center;font-size:14px;color:rgba(241,239,232,0.75);margin-bottom:4px;">选择性别</p>
+      <div class="gender-row">
+        <div class="gender-card" data-g="male">
+          <div class="gender-icon">♂</div>
+          <div class="gender-label">男</div>
+        </div>
+        <div class="gender-card" data-g="female">
+          <div class="gender-icon">♀</div>
+          <div class="gender-label">女</div>
+        </div>
+      </div>
+      <div class="create-btn-row">
+        <button class="btn-secondary" id="gender-back">上一步</button>
+        <button class="btn-primary" id="gender-next" disabled>下一步</button>
+      </div>
+    </div>
+
+    <!-- Step 3: 形象 -->
+    <div class="create-step" id="step-avatar">
+      <p style="text-align:center;font-size:14px;color:rgba(241,239,232,0.75);margin-bottom:4px;" id="avatar-hint">选择你的形象</p>
+      <div class="char-grid" id="char-grid"></div>
+      <div class="create-btn-row">
+        <button class="btn-secondary" id="avatar-back">上一步</button>
+        <button class="btn-primary" id="avatar-confirm" disabled>开始闯荡</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="assets/vendor/tcb.js"></script>
@@ -415,7 +557,9 @@ function drawOverlay(text) {
 
 function render() {
   ctx.clearRect(0, 0, W, H);
-  if (state === 'map') {
+  if (state === 'create') {
+    ctx.fillStyle = '#111'; ctx.fillRect(0, 0, W, H);
+  } else if (state === 'map') {
     drawMap();
   } else if (state === 'battle') {
     drawBattle();
@@ -437,6 +581,150 @@ function render() {
   requestAnimationFrame(render);
 }
 window.GAME = { player, nodes }; // 暴露给 online.js 做云端存档/排行榜
+
+// ===== 角色创建系统 =====
+const CHARACTERS = {
+  male: [
+    { id: 'm1', name: '体修战士',   img: 'assets/select/m1_warrior.png', desc: '强壮肌肉型，走体修路线' },
+    { id: 'm2', name: '少年侠客',   img: 'assets/select/m2_young.png',  desc: '年轻俊朗，天赋异禀' },
+    { id: 'm3', name: '道骨仙风',   img: 'assets/select/m3_daoist.png', desc: '中年大叔，道法深厚' },
+  ],
+  female: [
+    { id: 'f1', name: '灵气萝莉',   img: 'assets/select/f1_loli.png',   desc: '可爱灵动，根骨奇佳' },
+    { id: 'f2', name: '绝代佳人',   img: 'assets/select/f2_hot.png',    desc: '性感热辣，魅惑众生' },
+    { id: 'f3', name: '温婉御姐',   img: 'assets/select/f3_mature.png', desc: '成熟丰满，气质出众' },
+  ],
+};
+
+const createScreen = document.getElementById('create-screen');
+const nameInput = document.getElementById('char-name');
+const nameErr = document.getElementById('name-err');
+const charGrid = document.getElementById('char-grid');
+let createData = { name: '', gender: '', avatar: null };
+
+// 名字校验：仅汉字或字母
+function isValidName(s) { return /^[\u4e00-\u9fa5a-zA-Z]+$/.test(s); }
+
+// 步骤切换
+function goToStep(n) {
+  document.querySelectorAll('.create-step').forEach((el, i) => el.classList.toggle('active', i === n));
+  document.querySelectorAll('.step-dot').forEach((el, i) => {
+    el.classList.toggle('active', i === n);
+    el.classList.toggle('done', i < n);
+  });
+}
+
+// Step 1: 名字
+nameInput.addEventListener('input', () => {
+  const v = nameInput.value.trim();
+  if (v.length === 0) { nameErr.textContent = ''; document.getElementById('name-next').disabled = true; return; }
+  if (!isValidName(v)) { nameErr.textContent = '⚠ 名字只能包含汉字或字母，不能有数字或符号'; document.getElementById('name-next').disabled = true; return; }
+  if (v.length < 2) { nameErr.textContent = ''; document.getElementById('name-next').disabled = true; return; }
+  nameErr.textContent = '';
+  createData.name = v;
+  document.getElementById('name-next').disabled = false;
+});
+document.getElementById('name-next').addEventListener('click', () => { if (createData.name) goToStep(1); });
+
+// Step 2: 性别
+document.querySelectorAll('.gender-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.gender-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    createData.gender = card.dataset.g;
+    document.getElementById('gender-next').disabled = false;
+
+    // 预加载对应形象图到 grid
+    renderAvatarGrid(createData.gender);
+  });
+});
+document.getElementById('gender-back').addEventListener('click', () => goToStep(0));
+document.getElementById('gender-next').addEventListener('click', () => { if (createData.gender) goToStep(2); });
+
+// Step 3: 形象渲染与选择
+function renderAvatarGrid(gender) {
+  const list = CHARACTERS[gender] || [];
+  charGrid.innerHTML = list.map(c =>
+    `<div class="char-card" data-id="${c.id}">
+      <img src="${c.img}" alt="${c.name}" loading="lazy">
+      <div class="char-name">${c.name}</div>
+    </div>`
+  ).join('');
+
+  // 绑定选择事件
+  charGrid.querySelectorAll('.char-card').forEach(card => {
+    card.addEventListener('click', () => {
+      charGrid.querySelectorAll('.char-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      createData.avatar = list.find(c => c.id === card.dataset.id);
+      document.getElementById('avatar-confirm').disabled = false;
+
+      // 选中的形象也作为战斗立绘
+      if (createData.avatar) {
+        art.hero.src = createData.avatar.img;
+        art.hero.failed = false;
+      }
+    });
+  });
+}
+document.getElementById('avatar-back').addEventListener('click', () => goToStep(1));
+
+// 确认创建 → 进入游戏
+document.getElementById('avatar-confirm').addEventListener('click', () => {
+  if (!createData.avatar) return;
+  player.name = createData.name;
+  player.sect = createData.avatar.desc; // 用形象描述作为初始门派/定位
+  // 立绘已在选择时设置 (art.hero.src)
+  CULTIVATION.recalc(player);
+  player.hp = player.maxHp; player.mp = player.maxMp;
+
+  // 隐藏创建界面，显示游戏
+  createScreen.setAttribute('hidden', '');
+  state = 'map';
+  toast = '欢迎来到江湖，' + player.name + '！点击蓝色地点启程。';
+
+  // 存入 localStorage（下次打开不再重复创建）
+  try {
+    localStorage.setItem('wuxia_save', JSON.stringify({
+      name: player.name, sect: player.sect, avatarId: createData.avatar.id,
+      avatarImg: createData.avatar.img, xp: player.xp, score: player.score,
+    }));
+  } catch(e) {}
+});
+
+// 检查是否有已存档（跳过创建）
+function checkSavedCharacter() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('wuxia_save'));
+    if (saved && saved.name && saved.avatarImg) {
+      player.name = saved.name;
+      player.sect = saved.sect || '';
+      player.xp = saved.xp || 0;
+      player.score = saved.score || 0;
+      art.hero.src = saved.avatarImg;
+      art.hero.failed = false;
+      CULTIVATION.recalc(player);
+      player.hp = player.maxHp; player.mp = player.maxMp;
+      createScreen.setAttribute('hidden', '');
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+
+// 初始化：有存档直接进游戏，否则显示创建界面
+if (!checkSavedCharacter()) {
+  state = 'create'; // 新状态阻止 canvas 渲染游戏
+  createScreen.removeAttribute('hidden');
+  // Canvas 渲染一个暗色占位
+  function renderCreateBg() {
+    if (createScreen.hidden) return;
+    ctx.fillStyle = '#111';
+    ctx.fillRect(0, 0, W, H);
+    requestAnimationFrame(renderCreateBg);
+  }
+  renderCreateBg();
+}
 setButtons(false); // 地图阶段禁用战斗指令
 render();
 </script>
