@@ -40,7 +40,8 @@
   .modal-box h3 { margin: 0 0 10px; font-size: 17px; font-weight: 600; color: #F1EFE8; }
   .modal-box label { display: block; font-size: 13px; margin: 10px 0; }
   .modal-box input, .modal-box select { width: 100%; margin-top: 4px; padding: 8px; border: 0.5px solid var(--line); border-radius: 6px; font-size: 13px; background:#222;color:#eee; }
-  .modal-box button { width: 100%; margin-top: 14px; padding: 11px; background: var(--blue); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight:600; }
+  /* 全宽按钮只针对关闭/确认类按钮，不影响 .alloc-btn 小方钮 */
+  .modal-box .btn-full { width: 100%; margin-top: 14px; padding: 11px; background: var(--blue); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight:600; }
   .modal-box ol.board { padding-left: 20px; font-size: 13px; line-height: 1.9; max-height: 50vh; overflow: auto; }
   .modal-box p { font-size: 13px; line-height: 1.7; color: rgba(241,239,232,0.8); }
   .modal-box hr { border:none;border-top:1px solid rgba(255,255,255,0.08);margin:12px 0; }
@@ -929,7 +930,7 @@ function initHub() {
           break;
         case 'go_rank':
           if (window.Online && window.Online.showBoard) window.Online.showBoard();
-          else openModal('<h3 style="color:#D4A843">排行榜</h3><p style="color:rgba(241,239,232,0.7)">联网功能尚未开启，完成腾讯云配置后即可查看全服排行榜。</p><button onclick="closeModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">关闭</button>');
+          else openModal('<h3 style="color:#D4A843">排行榜</h3><p style="color:rgba(241,239,232,0.7)">联网功能尚未开启，完成腾讯云配置后即可查看全服排行榜。</p><button class="btn-full" onclick="closeModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">关闭</button>');
           break;
         case 'modal_attr':
           showAttrModal();
@@ -938,7 +939,7 @@ function initHub() {
           showSkillsModal();
           break;
         default:
-          openModal(`<h3 style="color:#D4A843">${item.label}</h3><p style="color:rgba(241,239,232,0.7)">「${item.label}」功能正在开发中，敬请期待！</p><button onclick="closeModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">关闭</button>`);
+          openModal(`<h3 style="color:#D4A843">${item.label}</h3><p style="color:rgba(241,239,232,0.7)">「${item.label}」功能正在开发中，敬请期待！</p><button class="btn-full" onclick="closeModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">关闭</button>`);
       }
     });
   });
@@ -1007,6 +1008,7 @@ function initHub() {
 
   // 属性弹窗（含自由加点 + 经验进度条）
   function showAttrModal() {
+    refreshHub(); // 先同步主页境界/进度条/战力，保证与弹窗一致
     const r = CULTIVATION.realmFromXp(player.xp);
     const earned = BASE_FREE_POINTS + r.globalIndex * POINTS_PER_STAGE;
     const free = earned - player.spent;
@@ -1054,11 +1056,12 @@ function initHub() {
         <tr><td style="padding:4px 6px;color:#9B6BCC;font-weight:500">🍀 闪避率</td><td style="text-align:right;font-weight:600;color:#fff">${pct(player.eva)}</td><td style="padding:4px 6px;color:#E8D9A0;font-weight:500">🍀 幸运值</td><td style="text-align:right;font-weight:600;color:#fff">${player.luck}</td></tr>
         <tr><td style="padding:4px 6px;color:#639922;font-weight:500">📈 挂机加成</td><td style="text-align:right;font-weight:600;color:#fff">${pct(player.xpBonus)}</td><td style="padding:4px 6px;color:#E87B7B;font-weight:700">⚡ 战力</td><td style="text-align:right;font-weight:700;color:#E87B7B">${fmt(calcCombatPower(player))}</td></tr>
       </table>
-      <button onclick="closeModal()" style="margin-top:16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">关闭</button>`);
+      <button class="btn-full" onclick="closeModal()" style="margin-top:16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">关闭</button>`);
   }
 
   // 功法弹窗
   function showSkillsModal() {
+    refreshHub(); // 同步主页数据
     const rows = player.learned.map(id => {
       const sk = SKILLS[id];
       if (!sk) return '';
@@ -1081,7 +1084,7 @@ function initHub() {
         <tr style="color:rgba(241,239,232,0.3);font-size:11px;text-transform:uppercase;letter-spacing:1px"><td style="padding:4px 6px">功法</td><td style="padding:4px">类型</td><td style="padding:4px">消耗</td><td style="padding:4px">倍率</td><td style="padding:4px;text-align:right">操作</td></tr>
         ${rows}
       </table>
-      <button onclick="closeModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">关闭</button>`);
+      <button class="btn-full" onclick="closeModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">关闭</button>`);
   }
   function setActiveSkill(id) {
     if (!player.learned.includes(id)) return;
@@ -1250,7 +1253,7 @@ function checkSavedCharacter() {
       // 有存档 → 初始化并进入主页
       initHub();
       window.HUB.show();
-      if (offlineGain > 0) openModal(`<h3 style="color:#D4A843">离线挂机结算</h3><p style="color:rgba(241,239,232,0.8)">离线期间自动修炼，获得修为 <b style="color:#639922">+${formatNum(offlineGain)}</b>（含挂机加成 ${Math.round(player.xpBonus * 100)}%）。</p><button onclick="closeModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">收下</button>`);
+      if (offlineGain > 0) openModal(`<h3 style="color:#D4A843">离线挂机结算</h3><p style="color:rgba(241,239,232,0.8)">离线期间自动修炼，获得修为 <b style="color:#639922">+${formatNum(offlineGain)}</b>（含挂机加成 ${Math.round(player.xpBonus * 100)}%）。</p><button class="btn-full" onclick="closeModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">收下</button>`);
       return true;
     }
   } catch(e) {}
