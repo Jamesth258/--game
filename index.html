@@ -485,7 +485,7 @@ const player = {
 
 // 由 6 基础属性 + 境界推导出全部战斗数值
 function recalcStats(p) {
-  const idx = (window.CULTIVATION ? CULTIVATION.realmFromXp(p.xp) : { globalIndex: 0 }).globalIndex;
+  const idx = (typeof CULTIVATION !== 'undefined' ? CULTIVATION.realmFromXp(p.xp) : { globalIndex: 0 }).globalIndex;
   p.maxHp  = Math.round(100 + p.con * 20 + idx * 100);
   p.def    = Math.round(10 + p.con * 2 + idx * 2.5);
   p.atk    = Math.round(20 + p.str * 2 + idx * 8);
@@ -946,7 +946,8 @@ function initHub() {
 
   // ====== 全局：主页境界/进度条同步（弹窗和主页共用同一份数据） ======
   function syncRealmDOM() {
-    if (!window.CULTIVATION) { console.warn('[syncRealm] CULTIVATION not loaded yet'); return; }
+    // CULTIVATION 是 cultivation.js 里 const 声明的脚本级变量（非 window 属性），直接引用即可
+    if (typeof CULTIVATION === 'undefined') { console.warn('[syncRealm] CULTIVATION not loaded yet'); return; }
     const r = CULTIVATION.realmFromXp(player.xp);
     const el = (id) => document.getElementById(id);
     const re = el('hub-realm'), xf = el('hub-xp-fill'), xr = el('hub-xp-realm'), xn = el('hub-xp-nums');
