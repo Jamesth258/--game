@@ -42,9 +42,12 @@ const CULTIVATION = (function () {
   // 每升一小阶所需修为：随境界序号 i（0 起）递增，让后期突破越来越难。
   //   req(i) = BASE + STEP·i + QUAD·i²    （线性增长 + 二次加速）
   // 调参：BASE 抬高整体门槛；STEP 控制线性斜率；QUAD 控制后期陡峭程度。
-  const STAGE_XP_BASE = 50;   // 第 1 小阶所需修为（与旧值持平，前期不卡手）
-  const STAGE_XP_STEP = 6;    // 每升一阶线性 +6
-  const STAGE_XP_QUAD = 0.5;  // 二次项，越往后越陡
+  // 设计目标（挂机节奏）：在线 2/s、离线 1/s 封顶 12h/天。
+  //   满级总修为≈3724万 → 肝帝(在线8h/天)≈1.01年、重度(在线2h)≈1.77年、休闲(在线1h)≈2.02年、纯离线≈2.36年。
+  //   即"至少玩一年才到顶"，且越往后单阶越久（第1阶≈2分钟，末阶≈5600分钟在线）。
+  const STAGE_XP_BASE = 200;  // 第 1 小阶所需修为（≈2分钟在线，前期即有"修炼感"）
+  const STAGE_XP_STEP = 20;   // 每升一阶线性 +20
+  const STAGE_XP_QUAD = 24;   // 二次项，越往后越陡（主导后期拉长）
   function stageXpReq(i) {
     return Math.round(STAGE_XP_BASE + STAGE_XP_STEP * i + STAGE_XP_QUAD * i * i);
   }
