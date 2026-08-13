@@ -344,13 +344,13 @@
       战力<span class="hub-power-num" id="hub-power-num">1,234</span>
     </div>
     <!-- 境界 -->
-    <div class="hub-realm" id="hub-realm">炼气境 第一重天</div>
+    <div class="hub-realm" id="hub-realm"></div>
     <!-- 经验进度条 -->
     <div class="xp-bar-wrap" id="hub-xp-bar" style="max-width:140px;flex-shrink:0">
       <div class="xp-bar-track" style="height:6px;border-radius:3px"><div class="xp-bar-fill" id="hub-xp-fill" style="width:0%;height:100%;border-radius:3px"></div></div>
       <div class="xp-bar-info" style="margin-top:1px">
-        <span class="cur-realm" id="hub-xp-realm" style="font-size:10px;color:#9B6BCC">炼气境</span>
-        <span class="xp-nums" id="hub-xp-nums" style="font-size:9px">0/200</span>
+        <span class="cur-realm" id="hub-xp-realm" style="font-size:10px;color:#9B6BCC"></span>
+        <span class="xp-nums" id="hub-xp-nums" style="font-size:9px"></span>
       </div>
     </div>
     <!-- 功能按钮 -->
@@ -946,10 +946,11 @@ function initHub() {
 
   // ====== 全局：主页境界/进度条同步（弹窗和主页共用同一份数据） ======
   function syncRealmDOM() {
-    if (!window.CULTIVATION) return;
+    if (!window.CULTIVATION) { console.warn('[syncRealm] CULTIVATION not loaded yet'); return; }
     const r = CULTIVATION.realmFromXp(player.xp);
     const el = (id) => document.getElementById(id);
     const re = el('hub-realm'), xf = el('hub-xp-fill'), xr = el('hub-xp-realm'), xn = el('hub-xp-nums');
+    console.log('[syncRealm]', r.label, 'progress:', Math.round((r.progress||0)*100) + '%', 'xp:', r.xpIntoStage + '/' + r.xpForStage);
     if (re) re.textContent = r.label || '凡人';
     if (xf) xf.style.width = Math.round((r.progress || 0) * 100) + '%';
     if (xr) xr.textContent = (r.label || '凡人').split(' ')[0]; // 只取"筑基境"不含重天
@@ -1239,6 +1240,8 @@ function checkSavedCharacter() {
       // 离线挂机结算（按离开时长累加修为，并回满气血）
       const offlineGain = applyOfflineXp();
       player.hp = player.maxHp; player.mp = player.maxMp;
+      // 立即同步主页境界/进度条（不等 initHub）
+      if (window.syncRealmDOM) syncRealmDOM();
       createScreen.setAttribute('hidden', '');
       // 有存档 → 初始化并进入主页
       initHub();
