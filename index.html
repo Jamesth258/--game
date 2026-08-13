@@ -36,15 +36,25 @@
   .topbar button { flex: 0 0 auto; padding: 6px 12px; font-size: 12px; }
   .modal { position: fixed; inset: 0; background: rgba(44,44,42,0.5); display: flex; align-items: center; justify-content: center; z-index: 200; }
   .modal[hidden] { display: none; }
-  .modal-box { background: #fff; border-radius: 12px; padding: 20px 24px; width: min(360px, 90vw); box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
-  .modal-box h3 { margin: 0 0 12px; font-size: 16px; font-weight: 500; }
+  .modal-box { background: #1a1a1e; border-radius: 14px; padding: 22px 28px; width: min(500px, 94vw); max-height: 88vh; overflow-y: auto; box-shadow: 0 16px 60px rgba(0,0,0,0.45); color: #F1EFE8; }
+  .modal-box h3 { margin: 0 0 10px; font-size: 17px; font-weight: 600; color: #F1EFE8; }
   .modal-box label { display: block; font-size: 13px; margin: 10px 0; }
-  .modal-box input, .modal-box select { width: 100%; margin-top: 4px; padding: 8px; border: 0.5px solid var(--line); border-radius: 6px; font-size: 13px; }
-  .modal-box button { width: 100%; margin-top: 14px; padding: 10px; background: var(--blue); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
+  .modal-box input, .modal-box select { width: 100%; margin-top: 4px; padding: 8px; border: 0.5px solid var(--line); border-radius: 6px; font-size: 13px; background:#222;color:#eee; }
+  .modal-box button { width: 100%; margin-top: 14px; padding: 11px; background: var(--blue); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight:600; }
   .modal-box ol.board { padding-left: 20px; font-size: 13px; line-height: 1.9; max-height: 50vh; overflow: auto; }
-  .modal-box p { font-size: 13px; line-height: 1.7; }
-  .alloc-btn { width: 26px; height: 24px; margin: 0 2px; padding: 0; background: #D4A843; color: #2C2C2A; border: none; border-radius: 5px; cursor: pointer; font-size: 15px; font-weight: 700; line-height: 1; }
-  .alloc-btn:disabled { background: #ccc; color: #888; cursor: default; }
+  .modal-box p { font-size: 13px; line-height: 1.7; color: rgba(241,239,232,0.8); }
+  .modal-box hr { border:none;border-top:1px solid rgba(255,255,255,0.08);margin:12px 0; }
+  .alloc-btn { width: 22px; height: 22px; margin: 0 1px; padding: 0; background: #2a6fd9; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 700; line-height: 22px; display:inline-flex;align-items:center;justify-content:center;flex-shrink:0; }
+  .alloc-btn:hover:not(:disabled) { background: #3b82f6; }
+  .alloc-btn:disabled { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.2); cursor: default; }
+
+  /* 经验进度条 */
+  .xp-bar-wrap { margin: 10px 0 4px; }
+  .xp-bar-info { display:flex; justify-content:space-between; align-items:baseline; font-size:12px; margin-bottom:4px; }
+  .xp-bar-info .cur-realm { font-weight:700; color:#D4A843; font-size:13px; }
+  .xp-bar-info .xp-nums { color:rgba(241,239,232,0.55); font-size:11px; }
+  .xp-bar-track { width:100%; height:10px; background:rgba(255,255,255,0.08); border-radius:5px; overflow:hidden; }
+  .xp-bar-fill { height:100%; background:linear-gradient(90deg,#D4A843,#f0c060); border-radius:5px; transition:width 0.4s ease; }
 
   /* ===== 角色创建界面 ===== */
   #create-screen {
@@ -334,6 +344,14 @@
     </div>
     <!-- 境界 -->
     <div class="hub-realm" id="hub-realm">炼气境 第一重天</div>
+    <!-- 经验进度条 -->
+    <div class="xp-bar-wrap" id="hub-xp-bar" style="max-width:140px;flex-shrink:0">
+      <div class="xp-bar-track" style="height:6px;border-radius:3px"><div class="xp-bar-fill" id="hub-xp-fill" style="width:0%;height:100%;border-radius:3px"></div></div>
+      <div class="xp-bar-info" style="margin-top:1px">
+        <span class="cur-realm" id="hub-xp-realm" style="font-size:10px;color:#9B6BCC">炼气境</span>
+        <span class="xp-nums" id="hub-xp-nums" style="font-size:9px">0/200</span>
+      </div>
+    </div>
     <!-- 功能按钮 -->
     <div class="hub-menu" id="hub-menu"></div>
   </div>
@@ -911,7 +929,7 @@ function initHub() {
           break;
         case 'go_rank':
           if (window.Online && window.Online.showBoard) window.Online.showBoard();
-          else openModal('<h3>排行榜</h3><p>联网功能尚未开启，完成腾讯云配置后即可查看全服排行榜。</p><button onclick="closeModal()">关闭</button>');
+          else openModal('<h3 style="color:#D4A843">排行榜</h3><p style="color:rgba(241,239,232,0.7)">联网功能尚未开启，完成腾讯云配置后即可查看全服排行榜。</p><button onclick="closeModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">关闭</button>');
           break;
         case 'modal_attr':
           showAttrModal();
@@ -920,7 +938,7 @@ function initHub() {
           showSkillsModal();
           break;
         default:
-          openModal(`<h3>${item.label}</h3><p>「${item.label}」功能正在开发中，敬请期待！</p><button onclick="closeModal()">关闭</button>`);
+          openModal(`<h3 style="color:#D4A843">${item.label}</h3><p style="color:rgba(241,239,232,0.7)">「${item.label}」功能正在开发中，敬请期待！</p><button onclick="closeModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">关闭</button>`);
       }
     });
   });
@@ -930,11 +948,17 @@ function initHub() {
     nameEl.textContent = player.name || '逍遥仙';
     powerEl.textContent = formatNum(calcCombatPower(player));
     avatarEl.src = 'assets/select/avatar_head.png?v=1';
-    // 境界
+    // 境界 + 经验进度条（统一用 CULTIVATION.realmFromXp，保证弹窗与主页一致）
     const realmEl = document.getElementById('hub-realm');
-    if (realmEl && window.CULTIVATION) {
+    const xpFill = document.getElementById('hub-xp-fill');
+    const xpRealm = document.getElementById('hub-xp-realm');
+    const xpNums = document.getElementById('hub-xp-nums');
+    if (window.CULTIVATION) {
       const r = CULTIVATION.realmFromXp(player.xp);
-      realmEl.textContent = r.label || '凡人';
+      if (realmEl) realmEl.textContent = r.label || '凡人';
+      if (xpFill) xpFill.style.width = Math.round(r.progress * 100) + '%';
+      if (xpRealm) xpRealm.textContent = r.label || '凡人';
+      if (xpNums) xpNums.textContent = formatNum(r.xpIntoStage) + '/' + formatNum(r.xpForStage);
     }
     // 角色展示：优先用该角色的视频，没有则用静态立绘
     const _all = CHARACTERS.male.concat(CHARACTERS.female);
@@ -963,49 +987,74 @@ function initHub() {
       if (state === 'hub' || state === 'map' || state === 'battle') {
         gainXp(ONLINE_XP_PER_SEC * (1 + player.xpBonus), false);
         powerEl.textContent = formatNum(calcCombatPower(player));
-        const realmEl = document.getElementById('hub-realm');
-        if (realmEl && window.CULTIVATION) realmEl.textContent = CULTIVATION.realmFromXp(player.xp).label;
+        // 同步境界 + 经验进度条（与 refreshHub 用同一数据源）
+        if (window.CULTIVATION) {
+          const r = CULTIVATION.realmFromXp(player.xp);
+          const _re = document.getElementById('hub-realm');
+          const _xf = document.getElementById('hub-xp-fill');
+          const _xr = document.getElementById('hub-xp-realm');
+          const _xn = document.getElementById('hub-xp-nums');
+          if (_re) _re.textContent = r.label || '凡人';
+          if (_xf) _xf.style.width = Math.round(r.progress * 100) + '%';
+          if (_xr) _xr.textContent = r.label || '凡人';
+          if (_xn) _xn.textContent = formatNum(r.xpIntoStage) + '/' + formatNum(r.xpForStage);
+        }
       }
       player.lastSeen = Date.now();
       if (++_saveTick % 5 === 0) saveGame(); // 每 5 秒落盘一次
     }, HUB_TICK_MS);
   }
 
-  // 属性弹窗（含自由加点）
+  // 属性弹窗（含自由加点 + 经验进度条）
   function showAttrModal() {
     const r = CULTIVATION.realmFromXp(player.xp);
     const earned = BASE_FREE_POINTS + r.globalIndex * POINTS_PER_STAGE;
     const free = earned - player.spent;
     const pct = v => Math.round(v * 100) + '%';
+    const fmt = n => formatNum(n);
+    // 紧凑加减按钮
     const btn = (k, d, disabled) =>
       `<button class="alloc-btn" onclick="allocAttr('${k}',${d})" ${disabled ? 'disabled' : ''}>${d > 0 ? '+' : '−'}</button>`;
     const attrRow = k => `
       <tr>
-        <td style="padding:5px 4px;color:#E8D9A0">${ATTR_NAMES[k]}</td>
-        <td style="text-align:center;color:#F1EFE8;font-weight:600">${player[k]}</td>
-        <td style="text-align:right;white-space:nowrap">
+        <td style="padding:6px 6px;color:#D4A843;font-weight:600;font-size:13px;white-space:nowrap">${ATTR_NAMES[k]}</td>
+        <td style="text-align:center;color:#fff;font-weight:700;font-size:14px;min-width:36px">${player[k]}</td>
+        <td style="text-align:right;white-space:nowrap;padding-left:8px">
           ${btn(k, -1, player[k] <= 10)} ${btn(k, 1, free <= 0)}
         </td>
       </tr>`;
+    // 经验进度条
+    const xpPct = Math.round(r.progress * 100);
+    const xpBarHtml = `
+      <div class="xp-bar-wrap">
+        <div class="xp-bar-info">
+          <span class="cur-realm">${esc(r.label)}</span>
+          <span class="xp-nums">${fmt(r.xpIntoStage)} / ${fmt(r.xpForStage)} (${xpPct}%)</span>
+        </div>
+        <div class="xp-bar-track"><div class="xp-bar-fill" style="width:${xpPct}%"></div></div>
+      </div>`;
     openModal(`
       <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M5 21v-2a7 7 0 0114 0v2"/></svg>
       <h3 style="margin:0">角色属性</h3></div>
-      <p style="margin:4px 0"><b>${esc(player.name)}</b> · ${esc(r.label)}</p>
-      <p style="margin:2px 0;color:#D4A843">可分配点数：<b>${free}</b>　<span style="color:#999;font-size:11px">（含开局基础 ${BASE_FREE_POINTS} 点，突破后每阶 +${POINTS_PER_STAGE}）</span></p>
+      <p style="margin:2px 0"><b style="color:#fff">${esc(player.name)}</b> · <b style="color:#D4A843">${esc(r.label)}</b></p>
+      ${xpBarHtml}
+      <p style="margin:6px 0 2px;color:#D4A843;font-size:13px">可分配点数：<b style="font-size:15px">${free}</b><span style="color:rgba(241,239,232,0.45);font-size:11px;margin-left:6px">（开局基础 ${BASE_FREE_POINTS} 点，每阶 +${POINTS_PER_STAGE}）</span></p>
       <table style="width:100%;font-size:13px;border-collapse:collapse;margin-top:8px">
-        <tr style="color:#999;font-size:12px"><td style="padding:3px 4px">属性</td><td style="padding:3px;text-align:center">数值</td><td style="padding:3px;text-align:right">加点</td></tr>
+        <tr style="color:rgba(241,239,232,0.35);font-size:11px;text-transform:uppercase;letter-spacing:1px">
+          <td style="padding:4px 6px">属性</td><td style="padding:4px;text-align:center">数值</td><td style="padding:4px;text-align:right">加点</td>
+        </tr>
         ${ATTR_KEYS.map(attrRow).join('')}
       </table>
-      <hr style="border:none;border-top:1px solid #eee;margin:10px 0">
-      <table style="width:100%;font-size:12.5px;border-collapse:collapse">
-        <tr><td style="padding:3px;color:#E87B7B">❤ 生命上限</td><td style="text-align:right">${player.maxHp}</td><td style="padding:3px;color:#185FA5">✦ 灵力上限</td><td style="text-align:right">${player.maxMp}</td></tr>
-        <tr><td style="padding:3px;color:#D4A843">⚔ 物理攻击</td><td style="text-align:right">${player.atk}</td><td style="padding:3px;color:#9B6BCC">☯ 精神攻击</td><td style="text-align:right">${player.spiAtk}</td></tr>
-        <tr><td style="padding:3px;color:#639922">🛡 物理防御</td><td style="text-align:right">${player.def}</td><td style="padding:3px;color:#639922">🛡 精神防御</td><td style="text-align:right">${player.spiDef}</td></tr>
-        <tr><td style="padding:3px;color:#9B6BCC">💨 速度</td><td style="text-align:right">${player.spd}</td><td style="padding:3px;color:#9B6BCC">⚡ 先攻值</td><td style="text-align:right">${player.init}</td></tr>
-        <tr><td style="padding:3px;color:#9B6BCC">🍀 闪避率</td><td style="text-align:right">${pct(player.eva)}</td><td style="padding:3px;color:#E8D9A0">🍀 幸运值</td><td style="text-align:right">${player.luck}</td></tr>
-        <tr><td style="padding:3px;color:#639922">📈 挂机加成</td><td style="text-align:right">${pct(player.xpBonus)}</td><td style="padding:3px;color:#E87B7B;font-weight:600">⚡ 战力</td><td style="text-align:right;font-weight:600">${formatNum(calcCombatPower(player))}</td></tr>
+      <hr>
+      <table style="width:100%;font-size:13px;border-collapse:collapse">
+        <tr><td style="padding:4px 6px;color:#E87B7B;font-weight:500">❤ 生命上限</td><td style="text-align:right;font-weight:600;color:#fff">${player.maxHp}</td><td style="padding:4px 6px;color:#185FA5;font-weight:500">✦ 灵力上限</td><td style="text-align:right;font-weight:600;color:#fff">${player.maxMp}</td></tr>
+        <tr><td style="padding:4px 6px;color:#D4A843;font-weight:500">⚔ 物理攻击</td><td style="text-align:right;font-weight:600;color:#fff">${player.atk}</td><td style="padding:4px 6px;color:#9B6BCC;font-weight:500">☯ 精神攻击</td><td style="text-align:right;font-weight:600;color:#fff">${player.spiAtk}</td></tr>
+        <tr><td style="padding:4px 6px;color:#639922;font-weight:500">🛡 物理防御</td><td style="text-align:right;font-weight:600;color:#fff">${player.def}</td><td style="padding:4px 6px;color:#639922;font-weight:500">🛡 精神防御</td><td style="text-align:right;font-weight:600;color:#fff">${player.spiDef}</td></tr>
+        <tr><td style="padding:4px 6px;color:#9B6BCC;font-weight:500">💨 速度</td><td style="text-align:right;font-weight:600;color:#fff">${player.spd}</td><td style="padding:4px 6px;color:#9B6BCC;font-weight:500">⚡ 先攻值</td><td style="text-align:right;font-weight:600;color:#fff">${player.init}</td></tr>
+        <tr><td style="padding:4px 6px;color:#9B6BCC;font-weight:500">🍀 闪避率</td><td style="text-align:right;font-weight:600;color:#fff">${pct(player.eva)}</td><td style="padding:4px 6px;color:#E8D9A0;font-weight:500">🍀 幸运值</td><td style="text-align:right;font-weight:600;color:#fff">${player.luck}</td></tr>
+        <tr><td style="padding:4px 6px;color:#639922;font-weight:500">📈 挂机加成</td><td style="text-align:right;font-weight:600;color:#fff">${pct(player.xpBonus)}</td><td style="padding:4px 6px;color:#E87B7B;font-weight:700">⚡ 战力</td><td style="text-align:right;font-weight:700;color:#E87B7B">${fmt(calcCombatPower(player))}</td></tr>
       </table>
-      <button onclick="closeModal()" style="margin-top:14px">关闭</button>`);
+      <button onclick="closeModal()" style="margin-top:16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">关闭</button>`);
   }
 
   // 功法弹窗
@@ -1017,22 +1066,22 @@ function initHub() {
       const typeTxt = sk.type === 'spirit' ? '精神' : '物理';
       const typeColor = sk.type === 'spirit' ? '#9B6BCC' : '#D4A843';
       return `<tr>
-        <td style="padding:5px 4px;color:#E8D9A0">${esc(sk.name)}${active ? ' <span style="color:#639922">·出战</span>' : ''}</td>
-        <td style="padding:5px 4px;color:${typeColor}">${typeTxt}</td>
-        <td style="padding:5px 4px;color:#185FA5">${sk.cost} 灵力</td>
-        <td style="padding:5px 4px">×${sk.mult}</td>
-        <td style="padding:5px 4px;text-align:right">${active ? '<span style="color:#999">使用中</span>' : `<button class="alloc-btn" onclick="setActiveSkill('${id}')">出战</button>`}</td>
+        <td style="padding:5px 6px;color:#D4A843;font-weight:500">${esc(sk.name)}${active ? ' <span style="color:#639922">·出战</span>' : ''}</td>
+        <td style="padding:5px 6px;color:${typeColor}">${typeTxt}</td>
+        <td style="padding:5px 6px;color:#185FA5">${sk.cost} 灵力</td>
+        <td style="padding:5px 6px;color:#fff">×${sk.mult}</td>
+        <td style="padding:5px 6px;text-align:right">${active ? '<span style="color:rgba(241,239,232,0.35)">使用中</span>' : `<button class="alloc-btn" onclick="setActiveSkill('${id}')">出战</button>`}</td>
       </tr>`;
     }).join('');
     openModal(`
       <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
       <h3 style="margin:0">功法</h3></div>
-      <p style="margin:4px 0;font-size:12.5px;color:#999">普攻恒为物理；功法分物理/精神两类，灵力消耗各由功法而定。战斗中「武功」释放当前出战功法。</p>
+      <p style="margin:4px 0;font-size:12px;color:rgba(241,239,232,0.55)">普攻恒为物理；功法分物理/精神两类，灵力消耗各由功法而定。战斗中「武功」释放当前出战功法。</p>
       <table style="width:100%;font-size:13px;border-collapse:collapse;margin-top:8px">
-        <tr style="color:#999;font-size:12px"><td style="padding:3px 4px">功法</td><td style="padding:3px">类型</td><td style="padding:3px">消耗</td><td style="padding:3px">倍率</td><td style="padding:3px;text-align:right">操作</td></tr>
+        <tr style="color:rgba(241,239,232,0.3);font-size:11px;text-transform:uppercase;letter-spacing:1px"><td style="padding:4px 6px">功法</td><td style="padding:4px">类型</td><td style="padding:4px">消耗</td><td style="padding:4px">倍率</td><td style="padding:4px;text-align:right">操作</td></tr>
         ${rows}
       </table>
-      <button onclick="closeModal()" style="margin-top:14px">关闭</button>`);
+      <button onclick="closeModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">关闭</button>`);
   }
   function setActiveSkill(id) {
     if (!player.learned.includes(id)) return;
@@ -1201,7 +1250,7 @@ function checkSavedCharacter() {
       // 有存档 → 初始化并进入主页
       initHub();
       window.HUB.show();
-      if (offlineGain > 0) openModal(`<h3>离线挂机结算</h3><p>离线期间自动修炼，获得修为 <b>+${formatNum(offlineGain)}</b>（含挂机加成 ${Math.round(player.xpBonus * 100)}%）。</p><button onclick="closeModal()">收下</button>`);
+      if (offlineGain > 0) openModal(`<h3 style="color:#D4A843">离线挂机结算</h3><p style="color:rgba(241,239,232,0.8)">离线期间自动修炼，获得修为 <b style="color:#639922">+${formatNum(offlineGain)}</b>（含挂机加成 ${Math.round(player.xpBonus * 100)}%）。</p><button onclick="closeModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">收下</button>`);
       return true;
     }
   } catch(e) {}
