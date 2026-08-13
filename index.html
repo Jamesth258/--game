@@ -944,23 +944,24 @@ function initHub() {
     });
   });
 
+  // ====== 全局：主页境界/进度条同步（弹窗和主页共用同一份数据） ======
+  function syncRealmDOM() {
+    if (!window.CULTIVATION) return;
+    const r = CULTIVATION.realmFromXp(player.xp);
+    const el = (id) => document.getElementById(id);
+    const re = el('hub-realm'), xf = el('hub-xp-fill'), xr = el('hub-xp-realm'), xn = el('hub-xp-nums');
+    if (re) re.textContent = r.label || '凡人';
+    if (xf) xf.style.width = Math.round((r.progress || 0) * 100) + '%';
+    if (xr) xr.textContent = (r.label || '凡人').split(' ')[0]; // 只取"筑基境"不含重天
+    if (xn) xn.textContent = formatNum(r.xpIntoStage) + '/' + formatNum(r.xpForStage);
+  }
+
   // 更新主页数据
   function refreshHub() {
     nameEl.textContent = player.name || '逍遥仙';
     powerEl.textContent = formatNum(calcCombatPower(player));
     avatarEl.src = 'assets/select/avatar_head.png?v=1';
-    // 境界 + 经验进度条（统一用 CULTIVATION.realmFromXp，保证弹窗与主页一致）
-    const realmEl = document.getElementById('hub-realm');
-    const xpFill = document.getElementById('hub-xp-fill');
-    const xpRealm = document.getElementById('hub-xp-realm');
-    const xpNums = document.getElementById('hub-xp-nums');
-    if (window.CULTIVATION) {
-      const r = CULTIVATION.realmFromXp(player.xp);
-      if (realmEl) realmEl.textContent = r.label || '凡人';
-      if (xpFill) xpFill.style.width = Math.round(r.progress * 100) + '%';
-      if (xpRealm) xpRealm.textContent = r.label || '凡人';
-      if (xpNums) xpNums.textContent = formatNum(r.xpIntoStage) + '/' + formatNum(r.xpForStage);
-    }
+    syncRealmDOM();
     // 角色展示：优先用该角色的视频，没有则用静态立绘
     const _all = CHARACTERS.male.concat(CHARACTERS.female);
     const _cur = _all.find(c => c.id === player.avatarId);
@@ -988,18 +989,7 @@ function initHub() {
       if (state === 'hub' || state === 'map' || state === 'battle') {
         gainXp(ONLINE_XP_PER_SEC * (1 + player.xpBonus), false);
         powerEl.textContent = formatNum(calcCombatPower(player));
-        // 同步境界 + 经验进度条（与 refreshHub 用同一数据源）
-        if (window.CULTIVATION) {
-          const r = CULTIVATION.realmFromXp(player.xp);
-          const _re = document.getElementById('hub-realm');
-          const _xf = document.getElementById('hub-xp-fill');
-          const _xr = document.getElementById('hub-xp-realm');
-          const _xn = document.getElementById('hub-xp-nums');
-          if (_re) _re.textContent = r.label || '凡人';
-          if (_xf) _xf.style.width = Math.round(r.progress * 100) + '%';
-          if (_xr) _xr.textContent = r.label || '凡人';
-          if (_xn) _xn.textContent = formatNum(r.xpIntoStage) + '/' + formatNum(r.xpForStage);
-        }
+        syncRealmDOM(); // 每秒同步境界+进度条
       }
       player.lastSeen = Date.now();
       if (++_saveTick % 5 === 0) saveGame(); // 每 5 秒落盘一次
