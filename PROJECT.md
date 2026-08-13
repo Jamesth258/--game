@@ -23,22 +23,34 @@
 
 ## 2. 文件结构
 
+> **2026-08-13 更新：已完成模块拆分**（原 1275 行单文件 → 骨架 + css + 6 个 js 模块）。
+> 拆分后各模块可安全并行开发，详见 §14。
+
 ```
 /
-├── index.html          ← 主文件（1275 行）：CSS + HTML + 主逻辑，含创建/主页/地图/战斗/弹窗
-├── cultivation.js      ← 境界体系（纯计算，无 DOM 依赖）★关键模块
-├── config.js           ← CloudBase 环境配置（当前为空占位）
-├── online.js           ← 联网层（排行榜等，渐进增强）
+├── index.html          ← 骨架（~145 行）：<link css> + 10 个 <script src>，不含任何逻辑
+├── css/
+│   └── style.css       ← 全部样式（原 index.html 7–249 行）
+├── config.js           ← CloudBase 环境配置（当前为空占位）★根目录、先于 js/ 加载
+├── cultivation.js      ← 境界体系（纯计算，无 DOM 依赖）★关键模块，根目录、先于 js/ 加载
+├── online.js           ← 联网层（排行榜等，渐进增强）★根目录、最后加载
 ├── assets/
+│   ├── vendor/tcb.js   ← CloudBase 前端 SDK 助手（index.html 第一个 <script>）
 │   ├── select/         ← 6 角色立绘 + 头像 + 登录背景
 │   │   ├── m1_warrior.png / m2_young.png / m3_daoist.png
 │   │   ├── f1_loli.png / f2_hot.png / f3_mature.png
 │   │   ├── avatar_head.png   ← 顶部栏头像（头部特写）
 │   │   └── bg_login.jpg
-│   ├── char/
-│   │   ├── char_m2.mp4       ← M2 角色动图（294KB，已压缩）
-│   │   └── char_m2_orig.mp4  ← 原始 7.1MB 备份（勿上线用）
-│   └── vendor/tcb.js
+│   └── char/
+│       ├── char_m2.mp4       ← M2 角色动图（294KB，已压缩）
+│       └── char_m2_orig.mp4  ← 原始 7.1MB 备份（勿上线用）
+├── js/
+│   ├── core.js         ← canvas 常量 / 素材加载 / openModal+closeModal / saveGame / window.onerror 红条兜底
+│   ├── player.js       ← ATTR_KEYS/NAMES、player 对象、recalcStats、saveGame/loadGame
+│   ├── battle.js       ← nodes 地图、回合制战斗状态机、Canvas 渲染
+│   ├── hub.js          ← HUB_MENU_ITEMS、calcCombatPower、syncRealmDOM、refreshHub、showAttrModal
+│   ├── create.js       ← CHARACTERS、角色创建流程、checkSavedCharacter
+│   └── main.js         ← 启动入口（创建流程 + 存档恢复 + 首帧渲染）
 ├── design/             ← 设计文档
 │   ├── 角色与选人设计.md
 │   ├── 角色动图与主体库.md      ← 即梦主体库 + 9:16 视频提示词
@@ -46,16 +58,25 @@
 └── .workbuddy/memory/  ← 开发日志（按日期）
 ```
 
+**加载顺序铁律**（非 module 脚本，按 index.html 中 `<script>` 出现顺序执行）：
+`tcb.js → config.js → cultivation.js → js/core.js → js/player.js → js/battle.js → js/hub.js → js/create.js → js/main.js → online.js`
+- `cultivation.js` / `config.js` / `online.js` 在**根目录**，`js/*.js` 在子目录，顺序由 index.html 决定，与目录无关
+- 顶层 `const`/`let` 是脚本级绑定，**不挂 `window`**；跨文件引用靠「同全局词法作用域 + 加载顺序」而非 `window.X`（见坑点 8）
+
 ---
 
 ## 3. index.html 分区地图（行号）
 
+> **⚠️ 已过时**：下表是拆分前「1275 行单文件」的行号地图，拆分后 index.html 仅剩骨架（~145 行）。
+> 拆分后的代码位置见 §2 文件结构 + §14，各模块内部行号以对应 `js/*.js` 文件为准。
+
+（历史参考 — 拆分前单文件行号）
 | 行号 | 内容 |
 |---|---|
-| 7–250 | `<style>` 全部 CSS（弹窗 / 创建界面 / 主页 / 进度条） |
-| 276–330 | 角色创建界面 HTML（3 步：名字 → 性别 → 形象） |
-| 331–369 | 游戏主页 HTML（顶部栏 + 中央人物区 + 底部） |
-| 371–374 | 全局弹窗容器 `#modal` |
+| 7–250 | `<style>` 全部 CSS（弹窗 / 创建界面 / 主页 / 进度条）→ 现 `css/style.css` |
+| 276–330 | 角色创建界面 HTML（3 步：名字 → 性别 → 形象）→ 现 `index.html` 34–86 行 + `js/create.js` |
+| 331–369 | 游戏主页 HTML（顶部栏 + 中央人物区 + 底部）→ 现 `index.html` 88–126 行 + `js/hub.js` |
+| 371–374 | 全局弹窗容器 `#modal` → 现 `index.html` 128–131 行 |
 | 379+ | 主 `<script>` |
 | 402–406 | `esc()` / `openModal()` / `closeModal()` 全局工具 |
 | 422 | `saveGame()` |
@@ -308,22 +329,58 @@ git add -A && git commit -m "描述" && git push origin master
 
 ---
 
-## 13. 模块拆分建议（并行开发前置条件）
+## 13. 多任务并行协作方式（WorkBuddy 工作空间）
 
-当前 `index.html` 1275 行单文件，**多人/多 Agent 并行会互相覆盖**。建议拆成：
+依据官方文档《任务管理》，左侧栏「**空间**」板块 = 工作空间，是官方支持的多 Agent 协作载体。
 
+**能力**（官方原文）：
+- 可开启**多个 Agent 同时协作**
+- 在任务列表中持久保存
+- 随时用 IDE 打开查看
+
+**操作方式**：
+1. 在任务卡片右键 → 「**保存到工作空间**」，把本项目固化为工作空间
+2. 之后在该工作空间上右键 → 「**新建任务**」，开启新任务
+3. 同一工作空间下的多个任务：**共享同一份代码/工作目录，但各自独立上下文**
+
+**优势**：
+- 上下文不再累积膨胀（每个任务从零开始，读 PROJECT.md 即可接手）
+- 可同时开多个任务并行开发不同模块
+- 任务持久保存，可随时回看历史
+
+**注意**：并行任务若同时修改**同一文件**仍会互相覆盖 → 但已完成模块拆分（§14），只要把并行任务按「一个 Agent 改一个模块文件」分工（如 A 改 `js/battle.js`、B 改 `js/hub.js`），即可安全并行，不会互相踩。
+
+---
+
+## 14. 模块拆分已完成（并行开发前置条件已满足）
+
+**2026-08-13 已落地**：原 `index.html` 1275 行单文件 → `index.html` 骨架(~145 行) + `css/style.css` + 6 个 `js/*.js` 模块。
+
+**实际落地的文件布局**：
 ```
-index.html        骨架 + <script src> 引入（~100 行）
+index.html        骨架 + <link css> + 10 个 <script src>（不含任何逻辑）
 css/style.css     全部样式
-js/data.js        CHARACTERS / SKILLS / nodes 等常量
-js/player.js      player 对象 + recalcStats + saveGame/loadGame
-js/cultivation.js （已独立，移入）
-js/modal.js       弹窗系统
-js/hub.js         主页 UI + syncRealmDOM + refreshHub
-js/battle.js      战斗逻辑
+config.js         根目录，CloudBase 环境配置
+cultivation.js    根目录，境界体系（★关键模块）
+online.js         根目录，联网层
+assets/vendor/tcb.js   CloudBase 前端 SDK 助手
+js/core.js        canvas 常量 / 素材加载 / 弹窗 / saveGame / onerror 兜底
+js/player.js      player 对象 + recalcStats + 存档读写
+js/battle.js      地图 nodes + 回合制战斗状态机 + Canvas 渲染
+js/hub.js         主页 UI + syncRealmDOM + refreshHub + 属性/技能弹窗
 js/create.js      角色创建流程
 js/main.js        启动入口
 ```
 
-拆分后不同模块可安全并行开发。
-**注意**：拆分时若跨文件共享变量，务必显式 `window.X = ...`（见坑点 8.1）。
+**拆分验证**（已通过，可放心并行）：
+- 代码内容逐字符一致（拆分前后归一化后 35378 字符完全相同）
+- 整体拼接 `new Function()` 语法校验无重复声明
+- CSS 一致性、资源引用存在性、DOM id 存在性、HTML 标签配平（div 43=43、script 10=10）全部通过
+- 10 个 `<script src>` 指向的文件全部存在
+- 每个模块 `node --check` 语法通过
+
+**并行开发约定**：
+- 不同 Agent 认领不同模块文件（见 §2 加载顺序，互不重叠即可并行）
+- 跨文件共享变量**不要**用 `window.X`，靠「同全局词法作用域 + 加载顺序」即可（见坑点 8）
+- 新增全局常量/函数名避免与已有模块顶层 `const` 重名
+- 改 `index.html` 骨架或新增 `<script>` 顺序时务必同步更新 §2 加载顺序铁律
