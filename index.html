@@ -387,6 +387,18 @@ function openModal(html) { _modalBox.innerHTML = html; _modal.hidden = false; }
 function closeModal() { _modal.hidden = true; _modalBox.innerHTML = ''; }
 _modal.addEventListener('click', e => { if (e.target === _modal) closeModal(); });
 
+// 全局错误兜底：任何运行时错误显示在页面顶部红条，便于排查（正常时不出现）
+window.addEventListener('error', e => {
+  let bar = document.getElementById('err-bar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'err-bar';
+    bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#c0392b;color:#fff;font:12px/1.5 monospace;padding:8px 12px;white-space:pre-wrap;';
+    (document.body || document.documentElement).appendChild(bar);
+  }
+  bar.textContent = '运行错误: ' + (e.message || e.error) + (e.filename ? (' @ ' + e.filename + ':' + e.lineno) : '');
+});
+
 // 统一存档（含 6 属性与已分配点数）
 function saveGame() {
   try {
