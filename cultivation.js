@@ -6,7 +6,7 @@
  *   r.realmName / r.stageName
  *   r.nextLabel    -> 下一小阶名称（已到顶则为 null）
  *   CULTIVATION.recalc(player) -> 按 xp 刷新 maxHp/atk/def/maxMp 派生属性
- * 调整节奏：XP_PER_STAGE 越小升阶越快。
+ * 经验曲线：每升一小阶所需修为随境界递增（见 STAGE_XP_*），后期突破越来越难。
  */
 const CULTIVATION = (function () {
   const CN = ['一', '二', '三', '四', '五', '六', '七', '八', '九'];
@@ -39,15 +39,33 @@ const CULTIVATION = (function () {
     });
   });
 
-  const XP_PER_STAGE = 50; // 每升一小阶所需修为
+  // 每升一小阶所需修为：随境界序号 i（0 起）递增，让后期突破越来越难。
+  //   req(i) = BASE + STEP·i + QUAD·i²    （线性增长 + 二次加速）
+  // 调参：BASE 抬高整体门槛；STEP 控制线性斜率；QUAD 控制后期陡峭程度。
+  const STAGE_XP_BASE = 50;   // 第 1 小阶所需修为（与旧值持平，前期不卡手）
+  const STAGE_XP_STEP = 6;    // 每升一阶线性 +6
+  const STAGE_XP_QUAD = 0.5;  // 二次项，越往后越陡
+  function stageXpReq(i) {
+    return Math.round(STAGE_XP_BASE + STAGE_XP_STEP * i + STAGE_XP_QUAD * i * i);
+  }
+  // 预计算累计阈值：CUM[i] = 进入第 i 小阶需要累计的总修为
+  const CUM = [0];
+  for (let i = 1; i <= FLAT.length; i++) CUM[i] = CUM[i - 1] + stageXpReq(i - 1);
 
   function realmFromXp(xp) {
     const total = FLAT.length;
-    let idx = Math.floor((xp || 0) / XP_PER_STAGE);
-    if (idx < 0) idx = 0;
-    if (idx >= total) idx = total - 1;
+    xp = xp || 0;
+    // 二分查找最大 idx 使 CUM[idx] <= xp
+    let lo = 0, hi = total - 1;
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      if (CUM[mid] <= xp) lo = mid; else hi = mid - 1;
+    }
+    const idx = lo;
+    const req = stageXpReq(idx);
+    const into = xp - CUM[idx];           // 当前小阶已攒修为
+    const within = Math.min(1, req > 0 ? into / req : 1);
     const stage = FLAT[idx];
-    const within = Math.min(1, ((xp || 0) - idx * XP_PER_STAGE) / XP_PER_STAGE);
     const next = idx + 1 < total ? FLAT[idx + 1] : null;
     return {
       globalIndex: idx,
@@ -56,6 +74,9 @@ const CULTIVATION = (function () {
       stageName: stage.stageName,
       label: stage.label,
       progress: within,
+      xpIntoStage: into,
+      xpForStage: req,
+      totalXp: xp,
       nextLabel: next ? next.label : null,
       isMax: idx === total - 1,
     };
@@ -73,7 +94,9 @@ const CULTIVATION = (function () {
   }
 
   return {
-    REALMS, FLAT, XP_PER_STAGE,
+    REALMS, FLAT,
+    STAGE_XP_BASE, STAGE_XP_STEP, STAGE_XP_QUAD,
+    stageXpReq, cumXp: i => CUM[i],
     TOTAL_STAGES: FLAT.length,
     MAX_LABEL: FLAT[FLAT.length - 1].label,
     BASE, realmFromXp, recalc,
