@@ -8,6 +8,14 @@ const nodes = [
   { id: 1, name: '黑松林',   x: 230, y: 210, type: 'battle', cleared: false, enemy: { name: '山贼头目', hp: 120, atk: 22, def: 9,  spd: 14 } },
   { id: 2, name: '断魂崖',   x: 390, y: 140, type: 'battle', cleared: false, enemy: { name: '血刀老祖', hp: 190, atk: 28, def: 11, spd: 20 } },
   { id: 3, name: '武林大会', x: 540, y: 70,  type: 'boss',   cleared: false, enemy: { name: '魔教教主', hp: 280, atk: 34, def: 15, spd: 22 } },
+  { id: 4, name: '毒龙潭',   x: 590, y: 110, type: 'battle', cleared: false, enemy: { name: '毒龙尊者', hp: 350,  atk: 40,  def: 18, spd: 26 } },
+  { id: 5, name: '幽冥谷',   x: 560, y: 180, type: 'boss',   cleared: false, enemy: { name: '幽冥谷主', hp: 520,  atk: 52,  def: 26, spd: 30 } },
+  { id: 6, name: '落魂涧',   x: 610, y: 250, type: 'battle', cleared: false, enemy: { name: '噬魂魔将', hp: 600,  atk: 58,  def: 30, spd: 34 } },
+  { id: 7, name: '血河渊',   x: 550, y: 310, type: 'boss',   cleared: false, enemy: { name: '血河神君', hp: 780,  atk: 70,  def: 38, spd: 40 } },
+  { id: 8, name: '白骨岭',   x: 470, y: 280, type: 'battle', cleared: false, enemy: { name: '白骨夫人', hp: 850,  atk: 76,  def: 42, spd: 44 } },
+  { id: 9, name: '剑冢',     x: 400, y: 220, type: 'boss',   cleared: false, enemy: { name: '剑魔独孤', hp: 1000, atk: 90,  def: 50, spd: 52 } },
+  { id: 10, name: '焚天崖',  x: 500, y: 150, type: 'battle', cleared: false, enemy: { name: '焚天火尊', hp: 1080, atk: 96,  def: 54, spd: 56 } },
+  { id: 11, name: '逍遥天',  x: 610, y: 80,  type: 'boss',   cleared: false, enemy: { name: '逍遥天主', hp: 1300, atk: 110, def: 62, spd: 60 } },
 ];
 const unlocked = id => id === 0 || nodes[id - 1].cleared;
 
@@ -181,6 +189,16 @@ function endBattle(win) {
     const gain = 100 * battle.node.id;            // 战绩分：按节点难度递增
     player.xp += gain;
     player.score = player.xp;                     // 战绩分=累计修为，排行榜可直接显示境界
+    // 灵石奖励（锻造货币）+ 装备掉落
+    const goldGain = 20 + battle.node.id * 15;
+    player.gold = (player.gold || 0) + goldGain;
+    let dropMsg = '';
+    if (Math.random() < 0.4) {
+      const dslot = EQUIP_SLOT_KEYS[Math.floor(Math.random() * EQUIP_SLOT_KEYS.length)];
+      const drop = genEquip(dslot, rollRarity());
+      player.bag.push(drop);
+      dropMsg = ' 拾得' + drop.name + '！';
+    }
     if (window.Online && window.Online.onProgress) window.Online.onProgress(player.score);
     const after = CULTIVATION.realmFromXp(player.xp);
     const oldMax = player.maxHp;
@@ -191,10 +209,11 @@ function endBattle(win) {
     const broke = after.globalIndex > before;
     const realmUp = after.realmIndex > CULTIVATION.FLAT[before].realmIndex;
     let toastMsg = battle.node.id === nodes.length - 1
-      ? '你击败了魔教教主，江湖太平！'
+      ? '你击败了' + battle.node.enemy.name + '，江湖太平！'
       : '胜利！';
     if (broke) toastMsg = (realmUp ? '★ 突破大境界！晋升【' : '突破！晋升【') + after.label + '】';
-    toast = toastMsg + ' 点击地图继续。';
+    toast = toastMsg + dropMsg + ' 点击地图继续。';
+    saveGame();
   } else {
     state = 'lose';
     toast = '你倒下了…点击地图重新挑战。';
@@ -265,8 +284,8 @@ function drawMap() {
     ctx.arc(n.x, n.y, 18, 0, Math.PI * 2);
     ctx.fillStyle = n.cleared ? '#97C459' : (on ? '#85B7EB' : '#D3D1C7');
     ctx.fill();
-    ctx.strokeStyle = '#5F5E5A';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = n.type === 'boss' ? '#C0392B' : '#5F5E5A';
+    ctx.lineWidth = n.type === 'boss' ? 3 : 1;
     ctx.stroke();
     ctx.fillStyle = '#2C2C2A';
     ctx.font = '12px sans-serif';

@@ -53,6 +53,7 @@ function saveGame() {
       com: player.com, des: player.des, spent: player.spent,
       learned: player.learned, activeSkill: player.activeSkill,
       lastSeen: player.lastSeen,
+      equipment: player.equipment, bag: player.bag, gold: player.gold,
     }));
   } catch (e) {}
 }

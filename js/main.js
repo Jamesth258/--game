@@ -20,6 +20,11 @@ function checkSavedCharacter() {
       player.learned = saved.learned && saved.learned.length ? saved.learned : ['xuanfeng', 'xuanyin'];
       player.activeSkill = saved.activeSkill || 'xuanfeng';
       player.lastSeen = saved.lastSeen || Date.now();
+      // 恢复装备 / 背包 / 灵石（旧存档可能缺字段，补默认）
+      const _eq = (saved.equipment && typeof saved.equipment === 'object') ? saved.equipment : {};
+      player.equipment = { weapon: _eq.weapon || null, armor: _eq.armor || null, accessory: _eq.accessory || null, boots: _eq.boots || null };
+      player.bag = Array.isArray(saved.bag) ? saved.bag : [];
+      player.gold = (saved.gold != null) ? saved.gold : 50;
       const _all = CHARACTERS.male.concat(CHARACTERS.female);
       const _ch = _all.find(c => c.id === saved.avatarId);
       art.hero.src = _ch ? _ch.img : saved.avatarImg;

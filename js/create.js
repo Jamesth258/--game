@@ -96,6 +96,7 @@ document.getElementById('avatar-confirm').addEventListener('click', () => {
   player.sect = createData.avatar.desc; // 用形象描述作为初始门派/定位
   player.avatarId = createData.avatar.id;
   // 立绘已在选择时设置 (art.hero.src)
+  applyStarterEquip(); // 赠送初始凡品套装（自动穿戴）
   recalcStats(player);
   player.hp = player.maxHp; player.mp = player.maxMp;
 
