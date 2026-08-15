@@ -28,6 +28,9 @@ function checkSavedCharacter() {
       player.equipment = { weapon: _eq.weapon || null, armor: _eq.armor || null, accessory: _eq.accessory || null, boots: _eq.boots || null };
       player.bag = Array.isArray(saved.bag) ? saved.bag : [];
       player.gold = (saved.gold != null) ? saved.gold : 50;
+      // 恢复剧情副本进度（旧存档可能缺字段，补默认）
+      player.storyCleared = (saved.storyCleared && typeof saved.storyCleared === 'object') ? saved.storyCleared : {};
+      player.storyRewardClaimed = (saved.storyRewardClaimed && typeof saved.storyRewardClaimed === 'object') ? saved.storyRewardClaimed : {};
       const _all = CHARACTERS.male.concat(CHARACTERS.female);
       const _ch = _all.find(c => c.id === saved.avatarId);
       art.hero.src = _ch ? _ch.img : saved.avatarImg;

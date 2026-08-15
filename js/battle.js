@@ -50,12 +50,13 @@ function buildSkillBar() {
   cmdBar.innerHTML = html;
 }
 
-function startBattle(node) {
+function startBattle(node, mode) {
   const enemy = makeEnemy(node);
   // 重置玩家本场战斗的临时状态（buff/debuff/护盾/僵直），避免跨场残留
   player.buffs = []; player.debuffs = []; player.shield = null; player.stun = 0;
   battle = {
     node, player, enemy,
+    mode: mode || 'map',          // 'map' = 江湖节点；'story' = 剧情副本
     queue: [], turn: 0,
     msg: '遭遇 ' + enemy.name + '！',
   };
@@ -314,28 +315,48 @@ function endBattle(win) {
   if (win) {
     battle.node.cleared = true;
     const before = CULTIVATION.realmFromXp(player.xp).globalIndex;
-    const gain = 100 * battle.node.id;            // 战绩分：按节点难度递增
-    player.xp += gain;
-    player.score = player.xp;                     // 战绩分=累计修为，排行榜可直接显示境界
-    // 灵石奖励（锻造货币）+ 装备掉落
-    const goldGain = 20 + battle.node.id * 15;
-    player.gold = (player.gold || 0) + goldGain;
     let dropMsg = '';
-    if (Math.random() < 0.4) {
-      const dslot = EQUIP_SLOT_KEYS[Math.floor(Math.random() * EQUIP_SLOT_KEYS.length)];
-      const drop = genEquip(dslot, rollRarity());
-      player.bag.push(drop);
-      dropMsg = ' 拾得' + drop.name + '！';
-    }
-    // 功法掉落：BOSS 高概率、普通战低概率；只掉未习得且非「待副本」锁定的功法
-    const skillChance = battle.node.type === 'boss' ? 0.6 : 0.2;
-    if (Math.random() < skillChance) {
-      const pool = SKILLS_DB.filter(s => !player.learned.includes(s.id) && !s.lockedUntil);
-      if (pool.length) {
-        const ds = pool[Math.floor(Math.random() * pool.length)];
-        player.learned.push(ds.id);
-        dropMsg += ' 习得功法《' + ds.name + '》！';
+    let clearAll = false; // 江湖地图全通
+    if (battle.mode === 'story') {
+      const st = battle.node._story || {};
+      const ch = st.ch, lv = st.lv;
+      // 经验奖励：本章该关的经验（喂入 CULTIVATION 经验曲线）
+      gainXp(STORY_BY_CH[ch].levels[lv - 1], false);
+      player.score = player.xp;
+      player.gold = (player.gold || 0) + (10 + ch);
+      // 进度推进：记录本章已通关的最高关卡
+      const prev = player.storyCleared[ch] || 0;
+      if (lv > prev) player.storyCleared[ch] = lv;
+      // 小概率装备掉落（与江湖手感一致）
+      if (Math.random() < 0.35) {
+        const dslot = EQUIP_SLOT_KEYS[Math.floor(Math.random() * EQUIP_SLOT_KEYS.length)];
+        const drop = genEquip(dslot, rollRarity());
+        player.bag.push(drop);
+        dropMsg = ' 拾得' + drop.name + '！';
       }
+    } else {
+      const gain = 100 * battle.node.id;            // 战绩分：按节点难度递增
+      player.xp += gain;
+      player.score = player.xp;                     // 战绩分=累计修为，排行榜可直接显示境界
+      const goldGain = 20 + battle.node.id * 15;
+      player.gold = (player.gold || 0) + goldGain;
+      if (Math.random() < 0.4) {
+        const dslot = EQUIP_SLOT_KEYS[Math.floor(Math.random() * EQUIP_SLOT_KEYS.length)];
+        const drop = genEquip(dslot, rollRarity());
+        player.bag.push(drop);
+        dropMsg = ' 拾得' + drop.name + '！';
+      }
+      // 功法掉落：BOSS 高概率、普通战低概率；只掉未习得且非「待副本」锁定的功法
+      const skillChance = battle.node.type === 'boss' ? 0.6 : 0.2;
+      if (Math.random() < skillChance) {
+        const pool = SKILLS_DB.filter(s => !player.learned.includes(s.id) && !s.lockedUntil);
+        if (pool.length) {
+          const ds = pool[Math.floor(Math.random() * pool.length)];
+          player.learned.push(ds.id);
+          dropMsg += ' 习得功法《' + ds.name + '》！';
+        }
+      }
+      if (battle.node.id === nodes.length - 1) clearAll = true;
     }
     if (window.Online && window.Online.onProgress) window.Online.onProgress(player.score);
     const after = CULTIVATION.realmFromXp(player.xp);
@@ -343,18 +364,16 @@ function endBattle(win) {
     recalcStats(player);                          // 境界提升 → 属性增强
     player.hp = Math.min(player.maxHp, (player.hp || 0) + (player.maxHp - oldMax) + 40); // 突破增益 + 胜利回血
     player.mp = player.maxMp;
-    state = (battle.node.id === nodes.length - 1) ? 'clear' : 'win';
+    state = (battle.mode === 'story') ? 'win' : (clearAll ? 'clear' : 'win');
     const broke = after.globalIndex > before;
     const realmUp = after.realmIndex > CULTIVATION.FLAT[before].realmIndex;
-    let toastMsg = battle.node.id === nodes.length - 1
-      ? '你击败了' + battle.node.enemy.name + '，江湖太平！'
-      : '胜利！';
+    let toastMsg = clearAll ? '你击败了' + battle.node.enemy.name + '，江湖太平！' : '胜利！';
     if (broke) toastMsg = (realmUp ? '★ 突破大境界！晋升【' : '突破！晋升【') + after.label + '】';
-    toast = toastMsg + dropMsg + ' 点击地图继续。';
+    toast = toastMsg + dropMsg + (battle.mode === 'story' ? ' 点击继续。' : ' 点击地图继续。');
     saveGame();
   } else {
     state = 'lose';
-    toast = '你倒下了…点击地图重新挑战。';
+    toast = battle.mode === 'story' ? '你倒下了…点击重新挑战。' : '你倒下了…点击地图重新挑战。';
   }
 }
 
@@ -380,8 +399,13 @@ canvas.addEventListener('click', e => {
     // 点击空白区域 → 返回主页
     if (window.HUB) { window.HUB.show(); }
   } else if (state === 'win' || state === 'lose' || state === 'clear') {
-    // 战斗结束 → 返回主页
-    if (window.HUB) { window.HUB.refresh(); window.HUB.show(); }
+    // 战斗结束 → 剧情副本返回副本界面，江湖战斗返回主页
+    if (battle && battle.mode === 'story') {
+      const ch = battle.node._story ? battle.node._story.ch : 1;
+      if (player.storyCleared[ch] >= 10) openStoryScreen();   // 章节通关 → 触发三选一奖励
+      else if (window.openChapter) openChapter(ch);          // 否则继续下一关
+      else openStoryScreen();
+    } else if (window.HUB) { window.HUB.refresh(); window.HUB.show(); }
     else { state = 'map'; toast = ''; }
   }
 });

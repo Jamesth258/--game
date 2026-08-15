@@ -54,6 +54,7 @@ function saveGame() {
       learned: player.learned, equippedSkills: player.equippedSkills,
       lastSeen: player.lastSeen,
       equipment: player.equipment, bag: player.bag, gold: player.gold,
+      storyCleared: player.storyCleared, storyRewardClaimed: player.storyRewardClaimed,
     }));
   } catch (e) {}
 }

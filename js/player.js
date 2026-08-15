@@ -138,6 +138,8 @@ const player = {
   xpBonus: 0,                                                // 挂机经验加成（比例）
   learned: DEFAULT_LEARNED.slice(),                         // 已习得功法（SKILLS_DB id 数组）
   equippedSkills: DEFAULT_EQUIPPED.slice(),                 // 已装备功法（≤6，战斗中每回合点选）
+  storyCleared: {},                                         // 剧情副本进度：ch -> 已通关关卡数(0~10)
+  storyRewardClaimed: {},                                   // 已领取章节通关奖励的章节号集合
   lastSeen: Date.now(),                                      // 离线时间戳（挂机结算）
   maxHp: 0, hp: 0, maxMp: 0, mp: 0, atk: 0, def: 0, spd: 0,
   spiAtk: 0, spiDef: 0, eva: 0, init: 0, luck: 0,
