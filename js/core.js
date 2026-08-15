@@ -51,7 +51,7 @@ function saveGame() {
       avatarImg: art.hero.src, xp: player.xp, score: player.score,
       con: player.con, str: player.str, sou: player.sou, spd: player.spd,
       com: player.com, des: player.des, spent: player.spent,
-      learned: player.learned, activeSkill: player.activeSkill,
+      learned: player.learned, equippedSkills: player.equippedSkills,
       lastSeen: player.lastSeen,
       equipment: player.equipment, bag: player.bag, gold: player.gold,
     }));

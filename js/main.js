@@ -17,8 +17,11 @@ function checkSavedCharacter() {
       player.sou = saved.sou || 10; player.spd = saved.spd || 10;
       player.com = saved.com || 10; player.des = saved.des || 10;
       player.spent = saved.spent || 0;
-      player.learned = saved.learned && saved.learned.length ? saved.learned : ['xuanfeng', 'xuanyin'];
-      player.activeSkill = saved.activeSkill || 'xuanfeng';
+      // 恢复功法：过滤掉旧版/不存在的 id；装备槽同样过滤并截断至上限
+      const _learned = (saved.learned && saved.learned.length) ? saved.learned.filter(id => typeof SKILLS_DB_MAP !== 'undefined' && SKILLS_DB_MAP[id]) : [];
+      player.learned = _learned.length ? _learned : DEFAULT_LEARNED.slice();
+      const _eq2 = (saved.equippedSkills && saved.equippedSkills.length) ? saved.equippedSkills.filter(id => typeof SKILLS_DB_MAP !== 'undefined' && SKILLS_DB_MAP[id] && player.learned.includes(id)) : [];
+      player.equippedSkills = _eq2.length ? _eq2.slice(0, MAX_EQUIPPED) : DEFAULT_EQUIPPED.slice();
       player.lastSeen = saved.lastSeen || Date.now();
       // 恢复装备 / 背包 / 灵石（旧存档可能缺字段，补默认）
       const _eq = (saved.equipment && typeof saved.equipment === 'object') ? saved.equipment : {};

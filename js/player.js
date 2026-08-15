@@ -9,11 +9,13 @@ const ATTR_NAMES = { con: '体质', str: '力量', sou: '灵魂', spd: '速度',
 const POINTS_PER_STAGE = 10;  // 每突破一小阶获得的可分配点数
 const BASE_FREE_POINTS = 10;  // 开局即可分配的基础点数（出生即有，不用等突破）
 
-// ===== 功法表（普攻恒为物理，功法分物理/精神两类，灵力消耗各由功法定）=====
-const SKILLS = {
-  xuanfeng: { id: 'xuanfeng', name: '旋风剑法', type: 'phys',   mult: 1.8, cost: 12, desc: '物理怒斩，重创单体' },
-  xuanyin:  { id: 'xuanyin',  name: '玄阴指',   type: 'spirit', mult: 1.6, cost: 15, desc: '灵魂冲击，无视部分护甲' },
-};
+// ===== 功法系统（装备至多 6 种，战斗中每回合点选施展）=====
+// 全部功法数据在 js/skills-data.js 的 SKILLS_DB / SKILLS_DB_MAP（由 gen_skills.py 生成，130 种）。
+// 普攻恒为物理（0 灵力）；功法分物理/精神/无三类，灵力消耗各由功法定（越阶越高）。
+// 新角色初始赠送一套涵盖「攻/精/回灵/防御增益/回血/减益」的入门功法，保证开局即可体验多样机制。
+const DEFAULT_LEARNED = ['at001', 'at022', 're015', 'bu008', 're004', 'de009', 'at002', 'bu016'];
+const DEFAULT_EQUIPPED = ['at001', 'at022', 're015', 'bu008', 're004', 'de009']; // 至多 6
+const MAX_EQUIPPED = 6;
 
 // ===== 挂机修炼 =====
 // 在线：停留在游戏画面（主页/地图/战斗）即按速率累加修为；离线：按离开时长结算（封顶 12 小时）
@@ -134,8 +136,8 @@ const player = {
   spent: 0,                                                  // 已分配点数
   extraActions: 0,                                           // 极品装备附加的本回合连动次数（recalcStats 重算）
   xpBonus: 0,                                                // 挂机经验加成（比例）
-  learned: ['xuanfeng', 'xuanyin'],                          // 已习得功法
-  activeSkill: 'xuanfeng',                                   // 出战功法
+  learned: DEFAULT_LEARNED.slice(),                         // 已习得功法（SKILLS_DB id 数组）
+  equippedSkills: DEFAULT_EQUIPPED.slice(),                 // 已装备功法（≤6，战斗中每回合点选）
   lastSeen: Date.now(),                                      // 离线时间戳（挂机结算）
   maxHp: 0, hp: 0, maxMp: 0, mp: 0, atk: 0, def: 0, spd: 0,
   spiAtk: 0, spiDef: 0, eva: 0, init: 0, luck: 0,

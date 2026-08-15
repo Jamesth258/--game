@@ -34,12 +34,26 @@ function makeEnemy(node) {
     atk: e.atk, def: e.def, spd: e.spd,
     init: Math.round(10 + e.spd * 2), eva: 0.05, spiAtk: 0, spiDef: e.def, luck: 0,
     potions: 0, defending: false, extraActions: 0,
+    buffs: [], debuffs: [], shield: null, stun: 0,
     skill: { name: '敌袭', type: 'phys', mult: 1.8, cost: 10 },
   };
 }
 
+// 构建战斗指令栏：普攻 + 已装备功法（≤6）+ 防御 + 道具
+function buildSkillBar() {
+  const skills = (player.equippedSkills || []).map(id => SKILLS_DB_MAP[id]).filter(Boolean);
+  let html = '<button data-act="attack">攻击</button>';
+  skills.forEach(s => {
+    html += `<button data-act="skill" data-skill="${s.id}" data-cost="${s.cost}" title="${esc(s.desc)}">${esc(s.name)}<small style="opacity:.7"> ${s.cost}灵</small></button>`;
+  });
+  html += '<button data-act="defend">防御</button><button data-act="item">道具</button>';
+  cmdBar.innerHTML = html;
+}
+
 function startBattle(node) {
   const enemy = makeEnemy(node);
+  // 重置玩家本场战斗的临时状态（buff/debuff/护盾/僵直），避免跨场残留
+  player.buffs = []; player.debuffs = []; player.shield = null; player.stun = 0;
   battle = {
     node, player, enemy,
     queue: [], turn: 0,
@@ -47,29 +61,48 @@ function startBattle(node) {
   };
   state = 'battle';
   toast = '';
+  buildSkillBar();
   beginRound();
 }
 
+// 状态乘区：buff 加成（amt 为比例，1 即 +0%）、debuff 削减（下限 0）
+function buffMul(u, stat) { let m = 1; (u.buffs || []).forEach(b => { if (b.stat === stat) m += b.amt; }); return m; }
+function debuffMul(u, stat) { let m = 1; (u.debuffs || []).forEach(b => { if (b.stat === stat) m -= b.amt; }); return Math.max(0, m); }
+// 回合开始：衰减 buff/debuff/shield 持续时间（stun 在下面单独处理）
+function tickDurations(u) {
+  if (u.buffs) u.buffs = u.buffs.filter(b => (b.dur -= 1) > 0);
+  if (u.debuffs) u.debuffs = u.debuffs.filter(b => (b.dur -= 1) > 0);
+  if (u.shield && (u.shield.dur -= 1) <= 0) u.shield = null;
+}
+
 function beginRound() {
-  // 每回合开始小幅回内力，清掉上一轮防御
-  [battle.player, battle.enemy].forEach(u => {
-    if (u.hp > 0) { u.mp = Math.min(u.maxMp, u.mp + 5); u.defending = false; }
-  });
   const p = battle.player, e = battle.enemy;
-  const alive = [p, e].filter(u => u.hp > 0);
+  // 每回合开始小幅回内力，清掉上一轮防御
+  [p, e].forEach(u => { if (u.hp > 0) { u.mp = Math.min(u.maxMp, u.mp + 5); u.defending = false; } });
+  // 衰减 buff/debuff/shield 持续时间
+  [p, e].forEach(tickDurations);
+  // 僵直（stun）：本回合无法行动，并递减
+  const pStun = (p.stun || 0) > 0, eStun = (e.stun || 0) > 0;
+  if (pStun) p.stun--;
+  if (eStun) e.stun--;
+  const alive = [p, e].filter(u => u.hp > 0 && !(u === p ? pStun : eStun));
   let queue = [];
   if (alive.length === 2) {
     // 先攻值多段：比值越高快者连动越多（2×→2次, 4×→3次, 6×→4次, 8×→5次, 10×→6次）
-    // 极品装备 extraActions 额外追加本回合连动次数
-    const faster = p.init >= e.init ? p : e;
+    // 极品装备 extraActions 额外追加本回合连动次数；增益·速度 buff 提升实际先攻
+    const pInit = p.init * buffMul(p, 'init');
+    const eInit = e.init * buffMul(e, 'init');
+    const faster = pInit >= eInit ? p : e;
     const slower = faster === p ? e : p;
     const ratio = faster.init / Math.max(1, slower.init);
     let n = ratio >= 2 ? Math.floor(ratio / 2) + 1 : 1;
     n += (faster.extraActions || 0);
     for (let i = 0; i < n; i++) queue.push(faster);
     queue.push(slower);
+  } else if (alive.length === 1) {
+    queue = alive; // 一方被僵直，仅另一方行动
   } else {
-    queue = alive;
+    queue = []; // 双方均被僵直：跳过本回合
   }
   battle.queue = queue;
   battle.turn = 0;
@@ -97,12 +130,16 @@ function processTurn() {
 }
 
 function setButtons(on) {
-  buttons.forEach(b => {
+  [...cmdBar.querySelectorAll('button')].forEach(b => {
     const act = b.dataset.act;
     let enabled = on;
-    if (act === 'skill' && player.mp < SKILLS[player.activeSkill].cost) enabled = false;
+    if (act === 'skill') {
+      const c = +b.dataset.cost;
+      if (player.mp < c) enabled = false; // 灵力不足置灰
+    }
     if (act === 'item' && player.potions <= 0) enabled = false;
     b.disabled = !enabled;
+    b.style.opacity = enabled ? '1' : '0.4';
   });
 }
 
@@ -113,13 +150,18 @@ function damage(attacker, target, mult, type) {
     battle.msg = target.name + ' 身形一晃，闪开了攻击！';
     return 0;
   }
-  // 物理攻击用 atk/def，精神攻击用 spiAtk/spiDef（两者都扣同一生命值）
-  const atkStat = type === 'spirit' ? attacker.spiAtk : attacker.atk;
-  const defStat = type === 'spirit' ? target.spiDef : target.def;
+  // 物理攻击用 atk/def，精神攻击用 spiAtk/spiDef；增益/减益乘区实时生效
+  const isSpirit = type === 'spirit';
+  const atkStat = (isSpirit ? attacker.spiAtk : attacker.atk) * buffMul(attacker, isSpirit ? 'spiAtk' : 'atk');
+  const defStat = (isSpirit ? target.spiDef : target.def) * debuffMul(target, isSpirit ? 'spiDef' : 'def');
   let base = atkStat * mult - defStat * 0.5;
-  let crit = Math.random() < 0.15;
+  // 暴击：基础 15% + 增益·暴击 buff
+  const critChance = 0.15 + Math.max(0, buffMul(attacker, 'crit') - 1);
+  const crit = Math.random() < critChance;
   if (crit) base *= 1.5;
   if (target.defending) base *= 0.5;
+  // 护体（shield）：按比例减伤
+  if (target.shield && target.shield.pct) base *= (1 - target.shield.pct);
   base = Math.max(1, Math.round(base));
   target.hp = Math.max(0, target.hp - base);
   const col = crit ? '#A32D2D' : '#2C2C2A';
@@ -128,12 +170,89 @@ function damage(attacker, target, mult, type) {
   return base;
 }
 
+// 施展功法（player 的 SKILLS_DB 条目，含 effect）
+function applySkill(actor, target, sk) {
+  actor.mp -= sk.cost;
+  const e = sk.effect || { kind: 'dmg', type: sk.type, mult: sk.mult };
+  const floatAt = (u, text, color) => floats.push({ x: u._x, y: u._y, text, color, ttl: 60 });
+  switch (e.kind) {
+    case 'dmg': {
+      let d;
+      if (e.pierce) { // 穿透：无视部分护甲
+        const atkStat = (e.type === 'spirit' ? actor.spiAtk : actor.atk) * buffMul(actor, e.type === 'spirit' ? 'spiAtk' : 'atk');
+        const defStat = (e.type === 'spirit' ? target.spiDef : target.def) * 0.25;
+        let base = atkStat * e.mult - defStat;
+        if (Math.random() < 0.15) base *= 1.5;
+        if (target.defending) base *= 0.5;
+        d = Math.max(1, Math.round(base));
+        target.hp = Math.max(0, target.hp - d);
+      } else {
+        d = damage(actor, target, e.mult, e.type);
+      }
+      battle.msg = actor.name + ' 施展「' + sk.name + '」造成 ' + d + ' 伤害';
+      if (e.lifesteal) { const h = Math.round(d * e.lifesteal); actor.hp = Math.min(actor.maxHp, actor.hp + h); floatAt(actor, '+' + h, '#3B6D11'); }
+      break;
+    }
+    case 'heal_hp': {
+      const amt = Math.round(actor.maxHp * (e.pct || 0)) + (e.flat || 0);
+      actor.hp = Math.min(actor.maxHp, actor.hp + amt);
+      floatAt(actor, '+' + amt, '#3B6D11');
+      battle.msg = actor.name + ' 施展「' + sk.name + '」回复 ' + amt + ' 气血';
+      break;
+    }
+    case 'heal_mp': {
+      const amt = Math.round(actor.maxMp * (e.pct || 0)) + (e.flat || 0);
+      actor.mp = Math.min(actor.maxMp, actor.mp + amt);
+      floatAt(actor, '+' + amt + '灵', '#378ADD');
+      battle.msg = actor.name + ' 施展「' + sk.name + '」回复 ' + amt + ' 灵力';
+      break;
+    }
+    case 'shield': {
+      actor.shield = { pct: e.pct, dur: e.dur };
+      battle.msg = actor.name + ' 施展「' + sk.name + '」护体（减伤 ' + Math.round(e.pct * 100) + '%）';
+      break;
+    }
+    case 'buff': {
+      actor.buffs.push({ stat: e.stat, amt: e.amt, dur: e.dur });
+      battle.msg = actor.name + ' 施展「' + sk.name + '」' + statCn(e.stat) + '提升';
+      break;
+    }
+    case 'debuff': {
+      target.debuffs.push({ stat: e.stat, amt: e.amt, dur: e.dur });
+      battle.msg = actor.name + ' 施展「' + sk.name + '」削弱 ' + target.name;
+      break;
+    }
+    case 'stun': {
+      target.stun = (target.stun || 0) + e.dur;
+      battle.msg = actor.name + ' 施展「' + sk.name + '」令 ' + target.name + ' 僵直';
+      break;
+    }
+    case 'absorb': { // 化盾：按伤害比例转为护盾吸收
+      actor.shield = { pct: 1, dur: e.dur, absorb: e.amt };
+      battle.msg = actor.name + ' 施展「' + sk.name + '」凝盾';
+      break;
+    }
+    case 'critup': {
+      actor.buffs.push({ stat: 'crit', amt: e.amt, dur: e.dur });
+      battle.msg = actor.name + ' 施展「' + sk.name + '」暴击提升';
+      break;
+    }
+    default:
+      battle.msg = actor.name + ' 施展「' + sk.name + '」（未知效果）';
+  }
+}
+
+function statCn(stat) {
+  return ({ atk: '攻击', def: '防御', init: '速度', spiAtk: '精神攻击', spiDef: '精神防御', crit: '暴击' })[stat] || stat;
+}
+
 function applyAction(actor, target, act) {
   if (act === 'attack') {
     const d = damage(actor, target, 1.0);
     battle.msg = actor.name + ' 使出攻击，造成 ' + d + ' 伤害';
   } else if (act === 'skill') {
-    const sk = actor.isEnemy ? actor.skill : SKILLS[actor.activeSkill];
+    // 敌方专用（玩家功法走 applySkill）
+    const sk = actor.skill;
     actor.mp -= sk.cost;
     const d = damage(actor, target, sk.mult, sk.type);
     battle.msg = actor.name + ' 施展「' + sk.name + '」，造成 ' + d + ' 伤害';
@@ -157,11 +276,20 @@ function enemyAct(enemy) {
   nextTurn();
 }
 
-function playerAct(act) {
+function playerAct(act, skillId) {
   if (!awaitingInput) return;
   awaitingInput = false;
   setButtons(false);
-  applyAction(battle.player, battle.enemy, act);
+  if (act === 'skill') {
+    const sk = skillId ? SKILLS_DB_MAP[skillId] : null;
+    if (sk && player.mp >= sk.cost) {
+      applySkill(battle.player, battle.enemy, sk);
+    } else {
+      applyAction(battle.player, battle.enemy, 'attack'); // 灵力不足回退普攻
+    }
+  } else {
+    applyAction(battle.player, battle.enemy, act);
+  }
   nextTurn();
 }
 
@@ -199,6 +327,16 @@ function endBattle(win) {
       player.bag.push(drop);
       dropMsg = ' 拾得' + drop.name + '！';
     }
+    // 功法掉落：BOSS 高概率、普通战低概率；只掉未习得且非「待副本」锁定的功法
+    const skillChance = battle.node.type === 'boss' ? 0.6 : 0.2;
+    if (Math.random() < skillChance) {
+      const pool = SKILLS_DB.filter(s => !player.learned.includes(s.id) && !s.lockedUntil);
+      if (pool.length) {
+        const ds = pool[Math.floor(Math.random() * pool.length)];
+        player.learned.push(ds.id);
+        dropMsg += ' 习得功法《' + ds.name + '》！';
+      }
+    }
     if (window.Online && window.Online.onProgress) window.Online.onProgress(player.score);
     const after = CULTIVATION.realmFromXp(player.xp);
     const oldMax = player.maxHp;
@@ -220,8 +358,12 @@ function endBattle(win) {
   }
 }
 
-// ---- 输入 ----
-buttons.forEach(b => b.addEventListener('click', () => playerAct(b.dataset.act)));
+// ---- 输入（事件委托：指令栏按钮每场战斗动态重建）----
+cmdBar.addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b || b.disabled) return;
+  playerAct(b.dataset.act, b.dataset.skill);
+});
 
 canvas.addEventListener('click', e => {
   const r = canvas.getBoundingClientRect();

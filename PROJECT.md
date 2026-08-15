@@ -301,8 +301,7 @@ git add -A && git commit -m "描述" && git push origin master
 - ✅ 6 属性自由加点系统（含派生属性实时计算）
 - ✅ 168 小阶境界体系 + 一年期经验曲线
 - ✅ 回合制战斗（多段先攻 / 物理+精神双类型伤害 / 闪避 / 灵力消耗）
-- ✅ 功法系统（出战切换，**旧模型**：单 activeSkill）
-- ✅ 功法系统重设计（**已设计未落地**：130 种功法数据 `js/skills-data.js` + GDD `design/功法系统GDD.md`；装备上限 6 + 每回合点选；10 类 ×10 渠道；详见下方待办 P0）
+- ✅ 功法系统（**已落地**：130 种 `js/skills-data.js` + GDD `design/功法系统GDD.md`；装备上限 6 + 每回合点选；10 类 ×10 渠道；buff/debuff/shield/stun/heal 状态机已接战斗）
 - ✅ 挂机修炼（在线 + 离线结算）
 - ✅ localStorage 存档
 - ✅ 暗色主题弹窗系统（属性 / 功法 / 排行榜 / 离线结算）
@@ -315,8 +314,8 @@ git add -A && git commit -m "描述" && git push origin master
 **P0 — 玩法闭环**
 - [x] 装备系统（4 部位：武器/护甲/法宝/战靴；5 品质：凡/灵/宝/仙/神；背包 + 灵石锻造 + 极品追加 extraActions 连动；store/load/战斗已集成）
 - [x] 背包弹窗（装备/出售/同部位更优对比）+ 商店弹窗（灵石购买随机品质装备），接 `window` 回调
-- [x] 功法系统重设计（数据+GDD 已完成，待接入战斗）：`js/skills-data.js` 130 种（10 类各13 / 7 阶位 / 10 渠道），`design/功法系统GDD.md` 含装备6槽+每回合点选改造方案（改 player.js/battle.js/hub.js/create.js/index.html 脚本顺序）
-- [ ] 将功法系统接入战斗（按 GDD §6.4 改造三文件：equippedSkills 替代 activeSkill、功法子面板、buff/debuff/shield/stun 状态机）
+- [x] 功法系统接入战斗（**已完成**）：`equippedSkills`(≤6) 替代单 `activeSkill`；战斗中每回合从指令栏点选已装备功法；`applySkill` 处理 dmg/shield/heal_hp/heal_mp/buff/debuff/stun/absorb/critup/lifesteal/pierce 全部 effect；`damage` 接入 buff/debuff/shield/crit 乘区；`beginRound` 接入 stun 跳过 + 状态衰减；`endBattle` 加功法掉落（BOSS 60%/普通 20%）；`hub.js` 功法弹窗改为 6 槽装备 + 功法库点选 + 功法秘库（灵石兑换）；`index.html` 在 player.js 后引 `js/skills-data.js`；存档兼容旧 `activeSkill` 字段
+- [x] 获取渠道落地情况：`shop`(秘库灵石兑换) / `boss`(战斗掉落) / `levelup`(境界突破领悟，待接) / `signin` / `sect` / `arena` / `event` / `achievement` 渠道标签已设；`dungeon`(14) 与 `exchange`(13) 渠道的功法已标 `lockedUntil`，待剧情副本系统上线后开放获取，目前不可习得（不崩）
 
 **P1 — 内容量**
 - [x] 更多地图 / 关卡 / BOSS（nodes 由 4 → 12 节点，BOSS 由 1 → 5：魔教教主/幽冥谷主/血河神君/剑魔独孤/逍遥天主；数值 hp 280→1300 平滑成长；BOSS 节点红色描边；通关提示读取真实敌名）

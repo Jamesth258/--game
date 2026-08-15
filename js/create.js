@@ -97,6 +97,8 @@ document.getElementById('avatar-confirm').addEventListener('click', () => {
   player.avatarId = createData.avatar.id;
   // 立绘已在选择时设置 (art.hero.src)
   applyStarterEquip(); // 赠送初始凡品套装（自动穿戴）
+  player.learned = DEFAULT_LEARNED.slice();        // 初始功法库（涵盖攻/精/回灵/防御增益/回血/减益）
+  player.equippedSkills = DEFAULT_EQUIPPED.slice(); // 初始装备 6 种（战斗中每回合点选）
   recalcStats(player);
   player.hp = player.maxHp; player.mp = player.maxMp;
 

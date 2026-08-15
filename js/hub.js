@@ -209,33 +209,103 @@ function initHub() {
       <button class="btn-full" onclick="closeModal()" style="margin-top:16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">关闭</button>`);
   }
 
-  // 功法弹窗
+  // 功法弹窗：最多装备 6 种，战斗中每回合点选；下方为已习得功法库（点选装备/卸下）
+  function tierColor(t) { return ({ 1: '#9aa0a6', 2: '#639922', 3: '#378ADD', 4: '#9B6BCC', 5: '#D4A843', 6: '#E87B7B', 7: '#E8D9A0' })[t] || '#9aa0a6'; }
+
   function showSkillsModal() {
     refreshHub(); // 同步主页数据
-    const rows = player.learned.map(id => {
-      const sk = SKILLS[id];
-      if (!sk) return '';
-      const active = player.activeSkill === id;
-      const typeTxt = sk.type === 'spirit' ? '精神' : '物理';
-      const typeColor = sk.type === 'spirit' ? '#9B6BCC' : '#D4A843';
-      return `<tr>
-        <td style="padding:5px 6px;color:#D4A843;font-weight:500">${esc(sk.name)}${active ? ' <span style="color:#639922">·出战</span>' : ''}</td>
-        <td style="padding:5px 6px;color:${typeColor}">${typeTxt}</td>
-        <td style="padding:5px 6px;color:#185FA5">${sk.cost} 灵力</td>
-        <td style="padding:5px 6px;color:#fff">×${sk.mult}</td>
-        <td style="padding:5px 6px;text-align:right">${active ? '<span style="color:rgba(241,239,232,0.35)">使用中</span>' : `<button class="alloc-btn" onclick="setActiveSkill('${id}')">出战</button>`}</td>
-      </tr>`;
+    const equipped = player.equippedSkills || [];
+    const learned = player.learned || [];
+    const isEquipped = id => equipped.includes(id);
+    // 已装备槽位（固定 6 格）
+    const slotHtml = Array.from({ length: MAX_EQUIPPED }).map((_, i) => {
+      const id = equipped[i];
+      if (id && SKILLS_DB_MAP[id]) {
+        const s = SKILLS_DB_MAP[id];
+        return `<div class="bag-item"><div class="bag-info">
+          <span class="equip-icon" style="color:${tierColor(s.tier)}">${s.tierName[0]}</span>
+          <span class="bag-name">${esc(s.name)}</span>
+          <span class="equip-bonus">${esc(s.schoolCn)} · ${s.cost}灵</span></div>
+          <button class="equip-btn danger" onclick="unequipSkill('${id}')">卸下</button></div>`;
+      }
+      return `<div class="equip-slot" style="opacity:.45;text-align:center;color:rgba(241,239,232,.4);display:flex;align-items:center;justify-content:center">空槽位 ${i + 1}</div>`;
+    }).join('');
+    // 已习得功法库（点击装备）
+    const libHtml = learned.map(id => {
+      const s = SKILLS_DB_MAP[id]; if (!s) return '';
+      const on = isEquipped(id);
+      const full = !on && equipped.length >= MAX_EQUIPPED;
+      return `<div class="bag-item"><div class="bag-info">
+        <span class="equip-icon" style="color:${tierColor(s.tier)}">${s.tierName[0]}</span>
+        <span class="bag-name">${esc(s.name)}</span>
+        <span class="equip-bonus">${esc(s.schoolCn)} · ${s.cost}灵 · ${esc(s.desc)}</span></div>
+        ${on ? '<span style="color:#639922;font-size:12px;white-space:nowrap">已装备</span>' : `<button class="equip-btn" ${full ? 'disabled' : ''} onclick="equipSkill('${id}')">装备</button>`}</div>`;
     }).join('');
     openModal(`
       <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
       <h3 style="margin:0">功法</h3></div>
-      <p style="margin:4px 0;font-size:12px;color:rgba(241,239,232,0.55)">普攻恒为物理；功法分物理/精神两类，灵力消耗各由功法而定。战斗中「武功」释放当前出战功法。</p>
-      <table style="width:100%;font-size:13px;border-collapse:collapse;margin-top:8px">
-        <tr style="color:rgba(241,239,232,0.3);font-size:11px;text-transform:uppercase;letter-spacing:1px"><td style="padding:4px 6px">功法</td><td style="padding:4px">类型</td><td style="padding:4px">消耗</td><td style="padding:4px">倍率</td><td style="padding:4px;text-align:right">操作</td></tr>
-        ${rows}
-      </table>
-      <button class="btn-full" onclick="closeModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">关闭</button>`);
+      <p style="margin:4px 0;font-size:12px;color:rgba(241,239,232,0.6)">最多同时装备 <b style="color:#D4A843">${MAX_EQUIPPED}</b> 种功法；战斗中每回合自行点选施展。普攻恒为物理（0 灵力）。</p>
+      <div class="equip-sec-title">已装备（${equipped.length}/${MAX_EQUIPPED}）</div>
+      <div class="bag-list">${slotHtml}</div>
+      <hr>
+      <div class="equip-sec-title">已习得功法库（点击装备）</div>
+      <div class="bag-list">${libHtml}</div>
+      <button class="btn-full" onclick="showSkillShop()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">功法秘库（灵石兑换）</button>
+      <button class="btn-full" onclick="closeModal()" style="margin-top:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">关闭</button>`);
   }
+
+  // 装备/卸下功法（≤6）
+  function equipSkill(id) {
+    if (!player.learned.includes(id)) return;
+    if ((player.equippedSkills || []).includes(id)) return;
+    if ((player.equippedSkills || []).length >= MAX_EQUIPPED) return;
+    player.equippedSkills = player.equippedSkills || [];
+    player.equippedSkills.push(id);
+    saveGame(); refreshHub(); showSkillsModal();
+  }
+  function unequipSkill(id) {
+    if (!player.equippedSkills) return;
+    player.equippedSkills = player.equippedSkills.filter(x => x !== id);
+    saveGame(); refreshHub(); showSkillsModal();
+  }
+  window.equipSkill = equipSkill;
+  window.unequipSkill = unequipSkill;
+
+  // 功法秘库：灵石兑换未习得且非「待副本」锁定的功法
+  const SKILL_SHOP_PRICE = { 1: 40, 2: 80, 3: 160, 4: 320, 5: 640, 6: 1280, 7: 2560 };
+  function showSkillShop() {
+    refreshHub();
+    const gold = player.gold || 0;
+    const pool = SKILLS_DB.filter(s => !player.learned.includes(s.id) && !s.lockedUntil);
+    const copy = pool.slice();
+    const picks = [];
+    for (let i = 0; i < 6 && copy.length; i++) picks.push(copy.splice(Math.floor(Math.random() * copy.length), 1)[0]);
+    const rows = picks.map(s => {
+      const price = SKILL_SHOP_PRICE[s.tier] || 40;
+      const can = gold >= price;
+      return `<div class="bag-item"><div class="bag-info">
+        <span class="equip-icon" style="color:${tierColor(s.tier)}">${s.tierName[0]}</span>
+        <span class="bag-name">${esc(s.name)}</span>
+        <span class="equip-bonus">${esc(s.schoolCn)} · ${s.cost}灵 · ${esc(s.desc)}</span></div>
+        ${can ? `<button class="equip-btn" onclick="buySkill('${s.id}')">兑换·${price}灵</button>` : `<button class="equip-btn" disabled style="background:rgba(255,255,255,0.06);color:rgba(241,239,232,0.3);cursor:default">${price}灵</button>`}</div>`;
+    }).join('');
+    openModal(`
+      <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+      <h3 style="margin:0">功法秘库</h3></div>
+      <p style="margin:2px 0 10px;font-size:12px;color:rgba(241,239,232,0.6)">灵石 <b style="color:#D4A843">${gold}</b> · 兑换后自动进入功法库</p>
+      <div class="bag-list">${rows}</div>
+      <button class="btn-full" onclick="showSkillsModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回功法</button>`);
+  }
+  function buySkill(id) {
+    const s = SKILLS_DB_MAP[id]; if (!s) return;
+    const price = SKILL_SHOP_PRICE[s.tier] || 40;
+    if ((player.gold || 0) < price) { showSkillShop(); return; }
+    player.gold -= price;
+    if (!player.learned.includes(id)) player.learned.push(id);
+    saveGame(); refreshHub(); showSkillShop();
+  }
+  window.showSkillShop = showSkillShop;
+  window.buySkill = buySkill;
   // 装备弹窗（穿戴 / 卸下 / 背包 / 锻造）
   function showEquipModal() {
     refreshHub(); // 同步主页战力
@@ -426,13 +496,16 @@ function initHub() {
   window.sellItem = sellItem;
   window.buyShopItem = buyShopItem;
 
-  function setActiveSkill(id) {
-    if (!player.learned.includes(id)) return;
-    player.activeSkill = id;
-    saveGame();
-    showSkillsModal();
+  // 兼容旧存档：若玩家仍持有旧版功法 id（xuanfeng/xuanyin），迁移为默认入门功法
+  function migrateLegacySkills() {
+    const legacy = ['xuanfeng', 'xuanyin'];
+    if (player.learned && player.learned.some(id => legacy.includes(id))) {
+      player.learned = DEFAULT_LEARNED.slice();
+      player.equippedSkills = DEFAULT_EQUIPPED.slice();
+      saveGame();
+    }
   }
-  window.setActiveSkill = setActiveSkill;
+  migrateLegacySkills();
 
   // 加点（弹窗内按钮回调，挂在 window 上供 onclick 调用）
   function allocAttr(k, d) {

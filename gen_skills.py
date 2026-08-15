@@ -198,6 +198,7 @@ while len(entries) < target:
         'mult': mult,
         'effect': eff,
         'acquire': ch,
+        'lockedUntil': (ch if ch in ('dungeon', 'exchange') else None),
         'desc': desc_of(school, tier, eff),
         'source': src,
     }
@@ -230,12 +231,14 @@ lines.append('const SKILLS_DB = [')
 for sk in entries:
     eff = sk.pop('effect')
     parts = []
-    for k in ['id','name','school','schoolCn','type','tier','tierName','cost','mult','acquire','desc','source']:
+    for k in ['id','name','school','schoolCn','type','tier','tierName','cost','mult','acquire','lockedUntil','desc','source']:
         parts.append(f"{k}: {js_val(sk[k])}")
     parts.append("effect: " + json.dumps(eff, ensure_ascii=False))
     lines.append('  { ' + ', '.join(parts) + ' },')
 
 lines.append('];')
+# 查表：id -> skill 对象，供 battle/hub 直接 SKILLS_DB_MAP[id] 取用
+lines.append('const SKILLS_DB_MAP = (function(){ var m = {}; for (var i=0;i<SKILLS_DB.length;i++){ m[SKILLS_DB[i].id] = SKILLS_DB[i]; } return m; })();')
 lines.append('if (typeof module !== "undefined") module.exports = SKILLS_DB;')
 
 out = '\n'.join(lines) + '\n'
