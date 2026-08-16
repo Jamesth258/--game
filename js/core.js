@@ -80,6 +80,7 @@ function saveGame() {
       lastSeen: player.lastSeen,
       equipment: player.equipment, bag: player.bag, gold: player.gold,
       storyCleared: player.storyCleared, storyRewardClaimed: player.storyRewardClaimed,
+      storyLevelFirstClear: player.storyLevelFirstClear,
       worldBoss: player.worldBoss,
       daily: player.daily, diamond: player.diamond,
     }));

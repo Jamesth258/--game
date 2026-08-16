@@ -25,6 +25,26 @@ let battle = null;
 let floats = [];            // 飘字
 let toast = '';             // 底部提示
 let awaitingInput = false;
+let _battleReturnBtn = null; // 战斗结束后的浮动返回按钮（DOM）
+
+// 在 canvas 上方显示一个可见的 DOM 返回按钮（解决副本战斗结束后卡在胜利画面的核心问题）
+function showBattleReturnBtn(text, action) {
+  hideBattleReturnBtn(); // 先清旧的
+  const btn = document.createElement('button');
+  btn.textContent = text;
+  btn.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-20px);z-index:999;' +
+    'padding:12px 36px;font-size:16px;font-weight:700;color:#1a1a1a;background:#D4A843;border:none;' +
+    'border-radius:8px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.4);' +
+    'animation:btnPulse 1.5s ease-in-out infinite;';
+  btn.onclick = function(e) { e.stopPropagation(); hideBattleReturnBtn(); action(); };
+  const stage = document.querySelector('.stage');
+  if (stage) { stage.style.position = 'relative'; stage.appendChild(btn); }
+  _battleReturnBtn = btn;
+}
+function hideBattleReturnBtn() {
+  if (_battleReturnBtn && _battleReturnBtn.parentNode) _battleReturnBtn.parentNode.removeChild(_battleReturnBtn);
+  _battleReturnBtn = null;
+}
 
 function makeEnemy(node) {
   const e = node.enemy;
@@ -63,6 +83,7 @@ function startBattle(node, mode) {
   };
   state = 'battle';
   toast = '';
+  hideBattleReturnBtn(); // 新战斗开始 → 清掉残留的返回按钮
   buildSkillBar();
   beginRound();
 }
@@ -334,19 +355,26 @@ function endBattle(win) {
     if (battle.mode === 'story') {
       const st = battle.node._story || {};
       const ch = st.ch, lv = st.lv;
-      // 经验奖励：本章该关的经验（喂入 CULTIVATION 经验曲线）
-      gainXp(STORY_BY_CH[ch].levels[lv - 1], false);
-      player.score = player.xp;
-      player.gold = (player.gold || 0) + (10 + ch);
-      // 进度推进：记录本章已通关的最高关卡
+      const levelKey = ch + '_' + lv;
+      const isFirstClear = !player.storyLevelFirstClear[levelKey];
+      // 进度推进：记录本章已通关的最高关卡（无论首通/重战都更新）
       const prev = player.storyCleared[ch] || 0;
       if (lv > prev) player.storyCleared[ch] = lv;
-      // 小概率装备掉落（与江湖手感一致）
-      if (Math.random() < 0.35) {
-        const dslot = EQUIP_SLOT_KEYS[Math.floor(Math.random() * EQUIP_SLOT_KEYS.length)];
-        const drop = genEquip(dslot, rollRarity());
-        player.bag.push(drop);
-        dropMsg = ' 拾得' + drop.name + '！';
+      if (isFirstClear) {
+        player.storyLevelFirstClear[levelKey] = true;   // 标记首通
+        // 经验奖励：仅首通获得
+        gainXp(STORY_BY_CH[ch].levels[lv - 1], false);
+        player.score = player.xp;
+        player.gold = (player.gold || 0) + (10 + ch);
+        // 小概率装备掉落（仅首通）
+        if (Math.random() < 0.35) {
+          const dslot = EQUIP_SLOT_KEYS[Math.floor(Math.random() * EQUIP_SLOT_KEYS.length)];
+          const drop = genEquip(dslot, rollRarity());
+          player.bag.push(drop);
+          dropMsg = ' 拾得' + drop.name + '！';
+        }
+      } else {
+        dropMsg = '（已通关，重战无额外奖励）';
       }
     } else {
       const gain = 100 * battle.node.id;            // 战绩分：按节点难度递增
@@ -385,16 +413,21 @@ function endBattle(win) {
     if (broke) toastMsg = (realmUp ? '★ 突破大境界！晋升【' : '突破！晋升【') + after.label + '】';
     toast = toastMsg + dropMsg + (battle.mode === 'story' ? ' 点击继续。' : ' 点击地图继续。');
     saveGame();
-    // 剧情副本：胜利后自动弹出结算界面（含返回主页/返回章节列表），避免卡在胜利画面无出口
-    if (battle.mode === 'story' && typeof storyAfterBattle === 'function') {
-      setTimeout(storyAfterBattle, 700);
+    // 副本战斗结束：立即在 canvas 上方显示可见的「返回」按钮（不再依赖不可靠的 setTimeout + modal）
+    if (battle.mode === 'story') {
+      const isChapterClear = player.storyCleared[(battle.node._story || {}).ch] >= 10;
+      showBattleReturnBtn(isChapterClear ? '领取通关奖励' : '返回副本', function() {
+        if (typeof storyAfterBattle === 'function') storyAfterBattle();
+      });
     }
   } else {
     state = 'lose';
     toast = battle.mode === 'story' ? '你倒下了…点击重新挑战。' : '你倒下了…点击地图重新挑战。';
-    // 剧情副本：失败后也自动弹出本章界面（含返回入口），避免卡死
-    if (battle.mode === 'story' && typeof storyAfterBattle === 'function') {
-      setTimeout(storyAfterBattle, 700);
+    // 副本失败：也显示返回按钮
+    if (battle.mode === 'story') {
+      showBattleReturnBtn('返回副本', function() {
+        if (typeof storyAfterBattle === 'function') storyAfterBattle();
+      });
     }
   }
 }
@@ -589,3 +622,7 @@ function render() {
   }
   requestAnimationFrame(render);
 }
+
+// 暴露给外部（测试/故事模块）
+window.showBattleReturnBtn = showBattleReturnBtn;
+window.hideBattleReturnBtn = hideBattleReturnBtn;

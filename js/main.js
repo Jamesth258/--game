@@ -31,6 +31,7 @@ function checkSavedCharacter() {
       // 恢复剧情副本进度（旧存档可能缺字段，补默认）
       player.storyCleared = (saved.storyCleared && typeof saved.storyCleared === 'object') ? saved.storyCleared : {};
       player.storyRewardClaimed = (saved.storyRewardClaimed && typeof saved.storyRewardClaimed === 'object') ? saved.storyRewardClaimed : {};
+      player.storyLevelFirstClear = (saved.storyLevelFirstClear && typeof saved.storyLevelFirstClear === 'object') ? saved.storyLevelFirstClear : {};
       player.worldBoss = (saved.worldBoss && typeof saved.worldBoss === 'object') ? saved.worldBoss : null;
       player.diamond = (saved.diamond != null) ? saved.diamond : 0;
       player.daily = (saved.daily && typeof saved.daily === 'object') ? saved.daily : null;

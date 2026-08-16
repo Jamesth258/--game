@@ -140,6 +140,7 @@ const player = {
   equippedSkills: DEFAULT_EQUIPPED.slice(),                 // 已装备功法（≤6，战斗中每回合点选）
   storyCleared: {},                                         // 剧情副本进度：ch -> 已通关关卡数(0~10)
   storyRewardClaimed: {},                                   // 已领取章节通关奖励的章节号集合
+  storyLevelFirstClear: {},                                  // 各关首通标记：'ch_lv' -> true（重战不再发奖励）
   worldBoss: null,                                          // 世界BOSS进度：{date, slots:{idx->{attempts,dmg,claimed,rank}}}
   daily: null,                                              // 每日奖励进度：{date, month, signedToday, monthSignCount, monthClaimed, onlineSecToday, onlineClaimed}
   diamond: 0,                                               // 钻石：专用于商城消费的货币（签到/在线奖励产出）

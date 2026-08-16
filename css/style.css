@@ -274,3 +274,6 @@
   .reward-card:hover { border-color: rgba(212,168,67,0.6); background: rgba(212,168,67,0.08); }
   .reward-card.reward-sel { border-color: #D4A843; background: rgba(212,168,67,0.16); box-shadow: 0 0 0 1px #D4A843 inset; }
   .reward-tag { display: none; margin-top: 6px; font-size: 11px; color: #1a1a1a; background: #D4A843; border-radius: 4px; padding: 1px 6px; font-weight: 700; }
+
+  /* 战斗结束浮动返回按钮动画 */
+  @keyframes btnPulse { 0%,100%{transform:translate(-50%,-20px) scale(1);} 50%{transform:translate(-50%,-20px) scale(1.05);} }
