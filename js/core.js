@@ -31,6 +31,16 @@ function openModal(html) { _modalBox.innerHTML = html; _modal.hidden = false; }
 function closeModal() { _modal.hidden = true; _modalBox.innerHTML = ''; }
 _modal.addEventListener('click', e => { if (e.target === _modal) closeModal(); });
 
+// 统一返回主页：关弹窗 + 强制显示主页 + 清掉残留战斗态 + 重置状态机
+// 解决世界BOSS「开打前 HUB.hide()，结算后只 closeModal 不恢复主页」导致的卡死
+function returnToHub() {
+  closeModal();
+  if (typeof battle !== 'undefined' && battle) battle = null; // 世界BOSS 从战斗弹窗返回时 battle 仍指向旧场
+  state = 'hub';
+  if (window.HUB) { window.HUB.refresh(); window.HUB.show(); }
+}
+window.returnToHub = returnToHub;
+
 // 全局错误兜底：任何运行时错误显示在页面顶部红条，便于排查（正常时不出现）
 window.addEventListener('error', e => {
   let bar = document.getElementById('err-bar');

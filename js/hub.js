@@ -80,7 +80,7 @@ function initHub() {
           break;
         case 'go_rank':
           if (window.Online && window.Online.showBoard) window.Online.showBoard();
-          else openModal('<h3 style="color:#D4A843">排行榜</h3><p style="color:rgba(241,239,232,0.7)">联网功能尚未开启，完成腾讯云配置后即可查看全服排行榜。</p><button class="btn-full" onclick="closeModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">关闭</button>');
+          else openModal('<h3 style="color:#D4A843">排行榜</h3><p style="color:rgba(241,239,232,0.7)">联网功能尚未开启，完成腾讯云配置后即可查看全服排行榜。</p><button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>');
           break;
         case 'modal_attr':
           showAttrModal();
@@ -98,7 +98,7 @@ function initHub() {
           showShopModal();
           break;
         default:
-          openModal(`<h3 style="color:#D4A843">${item.label}</h3><p style="color:rgba(241,239,232,0.7)">「${item.label}」功能正在开发中，敬请期待！</p><button class="btn-full" onclick="closeModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">关闭</button>`);
+          openModal(`<h3 style="color:#D4A843">${item.label}</h3><p style="color:rgba(241,239,232,0.7)">「${item.label}」功能正在开发中，敬请期待！</p><button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
       }
     });
   });
@@ -207,7 +207,7 @@ function initHub() {
         <tr><td style="padding:4px 6px;color:#9B6BCC;font-weight:500">🍀 闪避率</td><td style="text-align:right;font-weight:600;color:#fff">${pct(player.eva)}</td><td style="padding:4px 6px;color:#E8D9A0;font-weight:500">🍀 幸运值</td><td style="text-align:right;font-weight:600;color:#fff">${player.luck}</td></tr>
         <tr><td style="padding:4px 6px;color:#639922;font-weight:500">📈 挂机加成</td><td style="text-align:right;font-weight:600;color:#fff">${pct(player.xpBonus)}</td><td style="padding:4px 6px;color:#E87B7B;font-weight:700">⚡ 战力</td><td style="text-align:right;font-weight:700;color:#E87B7B">${fmt(calcCombatPower(player))}</td></tr>
       </table>
-      <button class="btn-full" onclick="closeModal()" style="margin-top:16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">关闭</button>`);
+      <button class="btn-full" onclick="returnToHub()" style="margin-top:16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
   }
 
   // 功法弹窗：最多装备 6 种，战斗中每回合点选；下方为已习得功法库（点选装备/卸下）
@@ -252,7 +252,7 @@ function initHub() {
       <div class="equip-sec-title">已习得功法库（点击装备）</div>
       <div class="bag-list">${libHtml}</div>
       <button class="btn-full" onclick="showSkillShop()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">功法秘库（灵石兑换）</button>
-      <button class="btn-full" onclick="closeModal()" style="margin-top:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">关闭</button>`);
+      <button class="btn-full" onclick="returnToHub()" style="margin-top:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
   }
 
   // 装备/卸下功法（≤6）
@@ -355,7 +355,7 @@ function initHub() {
       <hr>
       <div class="equip-sec-title">锻造（消耗灵石，随机品质随境界提升）</div>
       <div class="forge-grid">${forgeHtml}</div>
-      <button class="btn-full" onclick="closeModal()" style="margin-top:16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">关闭</button>`);
+      <button class="btn-full" onclick="returnToHub()" style="margin-top:16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
   }
 
   // 穿戴：从背包取出装备到对应部位，旧装备退回背包
@@ -432,7 +432,7 @@ function initHub() {
       <div class="equip-sec-title">背包装备</div>
       <div class="bag-list">${list}</div>
       <button class="btn-full" onclick="showShopModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">前往商店</button>
-      <button class="btn-full" onclick="closeModal()" style="margin-top:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">关闭</button>`);
+      <button class="btn-full" onclick="returnToHub()" style="margin-top:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
   }
 
   // 商店弹窗：4 部位各一件随机在售装备，灵石足够可购买；不足则禁用
@@ -463,7 +463,7 @@ function initHub() {
       <div class="equip-sec-title">在售装备（每次刷新随机品质）</div>
       <div class="bag-list">${rows}</div>
       <button class="btn-full" onclick="showBagModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">背包 / 出售</button>
-      <button class="btn-full" onclick="closeModal()" style="margin-top:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">关闭</button>`);
+      <button class="btn-full" onclick="returnToHub()" style="margin-top:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
   }
 
   // 出售：背包装备按品质换灵石

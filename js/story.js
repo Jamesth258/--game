@@ -90,7 +90,7 @@ function openStoryScreen() {
 
 function storySetVol(v) { _storyVol = v; openStoryScreen(); }
 function storyEnterChapter(c) { if (storyChapterUnlocked(c)) openChapter(c); }
-function storyClose() { closeModal(); state = 'hub'; if (window.HUB) { window.HUB.refresh(); window.HUB.show(); } }
+function storyClose() { returnToHub(); }
 function storyBackVol() { openStoryScreen(); }
 
 // ===== 章节详情：10 关 + 通关奖励预览 =====

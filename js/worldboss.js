@@ -162,7 +162,7 @@ function openWorldBossScreen() {
         <span class="equip-bonus">${timeTxt} ｜ ${stTxt[st]} ｜ 累计 ${wbFmt(sd.dmg)} ｜ 剩 ${remain} 次</span>
       </div>${btn}</div>`;
   });
-  html += `<button class="btn-full" onclick="closeModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">关闭</button>`;
+  html += `<button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`;
   openModal(html);
 }
 
@@ -199,7 +199,7 @@ function openWorldBossResult(slotIdx) {
   else if (st === 'open') act = `<span style="color:rgba(241,239,232,.4);font-size:12px">次数已用完，等截止领奖</span>`;
   else if ((st === 'locked' || st === 'ended') && sd.dmg > 0 && !sd.claimed) act = `<button class="equip-btn" onclick="openWorldBossClaim(${slotIdx})">领取奖励</button>`;
   else if (sd.claimed) act = `<span style="color:#639922;font-size:12px">已领取（第${sd.rank}名）</span>`;
-  html += `<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">${act}<button class="equip-btn" onclick="openWorldBossScreen()">返回列表</button></div>`;
+  html += `<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">${act}<button class="equip-btn" onclick="openWorldBossScreen()">返回列表</button><button class="equip-btn" onclick="returnToHub()">返回主页</button></div>`;
   openModal(html);
 }
 
@@ -229,7 +229,7 @@ function openWorldBossClaim(slotIdx) {
     return '';
   };
   html += `<div class="bag-list">` + results.map(r => `<div class="bag-item"><div class="bag-info"><span class="bag-name" style="color:#D4A843">${r[0]}宝箱</span><span class="equip-bonus">${rewardDesc(r)}</span></div></div>`).join('') + `</div>`;
-  html += `<button class="btn-full" onclick="openWorldBossScreen()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回</button>`;
+  html += `<button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`;
   openModal(html);
 }
 
