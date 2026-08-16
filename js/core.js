@@ -41,6 +41,21 @@ function returnToHub() {
 }
 window.returnToHub = returnToHub;
 
+// 轻提示（toast）：用于在线奖励达成等即时反馈，2.6 秒后自动消失
+function showToast(msg) {
+  try {
+    const el = document.createElement('div');
+    el.textContent = msg;
+    el.style.cssText = 'position:fixed;left:50%;bottom:80px;transform:translateX(-50%);z-index:9998;' +
+      'background:rgba(20,18,28,0.92);color:#E8D9A0;border:1px solid rgba(212,168,67,0.5);' +
+      'padding:8px 16px;border-radius:10px;font:13px/1.4 sans-serif;max-width:80%;text-align:center;' +
+      'box-shadow:0 4px 16px rgba(0,0,0,0.4)';
+    (document.body || document.documentElement).appendChild(el);
+    setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 2600);
+  } catch (e) {}
+}
+window.showToast = showToast;
+
 // 全局错误兜底：任何运行时错误显示在页面顶部红条，便于排查（正常时不出现）
 window.addEventListener('error', e => {
   let bar = document.getElementById('err-bar');
@@ -66,6 +81,7 @@ function saveGame() {
       equipment: player.equipment, bag: player.bag, gold: player.gold,
       storyCleared: player.storyCleared, storyRewardClaimed: player.storyRewardClaimed,
       worldBoss: player.worldBoss,
+      daily: player.daily, diamond: player.diamond,
     }));
   } catch (e) {}
 }

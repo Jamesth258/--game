@@ -12,7 +12,7 @@ const HUB_MENU_ITEMS = [
   { id: 'worldboss', label: '世界BOSS', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg>', action: 'go_worldboss' },
   { id: 'shop',   label: '商店', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>', action: 'modal_shop' },
   { id: 'event',  label: '活动', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>', action: 'modal_coming' },
-  { id: 'daily',  label: '每日奖励', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 16l2 2 4-4"/></svg>', action: 'modal_coming' },
+  { id: 'daily',  label: '每日奖励', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 16l2 2 4-4"/></svg>', action: 'modal_daily' },
   { id: 'rank',   label: '排行榜', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="5"/><path d="M8 21h8M12 13v8"/><path d="M7 4l2 2M17 4l-2 2"/></svg>', action: 'go_rank' },
   { id: 'arena',  label: '竞技场', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6M17 15l4 4M3 3l18 18"/></svg>', action: 'modal_coming' },
 ];
@@ -96,6 +96,9 @@ function initHub() {
           break;
         case 'modal_shop':
           showShopModal();
+          break;
+        case 'modal_daily':
+          openDailyRewardScreen();
           break;
         default:
           openModal(`<h3 style="color:#D4A843">${item.label}</h3><p style="color:rgba(241,239,232,0.7)">「${item.label}」功能正在开发中，敬请期待！</p><button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
@@ -441,6 +444,13 @@ function initHub() {
     refreshHub();
     const gold = player.gold || 0;
     shopStock = EQUIP_SLOT_KEYS.map(slot => genEquip(slot, rollRarity())); // 每次打开随机生成
+    // 钻石专区购买按钮（钻石不足则禁用）
+    const diamondBuyBtn = (type, price) => {
+      const can = (player.diamond || 0) >= price;
+      return can
+        ? `<button class="equip-btn" onclick="buyDiamondChest('${type}')">${price}钻</button>`
+        : `<button class="equip-btn" disabled style="background:rgba(255,255,255,0.06);color:rgba(241,239,232,0.3);cursor:default">${price}钻</button>`;
+    };
     const rows = shopStock.map(it => {
       const price = SHOP_PRICE[it.rarity] || 30;
       const can = gold >= price;
@@ -459,9 +469,17 @@ function initHub() {
     openModal(`
       <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
       <h3 style="margin:0">商店</h3></div>
-      <p style="margin:2px 0 10px;font-size:12px;color:rgba(241,239,232,0.6)">灵石 <b style="color:#D4A843">${gold}</b></p>
+      <p style="margin:2px 0 10px;font-size:12px;color:rgba(241,239,232,0.6)">灵石 <b style="color:#D4A843">${gold}</b> ｜ 钻石 <b style="color:#378ADD">${player.diamond || 0}</b></p>
       <div class="equip-sec-title">在售装备（每次刷新随机品质）</div>
       <div class="bag-list">${rows}</div>
+      <hr>
+      <div class="equip-sec-title">钻石专区（钻石消费）</div>
+      <div class="bag-list">
+        <div class="bag-item"><div class="bag-info"><span class="bag-name">功法抽奖宝箱</span><span class="equip-bonus">随机习得未拥有功法</span></div>${diamondBuyBtn('skill', 200)}</div>
+        <div class="bag-item"><div class="bag-info"><span class="bag-name">装备抽奖宝箱</span><span class="equip-bonus">随机品质装备</span></div>${diamondBuyBtn('equip', 200)}</div>
+        <div class="bag-item"><div class="bag-info"><span class="bag-name">灵石宝箱</span><span class="equip-bonus">+200~800 灵石</span></div>${diamondBuyBtn('stone', 50)}</div>
+        <div class="bag-item"><div class="bag-info"><span class="bag-name">经验宝箱</span><span class="equip-bonus">+2000~10000 修为</span></div>${diamondBuyBtn('exp', 50)}</div>
+      </div>
       <button class="btn-full" onclick="showBagModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">背包 / 出售</button>
       <button class="btn-full" onclick="returnToHub()" style="margin-top:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
   }
@@ -496,6 +514,23 @@ function initHub() {
   window.showShopModal = showShopModal;
   window.sellItem = sellItem;
   window.buyShopItem = buyShopItem;
+
+  // 钻石专区：用钻石兑换抽奖宝箱（钻石为商城专属货币，由每日奖励产出）
+  const DIAMOND_CHEST_PRICE = { skill: 200, equip: 200, stone: 50, exp: 50 };
+  function buyDiamondChest(type) {
+    const price = DIAMOND_CHEST_PRICE[type];
+    if (price == null) return;
+    if ((player.diamond || 0) < price) { showShopModal(); return; }
+    player.diamond -= price;
+    if (type === 'skill') openSkillChest();
+    else if (type === 'equip') openEquipChest();
+    else if (type === 'stone') openStoneChest();
+    else if (type === 'exp') openExpChest();
+    saveGame();
+    refreshHub();
+    showShopModal();
+  }
+  window.buyDiamondChest = buyDiamondChest;
 
   // 兼容旧存档：若玩家仍持有旧版功法 id（xuanfeng/xuanyin），迁移为默认入门功法
   function migrateLegacySkills() {

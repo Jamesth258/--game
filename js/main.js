@@ -32,6 +32,8 @@ function checkSavedCharacter() {
       player.storyCleared = (saved.storyCleared && typeof saved.storyCleared === 'object') ? saved.storyCleared : {};
       player.storyRewardClaimed = (saved.storyRewardClaimed && typeof saved.storyRewardClaimed === 'object') ? saved.storyRewardClaimed : {};
       player.worldBoss = (saved.worldBoss && typeof saved.worldBoss === 'object') ? saved.worldBoss : null;
+      player.diamond = (saved.diamond != null) ? saved.diamond : 0;
+      player.daily = (saved.daily && typeof saved.daily === 'object') ? saved.daily : null;
       const _all = CHARACTERS.male.concat(CHARACTERS.female);
       const _ch = _all.find(c => c.id === saved.avatarId);
       art.hero.src = _ch ? _ch.img : saved.avatarImg;
@@ -68,3 +70,4 @@ if (!checkSavedCharacter()) {
 }
 setButtons(false); // 地图阶段禁用战斗指令
 render();
+if (typeof initDaily === 'function') initDaily(); // 启动每日奖励的在线时长累计定时器

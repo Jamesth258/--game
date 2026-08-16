@@ -141,12 +141,14 @@ const player = {
   storyCleared: {},                                         // 剧情副本进度：ch -> 已通关关卡数(0~10)
   storyRewardClaimed: {},                                   // 已领取章节通关奖励的章节号集合
   worldBoss: null,                                          // 世界BOSS进度：{date, slots:{idx->{attempts,dmg,claimed,rank}}}
+  daily: null,                                              // 每日奖励进度：{date, month, signedToday, monthSignCount, monthClaimed, onlineSecToday, onlineClaimed}
+  diamond: 0,                                               // 钻石：专用于商城消费的货币（签到/在线奖励产出）
   lastSeen: Date.now(),                                      // 离线时间戳（挂机结算）
   maxHp: 0, hp: 0, maxMp: 0, mp: 0, atk: 0, def: 0, spd: 0,
   spiAtk: 0, spiDef: 0, eva: 0, init: 0, luck: 0,
   potions: 3, defending: false, sect: '', score: 0, xp: 0,
   equipment: { weapon: null, armor: null, accessory: null, boots: null }, // 已穿戴装备（部位→item）
-  bag: [], gold: 50,                                         // 背包 + 灵石（锻造货币）
+  bag: [], gold: 50, diamond: 0,                            // 背包 + 灵石（锻造货币） + 钻石（商城消费货币）
 };
 
 // 由 6 基础属性 + 境界 + 装备 推导出全部战斗数值
