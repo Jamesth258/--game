@@ -262,3 +262,15 @@
   .forge-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px; font-size: 13px; font-weight: 600; background: rgba(212,168,67,0.1); border: 1px solid rgba(212,168,67,0.3); border-radius: 8px; color: #F1EFE8; cursor: pointer; }
   .forge-btn:hover { background: rgba(212,168,67,0.2); }
   .forge-cost { font-size: 11px; font-weight: 400; color: rgba(241,239,232,0.5); }
+
+  /* 卷标签 */
+  .story-vol-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+  .story-vol-tab { padding: 4px 10px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.16); background: rgba(255,255,255,0.04); color: rgba(241,239,232,0.7); cursor: pointer; font-size: 12px; }
+  .story-vol-tab.on { background: #D4A843; color: #1a1a1a; border-color: #D4A843; font-weight: 700; }
+
+  /* 通关奖励三选一卡片 */
+  .reward-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 6px 0; }
+  .reward-card { position: relative; border: 1px solid rgba(255,255,255,0.14); border-radius: 8px; padding: 8px 6px; cursor: pointer; background: rgba(255,255,255,0.03); transition: all .12s; text-align: center; }
+  .reward-card:hover { border-color: rgba(212,168,67,0.6); background: rgba(212,168,67,0.08); }
+  .reward-card.reward-sel { border-color: #D4A843; background: rgba(212,168,67,0.16); box-shadow: 0 0 0 1px #D4A843 inset; }
+  .reward-tag { display: none; margin-top: 6px; font-size: 11px; color: #1a1a1a; background: #D4A843; border-radius: 4px; padding: 1px 6px; font-weight: 700; }

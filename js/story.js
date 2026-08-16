@@ -8,11 +8,25 @@ let _storyVol = 1;     // 当前查看的卷（1~10）
 let _storyCh = 1;      // 最近挑战的章节（战斗结束返回用）
 let _selSkill = null;  // 三选一当前选中的功法 id
 let _selEquip = 0;     // 三选一当前选中的装备序号
+let _rewardCh = 1;     // 当前三选一对应的章节号
 
 function sTierColor(t) { return ({ 1: '#9aa0a6', 2: '#639922', 3: '#378ADD', 4: '#9B6BCC', 5: '#D4A843', 6: '#E87B7B', 7: '#E8D9A0' })[t] || '#9aa0a6'; }
 
-// 章节解锁：第 1 章默开；其余需前一章 10 关全通
-function storyChapterUnlocked(ch) { return ch === 1 || (player.storyCleared[ch - 1] || 0) >= 10; }
+// 章节解锁：第 1 章默开；其余需【前一章 10 关全通】且【境界等级达标】
+// 设计：每突破升级一个境界等级，额外开放一个章节（境界等级取自 daily.js 的 realmLevel()：扁平小阶序号+1）
+function storyChapterUnlocked(ch) {
+  if (ch === 1) return true;
+  const prevCleared = (player.storyCleared[ch - 1] || 0) >= 10;
+  const realmOk = realmLevel() >= ch;          // 境界等级达到 ch 才允许挑战第 ch 章
+  return prevCleared && realmOk;
+}
+// 锁定原因：用于禁用按钮文案
+function storyChapterLockReason(ch) {
+  if (ch === 1) return '';
+  if ((player.storyCleared[ch - 1] || 0) < 10) return '先通第' + (ch - 1) + '章';
+  if (realmLevel() < ch) return '需境界等级' + ch + '（当前' + realmLevel() + '）';
+  return '';
+}
 
 // 按章节/关卡缩放敌方强度（以玩家当前属性为基准 × 章节难度系数，保证可战胜且随进度变难）
 function makeStoryEnemy(ch, lv) {
@@ -75,7 +89,7 @@ function openStoryScreen() {
       </div>
       ${unlocked
         ? `<button class="equip-btn" onclick="storyEnterChapter(${c})">进入</button>`
-        : `<button class="equip-btn" disabled style="background:rgba(255,255,255,0.06);color:rgba(241,239,232,0.3);cursor:default">先通第${c - 1}章</button>`}
+        : `<button class="equip-btn" disabled style="background:rgba(255,255,255,0.06);color:rgba(241,239,232,0.3);cursor:default">${storyChapterLockReason(c)}</button>`}
     </div>`);
   }
   openModal(`
@@ -135,6 +149,7 @@ function openChapter(ch) {
 // ===== 章节通关三选一奖励 =====
 function showStoryReward(ch) {
   const rw = STORY_BY_CH[ch].reward;
+  _rewardCh = ch;
   _selSkill = rw.skills[0];
   _selEquip = 0;
   const skillCards = rw.skills.map(id => {
@@ -143,6 +158,7 @@ function showStoryReward(ch) {
       <div style="color:${sTierColor(s.tier)};font-weight:700">${s.tierName}·${esc(s.name)}</div>
       <div style="font-size:11px;color:rgba(241,239,232,0.6)">${esc(s.schoolCn)} · ${s.cost}灵</div>
       <div style="font-size:11px;color:rgba(241,239,232,0.5)">${esc(s.desc)}</div>
+      <span class="reward-tag" style="display:none">已选</span>
     </div>`;
   }).join('');
   const eqCards = rw.equip.map((e, i) => {
@@ -151,24 +167,27 @@ function showStoryReward(ch) {
       <div style="color:${r.color};font-weight:700">${r.name}·${slot.name}</div>
       <div style="font-size:11px;color:rgba(241,239,232,0.6)">${slot.icon} 部位</div>
       <div style="font-size:11px;color:rgba(241,239,232,0.5)">随机属性随境界生成</div>
+      <span class="reward-tag" style="display:none">已选</span>
     </div>`;
   }).join('');
   openModal(`
     <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M12 2l3 7 7 .5-5.5 4.5 2 7L12 17l-6.5 4 2-7L2 9.5 9 9z"/></svg>
     <h3 style="margin:0">第${ch}章通关 · 奖励三选一</h3></div>
-    <p style="margin:2px 0 8px;font-size:12px;color:rgba(241,239,232,0.7)">功法与装备各选一项（默认选中第一项），确认后领取。</p>
+    <p style="margin:2px 0 8px;font-size:12px;color:rgba(241,239,232,0.7)">点击卡片选择功法与装备（默认选中第一项），下方实时显示已选，确认后领取。</p>
     <div class="equip-sec-title">功法（选 1）</div>
     <div class="reward-grid" id="reward-skills">${skillCards}</div>
     <div class="equip-sec-title">装备（选 1）</div>
     <div class="reward-grid" id="reward-equips">${eqCards}</div>
+    <p id="reward-pick" style="margin:10px 0 0;font-size:13px;color:rgba(241,239,232,0.9)">已选：功法 <b style="color:#D4A843">—</b> ＋ 装备 <b style="color:#D4A843">—</b></p>
     <button class="btn-full" onclick="storyClaimReward(${ch})" style="margin-top:14px;background:#D4A843;color:#1a1a1a;font-weight:700;border:none">确认领取</button>
     <button class="btn-full" onclick="storySkipReward(${ch})" style="margin-top:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">暂不选（回本章再领）</button>`);
-  setTimeout(() => { highlightReward('skill', rw.skills[0]); highlightReward('equip', 0); }, 0);
+  setTimeout(() => { highlightReward('skill', rw.skills[0]); highlightReward('equip', 0); updateRewardPick(); }, 0);
 }
 
 function storySelReward(kind, val) {
   if (kind === 'skill') _selSkill = val; else _selEquip = val;
   highlightReward(kind, val);
+  updateRewardPick();
 }
 function highlightReward(kind, val) {
   const grid = document.getElementById(kind === 'skill' ? 'reward-skills' : 'reward-equips');
@@ -176,7 +195,20 @@ function highlightReward(kind, val) {
   grid.querySelectorAll('.reward-card').forEach(c => {
     const match = kind === 'skill' ? c.dataset.id === val : (+c.dataset.i === +val);
     c.classList.toggle('reward-sel', match);
+    const tag = c.querySelector('.reward-tag');
+    if (tag) tag.style.display = match ? 'inline-block' : 'none';
   });
+}
+// 实时回显已选功法/装备名称
+function updateRewardPick() {
+  const el = document.getElementById('reward-pick');
+  if (!el) return;
+  const rw = STORY_BY_CH[_rewardCh] && STORY_BY_CH[_rewardCh].reward;
+  const sk = SKILLS_DB_MAP[_selSkill];
+  const eq = rw && rw.equip[_selEquip];
+  const skName = sk ? sk.name : (_selSkill || '—');
+  const eqName = eq ? (RARITY[eq.rarity].name + '·' + EQUIP_SLOTS[eq.slot].name) : (_selEquip || '—');
+  el.innerHTML = '已选：功法 <b style="color:#D4A843">' + esc(skName) + '</b> ＋ 装备 <b style="color:#D4A843">' + esc(eqName) + '</b>';
 }
 
 function storyClaimReward(ch) {
@@ -195,6 +227,14 @@ function storyClaimReward(ch) {
 }
 function storySkipReward(ch) { openChapter(ch); }   // 不标记已领，下次进入本章仍会提示
 
+// 战斗结束（胜/负）后的路由：章节通关→弹三选一；否则回到本章继续/重战。供 battle.js 自动调用，确保有返回出口
+function storyAfterBattle() {
+  const ch = (battle && battle.node && battle.node._story) ? battle.node._story.ch : 1;
+  if (player.storyCleared[ch] >= 10) openStoryScreen();   // 章节通关 → 触发三选一奖励
+  else if (window.openChapter) openChapter(ch);          // 否则继续下一关 / 失败重战
+  else openStoryScreen();
+}
+
 // 暴露给 onclick（HTML 内联）与 battle.js（脚本级直接调用亦可）
 window.openStoryScreen = openStoryScreen;
 window.openChapter = openChapter;
@@ -206,3 +246,4 @@ window.storySelReward = storySelReward;
 window.storyClaimReward = storyClaimReward;
 window.storySkipReward = storySkipReward;
 window.startStoryBattle = startStoryBattle;
+window.storyAfterBattle = storyAfterBattle;

@@ -385,9 +385,17 @@ function endBattle(win) {
     if (broke) toastMsg = (realmUp ? '★ 突破大境界！晋升【' : '突破！晋升【') + after.label + '】';
     toast = toastMsg + dropMsg + (battle.mode === 'story' ? ' 点击继续。' : ' 点击地图继续。');
     saveGame();
+    // 剧情副本：胜利后自动弹出结算界面（含返回主页/返回章节列表），避免卡在胜利画面无出口
+    if (battle.mode === 'story' && typeof storyAfterBattle === 'function') {
+      setTimeout(storyAfterBattle, 700);
+    }
   } else {
     state = 'lose';
     toast = battle.mode === 'story' ? '你倒下了…点击重新挑战。' : '你倒下了…点击地图重新挑战。';
+    // 剧情副本：失败后也自动弹出本章界面（含返回入口），避免卡死
+    if (battle.mode === 'story' && typeof storyAfterBattle === 'function') {
+      setTimeout(storyAfterBattle, 700);
+    }
   }
 }
 
@@ -430,10 +438,7 @@ canvas.addEventListener('click', e => {
   } else if (state === 'win' || state === 'lose' || state === 'clear') {
     // 战斗结束 → 剧情副本返回副本界面，世界BOSS 弹排行，江湖战斗返回主页
     if (battle && battle.mode === 'story') {
-      const ch = battle.node._story ? battle.node._story.ch : 1;
-      if (player.storyCleared[ch] >= 10) openStoryScreen();   // 章节通关 → 触发三选一奖励
-      else if (window.openChapter) openChapter(ch);          // 否则继续下一关
-      else openStoryScreen();
+      storyAfterBattle();   // 抽到 story.js：章节通关弹三选一，否则回本章
     } else if (battle && battle.mode === 'worldboss') {
       openWorldBossResult(battle.node._wb);
     } else if (window.HUB) { window.HUB.refresh(); window.HUB.show(); }
