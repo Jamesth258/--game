@@ -140,6 +140,7 @@ const player = {
   equippedSkills: DEFAULT_EQUIPPED.slice(),                 // 已装备功法（≤6，战斗中每回合点选）
   storyCleared: {},                                         // 剧情副本进度：ch -> 已通关关卡数(0~10)
   storyRewardClaimed: {},                                   // 已领取章节通关奖励的章节号集合
+  worldBoss: null,                                          // 世界BOSS进度：{date, slots:{idx->{attempts,dmg,claimed,rank}}}
   lastSeen: Date.now(),                                      // 离线时间戳（挂机结算）
   maxHp: 0, hp: 0, maxMp: 0, mp: 0, atk: 0, def: 0, spd: 0,
   spiAtk: 0, spiDef: 0, eva: 0, init: 0, luck: 0,

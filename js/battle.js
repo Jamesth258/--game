@@ -51,14 +51,15 @@ function buildSkillBar() {
 }
 
 function startBattle(node, mode) {
-  const enemy = makeEnemy(node);
+  const isWB = mode === 'worldboss';
+  const enemy = isWB ? makeWorldBoss(node._wb) : makeEnemy(node);
   // 重置玩家本场战斗的临时状态（buff/debuff/护盾/僵直），避免跨场残留
   player.buffs = []; player.debuffs = []; player.shield = null; player.stun = 0;
   battle = {
     node, player, enemy,
-    mode: mode || 'map',          // 'map' = 江湖节点；'story' = 剧情副本
-    queue: [], turn: 0,
-    msg: '遭遇 ' + enemy.name + '！',
+    mode: mode || 'map',          // 'map' = 江湖节点；'story' = 剧情副本；'worldboss' = 世界BOSS
+    queue: [], turn: 0, roundCount: 0, playerDmg: 0,
+    msg: (isWB ? '世界BOSS · ' : '遭遇 ') + enemy.name + '！',
   };
   state = 'battle';
   toast = '';
@@ -77,6 +78,11 @@ function tickDurations(u) {
 }
 
 function beginRound() {
+  // 世界BOSS：单场最多 WB_MAX_ROUNDS 回合，超出则按当前累计伤害结算
+  if (battle.mode === 'worldboss') {
+    battle.roundCount = (battle.roundCount || 0) + 1;
+    if (battle.roundCount > WB_MAX_ROUNDS) { endWorldBossBattle(false); return; }
+  }
   const p = battle.player, e = battle.enemy;
   // 每回合开始小幅回内力，清掉上一轮防御
   [p, e].forEach(u => { if (u.hp > 0) { u.mp = Math.min(u.maxMp, u.mp + 5); u.defending = false; } });
@@ -165,6 +171,7 @@ function damage(attacker, target, mult, type) {
   if (target.shield && target.shield.pct) base *= (1 - target.shield.pct);
   base = Math.max(1, Math.round(base));
   target.hp = Math.max(0, target.hp - base);
+  if (!attacker.isEnemy && battle) battle.playerDmg = (battle.playerDmg || 0) + base; // 世界BOSS 累计玩家伤害
   const col = crit ? '#A32D2D' : '#2C2C2A';
   const txt = (crit ? '暴击 ' : '') + '-' + base;
   floats.push({ x: target._x, y: target._y, text: txt, color: col, ttl: 60 });
@@ -187,6 +194,7 @@ function applySkill(actor, target, sk) {
         if (target.defending) base *= 0.5;
         d = Math.max(1, Math.round(base));
         target.hp = Math.max(0, target.hp - d);
+        if (!actor.isEnemy && battle) battle.playerDmg = (battle.playerDmg || 0) + d; // 穿透伤害也累计
       } else {
         d = damage(actor, target, e.mult, e.type);
       }
@@ -300,6 +308,12 @@ function nextTurn() {
 }
 
 function checkEnd() {
+  // 世界BOSS：击杀/阵亡/回合耗尽都视为「结算」（记录累计伤害，不触发地图/副本逻辑）
+  if (battle.mode === 'worldboss') {
+    if (battle.enemy.hp <= 0) { endWorldBossBattle(true); return true; }
+    if (battle.player.hp <= 0) { endWorldBossBattle(false); return true; }
+    return false;
+  }
   if (battle.enemy.hp <= 0) {
     endBattle(true); return true;
   }
@@ -377,6 +391,21 @@ function endBattle(win) {
   }
 }
 
+// 世界BOSS 结算：累计伤害 → 写入该时段 → 弹结果界面（不发经验/不掉落，奖励走排名）
+function endWorldBossBattle(killed) {
+  awaitingInput = false;
+  setButtons(false);
+  const slot = battle.node._wb;
+  const dmg = battle.playerDmg || 0;
+  ensureWorldBossDaily();
+  const slotData = player.worldBoss.slots[slot];
+  slotData.dmg = (slotData.dmg || 0) + dmg;
+  saveGame();
+  state = 'win';
+  toast = (killed ? '★ 你斩杀了世界BOSS！' : '挑战结束 — ') + '本场造成 ' + dmg + ' 伤害（累计 ' + slotData.dmg + '）。点击查看排行。';
+  openWorldBossResult(slot);
+}
+
 // ---- 输入（事件委托：指令栏按钮每场战斗动态重建）----
 cmdBar.addEventListener('click', e => {
   const b = e.target.closest('button');
@@ -399,12 +428,14 @@ canvas.addEventListener('click', e => {
     // 点击空白区域 → 返回主页
     if (window.HUB) { window.HUB.show(); }
   } else if (state === 'win' || state === 'lose' || state === 'clear') {
-    // 战斗结束 → 剧情副本返回副本界面，江湖战斗返回主页
+    // 战斗结束 → 剧情副本返回副本界面，世界BOSS 弹排行，江湖战斗返回主页
     if (battle && battle.mode === 'story') {
       const ch = battle.node._story ? battle.node._story.ch : 1;
       if (player.storyCleared[ch] >= 10) openStoryScreen();   // 章节通关 → 触发三选一奖励
       else if (window.openChapter) openChapter(ch);          // 否则继续下一关
       else openStoryScreen();
+    } else if (battle && battle.mode === 'worldboss') {
+      openWorldBossResult(battle.node._wb);
     } else if (window.HUB) { window.HUB.refresh(); window.HUB.show(); }
     else { state = 'map'; toast = ''; }
   }

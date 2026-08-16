@@ -55,6 +55,7 @@ function saveGame() {
       lastSeen: player.lastSeen,
       equipment: player.equipment, bag: player.bag, gold: player.gold,
       storyCleared: player.storyCleared, storyRewardClaimed: player.storyRewardClaimed,
+      worldBoss: player.worldBoss,
     }));
   } catch (e) {}
 }

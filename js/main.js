@@ -31,6 +31,7 @@ function checkSavedCharacter() {
       // 恢复剧情副本进度（旧存档可能缺字段，补默认）
       player.storyCleared = (saved.storyCleared && typeof saved.storyCleared === 'object') ? saved.storyCleared : {};
       player.storyRewardClaimed = (saved.storyRewardClaimed && typeof saved.storyRewardClaimed === 'object') ? saved.storyRewardClaimed : {};
+      player.worldBoss = (saved.worldBoss && typeof saved.worldBoss === 'object') ? saved.worldBoss : null;
       const _all = CHARACTERS.male.concat(CHARACTERS.female);
       const _ch = _all.find(c => c.id === saved.avatarId);
       art.hero.src = _ch ? _ch.img : saved.avatarImg;
