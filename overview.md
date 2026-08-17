@@ -1,45 +1,26 @@
-# 图鉴系统（功法 / 装备收集统计 + 里程碑奖励）
+# 宝箱概率系统（A+B+C 全做）
 
-## 功能概述
-主页新增「图鉴」按钮，点进去查看**全部功法（130 种）与全部装备（94 种）**的收集情况：
-- 已收集：亮显真实名称 + 阶位/类型/特效（或套装归属）。
-- 未收集：灰显「❓ ???」（保留探索感，激励持续刷取）。
-- 顶部进度条 + 计数（功法 X/130、装备 Y/94），并提示「再收集 N 个功法/装备得 1000 钻」。
+## 改动清单
+- **js/player.js**：默认对象新增 `skillPity: 0`（功法保底计数）。
+- **js/worldboss.js**：
+  - 新增 `SKILL_TIER_WEIGHTS`（黄38/玄26/地16/天10/王5/皇3/帝2，合计100）、`SKILL_PITY_LIMIT = 120`。
+  - 重写 `openSkillChest(biasTier=0)`：在未拥有功法里按 7 阶加权抽取（已集齐的阶权重归零）；累计开启满 120 次强制帝阶，抽到皇/帝阶重置计数。
+  - 重写 `openEquipChest(bias=0)`：品质 = `rollRarity()+1+bias` 封顶神品。
+  - 新增 `equipChestQualityDist(bias)`：解析当前境界下各品质理论概率。
+  - 新增 `openChestInfo()`：概率详情弹窗（装备品质表 + 功法各阶表 + 世界BOSS加成 + 120 保底说明），`window` 暴露。
+  - 世界BOSS 发放按名次传 bias：第1名 功法+2/装备+2，第2名 装备+1，第3名 功法+1。
+- **js/hub.js**：主页菜单新增「抽奖概率」入口（`modal_chestinfo` → `openChestInfo()`）。
+- **js/main.js**：旧档恢复补 `skillPity`。
+- **test/chest.test.js**：16 项真实跑过（加权分布、120 保底、装备 bias 分布、概率页渲染）。
 
-## 里程碑奖励（核心诉求）
-- **每收集满 10 个功法 → 奖励 1000 钻石**；**每收集满 10 个装备 → 奖励 1000 钻石**。
-- 功法与装备**独立计数**，互不串档。
-- 支持连发多档：一次从 0 收集到 20 个，连发 2 档（共 2000 钻）。
-- 去重：同一装备 id 重复获得不重复计入、不重复发奖。
-- 初始 8 个赠送功法不触发「满 10 发奖」（避免新角色白送钻）；旧存档已收集部分通过 `codexReward` 档位预置，**不补发历史钻石**，仅后续增量才发。
+## 关键设计口径
+- **A 功法加权**：黄阶约 39%、帝阶约 2%（实测抽样）；保底每 120 次必出帝阶。
+- **C 装备差异化**（境界等级1 基准）：装备宝箱 bias0 = 灵57%/宝29%/仙14%（无凡无神）；世界BOSS第1名 bias+2 → 仙57%/神43%。名次越高品质基线越高。
+- **B 概率页**：展示当前境界的装备品质表与功法各阶表，并标注世界BOSS加成与 120 保底。概率随境界动态变化（rollRarity 曲线），页面实时按当前境界计算。
 
-## 收集口径
-- 功法收集 = `player.learned`（已习得功法 id 数组，原机制直接复用）。
-- 装备收集 = `player.equipCollected`（新增去重集合，按 `EQUIP_DB` 的 `entryId`；出售/更换装备不移除，符合"收集过即计入"）。
-- 装备 item 由 `makeItemFromDb` 生成时携带 `entryId: entry.id`（新增清晰字段，原 `setId` 语义易混淆，保留兼容）。
+## 验证
+- chest 16/16、equip 18、daily 41、story 40、return_to_hub 全过、crit_panel 9、codex 18 全绿。
+- 已提交并 push 到 GitHub（`git push origin master`），GitHub Pages 约 1–2 分钟重建生效。
 
-## 接入的获得入口（获取即写入图鉴 + 触发奖励判定）
-- 世界BOSS：`openSkillChest`（功法）、`openEquipChest`（装备）
-- 副本通关三选一：`storyClaimReward`
-- 战斗掉落（普通/BOSS 战）：`battle.js` 装备/功法掉落
-- 功法秘库购买：`buySkill`
-- 所有入口统一调用 `recordEquipCollected(item)` / `checkCodexReward()`（`codex.js`）。
-
-## 旧档兼容（main.js）
-恢复时补 `player.equipCollected` / `player.codexReward` 默认值；并在 `recalcStats` 后把已发档位对齐为 `floor(已收集数/10)`，避免旧档误补发钻石。
-
-## 文件改动
-- 新增 `js/codex.js`：`recordEquipCollected` / `checkCodexReward` / `grantCodexDiamond` / `openCodex`（内联样式，无外部 CSS 依赖）。
-- `js/player.js`：`equipCollected:[]` + `codexReward:{skill:0,equip:0}` 默认字段。
-- `js/equip_db.js`：`makeItemFromDb` 加 `entryId`。
-- `js/hub.js`：菜单加图鉴按钮 + `modal_codex` 分发 + `buySkill` 触发。
-- `js/worldboss.js` / `js/story.js` / `js/battle.js`：各获得入口写入收集。
-- `js/main.js`：旧档恢复 + 档位对齐。
-- `index.html`：加载 `js/codex.js`。
-
-## 测试（真实跑过，非凭记忆）
-- 新增 `test/codex.test.js`：**18/18 通过**——图鉴渲染（标题/计数/未收集???/真名/里程碑提示）、功法满10发钻、装备满10发钻、去重、连发多档、初始不误发、功法装备独立计数。
-- 全量回归：**equip 18 / daily 41 / story 40 / return_to_hub 全过 / crit_panel 9** 全部无回归（测试桩补加载 codex.js 以匹配部署）。
-
-## 部署
-`git commit` + `git push origin master` 上线（GitHub Pages 约 1–2 分钟重建）。
+## 待办
+- 可选：在商店钻石专区也加「查看概率」按钮（当前入口在主页菜单）。

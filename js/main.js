@@ -38,6 +38,7 @@ function checkSavedCharacter() {
       // 图鉴收集集合与里程碑档位（旧存档可能缺字段，补默认）
       player.equipCollected = Array.isArray(saved.equipCollected) ? saved.equipCollected : [];
       player.codexReward = (saved.codexReward && typeof saved.codexReward === 'object') ? saved.codexReward : { skill: 0, equip: 0 };
+      player.skillPity = (typeof saved.skillPity === 'number') ? saved.skillPity : 0;
       const _all = CHARACTERS.male.concat(CHARACTERS.female);
       const _ch = _all.find(c => c.id === saved.avatarId);
       art.hero.src = _ch ? _ch.img : saved.avatarImg;

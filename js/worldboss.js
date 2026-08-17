@@ -121,20 +121,63 @@ function wbBoard(slot) {
 }
 
 // ====== 宝箱 ======
-function openSkillChest() {
-  const pool = SKILLS_DB.filter(s => !player.learned.includes(s.id));
-  const s = pool.length ? pool[Math.floor(Math.random() * pool.length)] : SKILLS_DB[Math.floor(Math.random() * SKILLS_DB.length)];
+// 功法 7 阶（黄/玄/地/天/王/皇/帝）开箱基础权重：低阶高概率、高阶低概率（合计 100）
+const SKILL_TIER_WEIGHTS = [0, 38, 26, 16, 10, 5, 3, 2];   // 下标 = tier(1~7)
+const SKILL_PITY_LIMIT = 120;                               // 功法宝箱保底：累计开启满此值必出帝阶
+
+// 在未拥有功法里，按阶加权抽一个目标阶（biasTier 为额外抬高，用于世界BOSS名次加成）
+function drawSkillTier(biasTier) {
+  let total = 0; const tiers = [];
+  for (let t = 1; t <= 7; t++) {
+    const cnt = SKILLS_DB.filter(s => s.tier === t && !player.learned.includes(s.id)).length;
+    const w = cnt > 0 ? SKILL_TIER_WEIGHTS[t] : 0;          // 该阶已集齐则权重归零
+    tiers.push({ t, w, cnt }); total += w;
+  }
+  if (total === 0) return 0;                                // 全收集完毕，交由调用方兜底
+  let r = Math.random() * total, pick = 1;
+  for (const x of tiers) { if ((r -= x.w) <= 0) { pick = x.t; break; } }
+  return Math.min(7, pick + (biasTier || 0));
+}
+function openSkillChest(biasTier) {
+  biasTier = biasTier || 0;
+  player.skillPity = (player.skillPity || 0) + 1;
+  let forceTier = (player.skillPity >= SKILL_PITY_LIMIT) ? 7 : 0;     // 保底：满 120 次强制帝阶
+  let targetTier = forceTier || drawSkillTier(biasTier);
+  let pool = SKILLS_DB.filter(s => s.tier === targetTier && !player.learned.includes(s.id));
+  if (pool.length === 0) {                                  // 目标阶已集齐 → 放宽到任意未拥有（优先高阶）
+    pool = SKILLS_DB.filter(s => !player.learned.includes(s.id));
+    if (pool.length === 0) pool = SKILLS_DB.slice();        // 全收集则允许重复（不会重复入功法库）
+  }
+  const s = pool[Math.floor(Math.random() * pool.length)];
   if (!player.learned.includes(s.id)) player.learned.push(s.id);
+  if (forceTier || s.tier >= 6) player.skillPity = 0;       // 保底消耗或抽到皇/帝阶 → 重置计数
   checkCodexReward();
   return s;
 }
-function openEquipChest() {
+// 装备宝箱：部位随机 + 品质 = 常规锻造(rollRarity) 高 1 阶，再叠加来源 bias（世界BOSS名次越高越高），封顶神品
+function openEquipChest(bias) {
+  bias = bias || 0;
   const slot = EQUIP_SLOT_KEYS[Math.floor(Math.random() * EQUIP_SLOT_KEYS.length)];
-  const r = Math.min(RARITY.length - 1, rollRarity() + 1);   // 宝箱品质略高于常规锻造
+  const r = Math.min(RARITY.length - 1, rollRarity() + 1 + bias);
   const it = genEquip(slot, r);
   player.bag.push(it);
   recordEquipCollected(it);
   return it;
+}
+// 解析：在当前境界下，装备宝箱（给定 bias）开出各品质的理论概率，返回与 RARITY 对齐的 5 项数组
+function equipChestQualityDist(bias) {
+  const tier = (typeof CULTIVATION !== 'undefined') ? CULTIVATION.realmFromXp(player.xp).globalIndex : 0;
+  const w = [
+    Math.max(1, 60 - tier * 2), 30 + Math.min(tier, 20), Math.min(15 + tier, 40),
+    Math.max(0, tier - 5) * 2, Math.max(0, tier - 15),
+  ];
+  const sum = w.reduce((a, b) => a + b, 0);
+  const dist = [0, 0, 0, 0, 0];
+  for (let i = 0; i < 5; i++) {
+    let q = i + 1 + (bias || 0); if (q > 4) q = 4; if (q < 0) q = 0;
+    dist[q] += w[i] / sum;
+  }
+  return dist;
 }
 function openStoneChest() { const g = 200 + Math.floor(Math.random() * 600); player.gold = (player.gold || 0) + g; return g; }
 function openExpChest() { const x = 2000 + Math.floor(Math.random() * 8000); gainXp(x, false); return x; }
@@ -216,9 +259,9 @@ function openWorldBossClaim(slotIdx) {
   sd.rank = rank; sd.claimed = true;
   // 按名次发奖
   const results = [];
-  if (rank === 1) { results.push(['功法', openSkillChest()]); results.push(['装备', openEquipChest()]); }
-  else if (rank === 2) { results.push(['装备', openEquipChest()]); }
-  else if (rank === 3) { results.push(['功法', openSkillChest()]); }
+  if (rank === 1) { results.push(['功法', openSkillChest(2)]); results.push(['装备', openEquipChest(2)]); }
+  else if (rank === 2) { results.push(['装备', openEquipChest(1)]); }
+  else if (rank === 3) { results.push(['功法', openSkillChest(1)]); }
   else { for (let i = 0; i < 5; i++) results.push(['灵石', openStoneChest()]); for (let i = 0; i < 5; i++) results.push(['经验', openExpChest()]); }
   saveGame();
   let html = `<div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg><h3 style="margin:0">世界BOSS 领奖</h3></div>`;
@@ -234,6 +277,43 @@ function openWorldBossClaim(slotIdx) {
   html += `<button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`;
   openModal(html);
 }
+
+// ====== 宝箱概率详情页 ======
+const SKILL_TIER_NAMES = ['', '黄阶', '玄阶', '地阶', '天阶', '王阶', '皇阶', '帝阶'];
+function openChestInfo() {
+  const realmLv = (typeof CULTIVATION !== 'undefined') ? CULTIVATION.realmFromXp(player.xp).globalIndex + 1 : 1;
+  const pct = x => (x * 100).toFixed(1) + '%';
+  // 装备宝箱品质表（默认 bias=0：每日/在线/钻石商城）
+  const eqDist = equipChestQualityDist(0);
+  const eqRows = RARITY.map((r, i) =>
+    `<tr><td style="padding:4px 8px"><span style="color:${r.color};font-weight:600">${r.name}</span></td>` +
+    `<td style="text-align:right;padding:4px 8px;font-weight:600;color:#fff">${pct(eqDist[i])}</td></tr>`).join('');
+  // 功法各阶概率表（基础权重）
+  const skRows = [];
+  for (let t = 1; t <= 7; t++) skRows.push(
+    `<tr><td style="padding:4px 8px;font-weight:600;color:#E8D9A0">${SKILL_TIER_NAMES[t]}</td>` +
+    `<td style="text-align:right;padding:4px 8px;font-weight:600;color:#fff">${SKILL_TIER_WEIGHTS[t]}%</td></tr>`);
+  const skRowsHtml = skRows.join('');
+  const html =
+`<div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v16M16 4v16"/></svg><h3 style="margin:0">抽奖概率说明</h3></div>
+<p style="margin:6px 0 2px;color:rgba(241,239,232,0.7);font-size:13px">当前境界等级 <b style="color:#D4A843">${realmLv}</b>（品质概率随境界提升而变高）</p>
+
+<div style="margin-top:10px;padding:10px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;background:rgba(255,255,255,0.03)">
+  <div style="font-weight:700;color:#639922;margin-bottom:6px">🎁 装备宝箱 · 品质概率</div>
+  <table style="width:100%;border-collapse:collapse;font-size:13px;color:rgba(241,239,232,0.85)">${eqRows}</table>
+  <p style="margin:6px 0 0;font-size:12px;color:rgba(241,239,232,0.55)">· 来源加成：世界BOSS 第1名 +2 阶、第2名 +1 阶（更高品质）；每日/在线/钻石商城为基准。</p>
+</div>
+
+<div style="margin-top:10px;padding:10px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;background:rgba(255,255,255,0.03)">
+  <div style="font-weight:700;color:#9B6BCC;margin-bottom:6px">📜 功法宝箱 · 各阶概率</div>
+  <table style="width:100%;border-collapse:collapse;font-size:13px;color:rgba(241,239,232,0.85)">${skRowsHtml}</table>
+  <p style="margin:6px 0 0;font-size:12px;color:rgba(241,239,232,0.55)">· 仅在「未拥有」功法中按阶加权抽取（已集齐的阶不再出现）。<br>· 来源加成：世界BOSS 第1名 +2 阶、第2/3名 +1 阶。<br>· <b style="color:#D4A843">保底</b>：连续开启满 ${SKILL_PITY_LIMIT} 次必出帝阶，抽到皇/帝阶即重置计数。</p>
+</div>
+
+<button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`;
+  openModal(html);
+}
+window.openChestInfo = openChestInfo;
 
 window.openWorldBossScreen = openWorldBossScreen;
 window.startWorldBossBattle = startWorldBossBattle;
