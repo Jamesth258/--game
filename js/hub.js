@@ -2,20 +2,25 @@
  * 由 index.html 拆分而来。加载顺序见 index.html 底部 <script> 列表，勿随意调整。
  * 注意：顶层 const/let 跨文件可直接引用，但不会挂到 window（详见 PROJECT.md 坑点 8.1）。
  */
-// ===== 游戏主页系统（人物展示 + 菜单栏） =====
-const HUB_MENU_ITEMS = [
+// ===== 游戏主页系统（人物居中 + 顶栏 + 底栏） =====
+
+// 顶栏右侧图标按钮（从左到右）
+const HUB_TOP_ITEMS = [
+  { id: 'daily',  label: '每日奖励', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 16l2 2 4-4"/></svg>', action: 'modal_daily' },
+  { id: 'shop',   label: '商店', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>', action: 'modal_shop' },
+  { id: 'codex',  label: '图鉴', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/></svg>', action: 'modal_codex' },
+  { id: 'worldboss', label: '世界BOSS', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg>', action: 'go_worldboss' },
+  { id: 'rank',   label: '排行榜', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="5"/><path d="M8 21h8M12 13v8"/><path d="M7 4l2 2M17 4l-2 2"/></svg>', action: 'go_rank' },
+  { id: 'settings', label: '设置', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06A1.65 1.65 0 0015 18.96a1.65 1.65 0 00-1.82.33V19a2 2 0 01-2.82 0v-.08A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82-.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-.33-1.82V13a2 2 0 012.82 0v.08A1.65 1.65 0 009 10.6a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 13v2z"/></svg>', action: 'modal_settings' },
+];
+
+// 底栏主功能按钮（从左到右）
+const HUB_BOTTOM_ITEMS = [
   { id: 'attr',   label: '属性', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="7" r="4"/><path d="M5 21v-2a7 7 0 0114 0v2"/><path d="M16 11h4M18 9v4M3 15h4M5 13v4"/></svg>', action: 'modal_attr' },
   { id: 'equip',   label: '装备', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L4 7l8 5 8-5-8-5zM4 12l8 5 8-5M4 17l8 5 8-5"/></svg>', action: 'modal_equip' },
   { id: 'bag',    label: '背包', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="12" y1="11" x2="12" y2="15"/></svg>', action: 'modal_bag' },
   { id: 'skill',  label: '功法', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><path d="M8 7h8M8 11h6"/></svg>', action: 'modal_skills' },
   { id: 'story',  label: '副本', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><circle cx="10" cy="8" r="1.5" fill="currentColor"/><circle cx="14" cy="12" r="1.5" fill="currentColor"/></svg>', action: 'go_story' },
-  { id: 'worldboss', label: '世界BOSS', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg>', action: 'go_worldboss' },
-  { id: 'shop',   label: '商店', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>', action: 'modal_shop' },
-  { id: 'daily',  label: '每日奖励', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 16l2 2 4-4"/></svg>', action: 'modal_daily' },
-  { id: 'rank',   label: '排行榜', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="5"/><path d="M8 21h8M12 13v8"/><path d="M7 4l2 2M17 4l-2 2"/></svg>', action: 'go_rank' },
-  { id: 'arena',  label: '竞技场', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6M17 15l4 4M3 3l18 18"/></svg>', action: 'modal_coming' },
-  { id: 'codex',  label: '图鉴', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/></svg>', action: 'modal_codex' },
-  { id: 'chestinfo', label: '抽奖概率', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v16M16 4v16"/></svg>', action: 'modal_chestinfo' },
 ];
 
 function calcCombatPower(p) {
@@ -45,7 +50,8 @@ const SHOP_PRICE = { fan: 30, ling: 60, bao: 120, xian: 240, shen: 480 }; // 商
 
 function initHub() {
   const hub = document.getElementById('hub-screen');
-  const menuContainer = document.getElementById('hub-menu');
+  const topIconContainer = document.getElementById('hub-top-icons');
+  const bottomIconContainer = document.getElementById('hub-bottom-icons');
   const avatarEl = document.getElementById('hub-avatar');
   const nameEl = document.getElementById('hub-name');
   const powerEl = document.getElementById('hub-power-num');
@@ -62,56 +68,85 @@ function initHub() {
     charVideo._errBound = true;
   }
 
-  // 渲染菜单按钮
-  menuContainer.innerHTML = HUB_MENU_ITEMS.map(item =>
-    `<button class="hub-btn" data-hub="${item.id}" title="${item.label}">${item.icon}<span>${item.label}</span></button>`
+  // 渲染顶部图标按钮
+  topIconContainer.innerHTML = HUB_TOP_ITEMS.map(item =>
+    `<button class="hub-top-btn" data-hub="${item.id}" title="${item.label}">${item.icon}<span>${item.label}</span></button>`
   ).join('');
 
-  // 绑定按钮事件
-  menuContainer.querySelectorAll('.hub-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const item = HUB_MENU_ITEMS.find(i => i.id === btn.dataset.hub);
-      if (!item) return;
-      switch (item.action) {
-        case 'go_story':
-          openStoryScreen();
-          break;
-        case 'go_worldboss':
-          openWorldBossScreen();
-          break;
-        case 'go_rank':
-          if (window.Online && window.Online.showBoard) window.Online.showBoard();
-          else openModal('<h3 style="color:#D4A843">排行榜</h3><p style="color:rgba(241,239,232,0.7)">联网功能尚未开启，完成腾讯云配置后即可查看全服排行榜。</p><button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>');
-          break;
-        case 'modal_attr':
-          showAttrModal();
-          break;
-        case 'modal_skills':
-          showSkillsModal();
-          break;
-        case 'modal_equip':
-          showEquipModal();
-          break;
-        case 'modal_bag':
-          showBagModal();
-          break;
-        case 'modal_shop':
-          showShopModal();
-          break;
-        case 'modal_daily':
-          openDailyRewardScreen();
-          break;
-        case 'modal_codex':
-          openCodex();
-          break;
-        case 'modal_chestinfo':
-          openChestInfo();
-          break;
-        default:
-          openModal(`<h3 style="color:#D4A843">${item.label}</h3><p style="color:rgba(241,239,232,0.7)">「${item.label}」功能正在开发中，敬请期待！</p><button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
-      }
+  // 渲染底部主功能按钮
+  bottomIconContainer.innerHTML = HUB_BOTTOM_ITEMS.map(item =>
+    `<button class="hub-bottom-btn" data-hub="${item.id}" title="${item.label}">${item.icon}<span>${item.label}</span></button>`
+  ).join('');
+
+  // 统一事件绑定（顶栏 + 底栏）
+  const allItems = [...HUB_TOP_ITEMS, ...HUB_BOTTOM_ITEMS];
+  [topIconContainer, bottomIconContainer].forEach(container => {
+    container.querySelectorAll('[data-hub]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = allItems.find(i => i.id === btn.dataset.hub);
+        if (!item) return;
+        handleHubAction(item);
+      });
     });
   });
+
+  // 统一动作分发
+  function handleHubAction(item) {
+    switch (item.action) {
+      case 'go_story':      openStoryScreen(); break;
+      case 'go_worldboss': openWorldBossScreen(); break;
+      case 'go_rank':
+        if (window.Online && window.Online.showBoard) window.Online.showBoard();
+        else openModal('<h3 style="color:#D4A843">排行榜</h3><p style="color:rgba(241,239,232,0.7)">联网功能尚未开启，完成腾讯云配置后即可查看全服排行榜。</p><button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>');
+        break;
+      case 'modal_attr':    showAttrModal(); break;
+      case 'modal_skills':  showSkillsModal(); break;
+      case 'modal_equip':   showEquipModal(); break;
+      case 'modal_bag':     showBagModal(); break;
+      case 'modal_shop':    showShopModal(); break;
+      case 'modal_daily':   openDailyRewardScreen(); break;
+      case 'modal_codex':   openCodex(); break;
+      case 'modal_chestinfo':openChestInfo(); break;
+      case 'modal_settings':showSettingsModal(); break;
+      default:
+        openModal(`<h3 style="color:#D4A843">${item.label}</h3><p style="color:rgba(241,239,232,0.7)">「${item.label}」功能正在开发中，敬请期待！</p><button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
+    }
+  }
+
+  // 设置弹窗（含抽奖概率入口）
+  function showSettingsModal() {
+    refreshHub();
+    const r = CULTIVATION.realmFromXp(player.xp);
+    openModal(`
+      <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06A1.65 1.65 0 0015 18.96a1.65 1.65 0 00-1.82.33V19a2 2 0 01-2.82 0v-.08A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82-.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-.33-1.82V13a2 2 0 012.82 0v.08A1.65 1.65 0 0010.6 13a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 13v2z"/></svg>
+      <h3 style="margin:0">设置</h3></div>
+      <p style="margin:2px 0 10px;font-size:12px;color:rgba(241,239,232,0.6)"><b style="color:#fff">${esc(player.name)}</b> · <b style="color:#D4A843">${esc(r.label)}</b></p>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="btn-full" onclick="openChestInfo()" style="background:rgba(212,168,67,0.08);border:1px solid rgba(212,168,67,0.25);text-align:left;padding:12px 14px">
+          <span style="font-size:14px;font-weight:600">📊 抽奖概率</span><br>
+          <span style="font-size:11px;color:rgba(241,239,232,0.5)">查看功法/装备宝箱各品质掉落概率与保底机制</span>
+        </button>
+
+        <button class="btn-full" onclick="if(confirm('确定要清空存档重新开始吗？所有进度将丢失！')){localStorage.removeItem('wuxia_save');location.reload();}" style="background:rgba(232,123,123,0.08);border:1px solid rgba(232,123,123,0.25);text-align:left;padding:12px 14px">
+          <span style="font-size:14px;font-weight:600;color:#E87B7B">🗑️ 清空存档</span><br>
+          <span style="font-size:11px;color:rgba(241,239,232,0.5)">删除所有游戏数据，重新创建角色（不可恢复）</span>
+        </button>
+
+        <div style="padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:8px;border:0.5px solid rgba(255,255,255,0.08)">
+          <div style="font-size:11px;color:rgba(241,239,232,0.45);margin-bottom:6px">游戏信息</div>
+          <div style="font-size:12px;color:rgba(241,239,232,0.7);line-height:1.7">
+            版本：v1.2.2<br>
+            存档：浏览器本地存储<br>
+            灵石：<b style="color:#D4A843">${formatNum(player.gold)}</b> · 钻石：<b style="color:#378ADD">${player.diamond || 0}</b><br>
+            战力：<b style="color:#E87B7B">${formatNum(calcCombatPower(player))}</b>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
+  }
+  window.showSettingsModal = showSettingsModal;
 
   // ====== 全局：主页境界/进度条同步（弹窗和主页共用同一份数据） ======
   function syncRealmDOM() {

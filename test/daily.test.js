@@ -68,7 +68,7 @@ code += `
     // 初始化主页（建立 HUB、window.* 回调、商店函数等）
     initHub();
     assert('initHub 后 window.HUB 存在', !!window.HUB);
-    assert('每日奖励菜单已接入 modal_daily', HUB_MENU_ITEMS.find(i=>i.id==='daily').action === 'modal_daily');
+    assert('每日奖励菜单已接入 modal_daily', HUB_TOP_ITEMS.find(i=>i.id==='daily').action === 'modal_daily');
     assert('window.openDailyRewardScreen 存在', typeof openDailyRewardScreen === 'function');
     assert('window.buyDiamondChest 存在', typeof window.buyDiamondChest === 'function');
 

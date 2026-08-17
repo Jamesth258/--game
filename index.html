@@ -85,44 +85,42 @@
   </div>
 </div>
 
-<!-- ===== 游戏主页（人物展示 + 菜单栏） ===== -->
+<!-- ===== 游戏主页（人物居中 + 顶栏 + 底栏） ===== -->
 <div id="hub-screen" hidden>
-  <!-- 顶部菜单栏 -->
+  <!-- 顶部信息栏 -->
   <div class="hub-topbar">
-    <!-- 头像 -->
-    <div class="hub-avatar-wrap">
-      <div class="hub-avatar-frame"></div>
-      <img class="hub-avatar-img" id="hub-avatar" src="" alt="">
-    </div>
-    <!-- 名字 -->
-    <div class="hub-name" id="hub-name">逍遥仙</div>
-    <!-- 战力 -->
-    <div class="hub-power">
-      战力<span class="hub-power-num" id="hub-power-num">1,234</span>
-    </div>
-    <!-- 境界 -->
-    <div class="hub-realm" id="hub-realm"></div>
-    <!-- 经验进度条 -->
-    <div class="xp-bar-wrap" id="hub-xp-bar" style="max-width:140px;flex-shrink:0">
-      <div class="xp-bar-track" style="height:6px;border-radius:3px"><div class="xp-bar-fill" id="hub-xp-fill" style="width:0%;height:100%;border-radius:3px"></div></div>
-      <div class="xp-bar-info" style="margin-top:1px">
-        <span class="cur-realm" id="hub-xp-realm" style="font-size:10px;color:#9B6BCC"></span>
-        <span class="xp-nums" id="hub-xp-nums" style="font-size:9px"></span>
+    <!-- 左：头像 + 战力 + 境界 -->
+    <div class="hub-top-left">
+      <div class="hub-avatar-wrap">
+        <div class="hub-avatar-frame"></div>
+        <img class="hub-avatar-img" id="hub-avatar" src="" alt="">
+      </div>
+      <div class="hub-info-group">
+        <div class="hub-power">战力<span class="hub-power-num" id="hub-power-num">1,234</span></div>
+        <div class="hub-realm" id="hub-realm"></div>
+        <div class="xp-bar-wrap" id="hub-xp-bar">
+          <div class="xp-bar-track"><div class="xp-bar-fill" id="hub-xp-fill" style="width:0%"></div></div>
+          <div class="xp-bar-info">
+            <span class="cur-realm" id="hub-xp-realm"></span>
+            <span class="xp-nums" id="hub-xp-nums"></span>
+          </div>
+        </div>
       </div>
     </div>
-    <!-- 功能按钮 -->
-    <div class="hub-menu" id="hub-menu"></div>
+    <!-- 右：功能图标按钮（每日奖励/商店/图鉴/世界BOSS/排行榜/设置） -->
+    <div class="hub-top-right" id="hub-top-icons"></div>
   </div>
 
-  <!-- 中央人物动图区 -->
+  <!-- 中央人物立绘区 -->
   <div class="hub-char-area" id="hub-char-area">
-    <!-- 有视频时用 video，没有时用 img 静态立绘 -->
     <video class="hub-char-video" id="hub-char-video" autoplay loop muted playsinline hidden></video>
     <img class="hub-char-static" id="hub-char-static" src="" alt="">
+    <!-- 人物名称浮层 -->
+    <div class="hub-char-name" id="hub-name">逍遥仙</div>
   </div>
 
-  <!-- 底部 -->
-  <div class="hub-footer">点击上方按钮开始你的修仙之旅</div>
+  <!-- 底部主功能栏（属性/装备/背包/功法/副本） -->
+  <div class="hub-bottombar" id="hub-bottom-icons"></div>
 </div>
 
 <!-- 全局弹窗（离线/在线通用） -->
