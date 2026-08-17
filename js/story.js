@@ -96,9 +96,9 @@ function openStoryScreen() {
   openModal(`
     <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
     <h3 style="margin:0">剧情副本</h3></div>
-    <p style="margin:2px 0 8px;font-size:12px;color:rgba(241,239,232,0.6)">每章 10 关，单关胜得经验；通关领 <b style="color:#D4A843">功法三选一 + 装备三选一</b>。改编自热门仙侠小说。</p>
+    <p style="margin:2px 0 8px;font-size:12px;color:rgba(241,239,232,0.6)">每章 10 关，单关胜得经验；通关领 <b style="color:#D4A843">功法三选一 + 装备三选一</b>。</p>
     <div class="story-vol-tabs">${volTabs}</div>
-    <div class="equip-sec-title">${esc(vol.name)} · 改编自《${esc(vol.inspiredBy)}》</div>
+    <div class="equip-sec-title">${esc(vol.name)}</div>
     <div class="bag-list">${chapters.join('')}</div>
     <button class="btn-full" onclick="storyClose()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
 }
