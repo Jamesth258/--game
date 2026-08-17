@@ -154,7 +154,7 @@ function openSkillChest(biasTier) {
   checkCodexReward();
   return s;
 }
-// 装备宝箱：部位随机 + 品质 = 常规锻造(rollRarity) 高 1 阶，再叠加来源 bias（世界BOSS名次越高越高），封顶神品
+// 装备宝箱：部位随机 + 品质 = 常规 rollRarity 高 1 阶，再叠加来源 bias（世界BOSS名次越高越高），封顶神品
 function openEquipChest(bias) {
   bias = bias || 0;
   const slot = EQUIP_SLOT_KEYS[Math.floor(Math.random() * EQUIP_SLOT_KEYS.length)];

@@ -71,7 +71,7 @@ code += `
     // 1) 装备表规模 80~100
     assert('装备表规模 80~100 (实际=' + EQUIP_DB.length + ')', EQUIP_DB.length >= 80 && EQUIP_DB.length <= 100);
 
-    // 2) 每个 部位×品质 至少 1 件（保证宝箱/锻造任意槽位都能抽到）
+    // 2) 每个 部位×品质 至少 1 件（保证宝箱/商店任意槽位都能抽到）
     const SLOTS = ['weapon','armor','accessory','boots'];
     let allCells = true;
     SLOTS.forEach(s => { for (let r=0;r<5;r++){ if (!EQUIP_DB.some(e=>e.slot===s && e.rarity===r)) allCells = false; } });

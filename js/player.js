@@ -80,7 +80,7 @@ function genEquip(slot, rarityIdx) {
   return drawEquipFromDb(slot, rarityIdx);
 }
 
-// 锻造时的品质随机（境界越高越容易出高品）
+// 品质随机（境界越高越容易出高品；宝箱/商店/战斗掉落共用）
 function rollRarity() {
   const tier = (typeof CULTIVATION !== 'undefined') ? CULTIVATION.realmFromXp(player.xp).globalIndex : 0;
   const w = [
@@ -143,7 +143,7 @@ const player = {
   critRate: 0.15, critDmg: 1.5,                                // 常驻暴击率 / 暴伤倍率（属性面板展示用）
   potions: 3, defending: false, sect: '', score: 0, xp: 0,
   equipment: { weapon: null, armor: null, accessory: null, boots: null }, // 已穿戴装备（部位→item）
-  bag: [], gold: 50, diamond: 0,                            // 背包 + 灵石（锻造货币） + 钻石（商城消费货币）
+  bag: [], gold: 50, diamond: 0,                            // 背包 + 灵石（装备/商店货币） + 钻石（商城消费货币）
 };
 
 // 由 6 基础属性 + 境界 + 装备 推导出全部战斗数值

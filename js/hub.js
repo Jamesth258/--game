@@ -320,12 +320,10 @@ function initHub() {
   }
   window.showSkillShop = showSkillShop;
   window.buySkill = buySkill;
-  // 装备弹窗（穿戴 / 卸下 / 背包 / 锻造）
+  // 装备弹窗（穿戴 / 卸下 / 背包）
   function showEquipModal() {
     refreshHub(); // 同步主页战力
-    const r = CULTIVATION.realmFromXp(player.xp);
     const gold = player.gold || 0;
-    const forgeCost = 30 + r.globalIndex * 5;
 
     // 已穿戴的部位卡
     const slotCard = slot => {
@@ -351,12 +349,7 @@ function initHub() {
             <span class="equip-bonus">${esc(equipBonusText(it))}</span></div>
           <button class="equip-btn" onclick="equipItem('${it.uid}')">装备</button>
         </div>`).join('')
-      : `<p style="color:rgba(241,239,232,0.4);font-size:12px;margin:6px 0">背包为空 — 击败江湖敌人可掉落装备，或用灵石锻造。</p>`;
-
-    // 锻造按钮（每个部位一个）
-    const forgeHtml = EQUIP_SLOT_KEYS.map(s =>
-      `<button class="forge-btn" onclick="forgeEquip('${s}')">${EQUIP_SLOTS[s].icon} 锻造${EQUIP_SLOTS[s].name}<br><span class="forge-cost">${forgeCost} 灵石</span></button>`
-    ).join('');
+      : `<p style="color:rgba(241,239,232,0.4);font-size:12px;margin:6px 0">背包为空 — 击败江湖敌人可掉落装备宝箱。</p>`;
 
     openModal(`
       <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M12 2L4 7l8 5 8-5-8-5zM4 12l8 5 8-5M4 17l8 5 8-5"/></svg>
@@ -366,9 +359,6 @@ function initHub() {
       <hr>
       <div class="equip-sec-title">背包（${player.bag.length}）</div>
       <div class="bag-list">${bagHtml}</div>
-      <hr>
-      <div class="equip-sec-title">锻造（消耗灵石，随机品质随境界提升）</div>
-      <div class="forge-grid">${forgeHtml}</div>
       <button class="btn-full" onclick="returnToHub()" style="margin-top:16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
   }
 
@@ -399,22 +389,8 @@ function initHub() {
     refreshHub();
     showEquipModal();
   }
-  // 锻造：消耗灵石生成随机品质装备进背包
-  function forgeEquip(slot) {
-    const tier = CULTIVATION.realmFromXp(player.xp).globalIndex;
-    const cost = 30 + tier * 5;
-    if ((player.gold || 0) < cost) {
-      openModal(`<h3 style="color:#D4A843">灵石不足</h3><p style="color:rgba(241,239,232,0.75)">锻造${EQUIP_SLOTS[slot].name}需 ${cost} 灵石，当前仅有 ${player.gold || 0}。击败江湖敌人可获得灵石。</p><button class="btn-full" onclick="if(window.showEquipModal)window.showEquipModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回</button>`);
-      return;
-    }
-    player.gold -= cost;
-    player.bag.push(genEquip(slot, rollRarity()));
-    saveGame();
-    showEquipModal();
-  }
   window.equipItem = equipItem;
   window.unequipSlot = unequipSlot;
-  window.forgeEquip = forgeEquip;
   window.showEquipModal = showEquipModal;
   window.showBagModal = showBagModal;
 
@@ -448,7 +424,7 @@ function initHub() {
             </div>
           </div>`;
         }).join('')
-      : `<p style="color:rgba(241,239,232,0.4);font-size:12px;margin:6px 0">背包为空 — 击败江湖敌人可掉落宝箱，或去商店/锻造获取。</p>`;
+      : `<p style="color:rgba(241,239,232,0.4);font-size:12px;margin:6px 0">背包为空 — 击败江湖敌人可掉落宝箱，或去商店购买。</p>`;
     const chestSection = chests.length
       ? `<div class="equip-sec-title">宝箱（${chests.length}）· 点击开启</div><div class="bag-list">${chestHtml}</div><hr>`
       : '';
