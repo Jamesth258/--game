@@ -511,6 +511,7 @@ function initHub() {
     if ((player.gold || 0) < price) { showShopModal(); return; }
     player.gold -= price;
     player.bag.push(it);
+    if (typeof recordEquipCollected === 'function') recordEquipCollected(it); // 购买即记为已拥有（商店标注 / 图鉴）
     shopStock = shopStock.filter(x => x.uid !== uid);
     saveGame();
     refreshHub();

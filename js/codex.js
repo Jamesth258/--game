@@ -15,9 +15,20 @@ function recordEquipCollected(item) {
   checkCodexReward();
 }
 
+// 当前已拥有的装备 entryId 集合：图鉴记录(equipCollected，含已售出) + 背包 + 已穿戴。
+// 用「实时」集合而非仅依赖 equipCollected，避免「获得后未回溯/当次购买未记录」时漏标。
+function ownedEquipSet() {
+  const s = new Set(player.equipCollected || []);
+  (player.bag || []).forEach(it => { if (it && it.entryId) s.add(it.entryId); });
+  if (player.equipment && typeof player.equipment === 'object') {
+    ['weapon', 'armor', 'accessory', 'boots'].forEach(k => { const it = player.equipment[k]; if (it && it.entryId) s.add(it.entryId); });
+  }
+  return s;
+}
+
 // 是否已拥有：供商店 / 副本三选一界面标注「（已拥有）」，防重复购买 / 重复选择
 function isEquipOwned(entryId) {
-  return !!(player.equipCollected && entryId != null && player.equipCollected.includes(entryId));
+  return entryId != null && ownedEquipSet().has(entryId);
 }
 function isSkillOwned(id) {
   return !!(player.learned && id != null && player.learned.includes(id));
@@ -113,12 +124,30 @@ window.isSkillOwned = isSkillOwned;
 // 重建装备图鉴收集集合：把背包(bag)与已穿戴(equipment)中带 entryId 的装备并入 equipCollected（去重）。
 // 用于图鉴功能上线前的旧存档回溯——老玩家历史已拥有的装备在 bag/equipment 里但从未写入 equipCollected，
 // 导致图鉴大量灰显为未收集；同时兜底「任何获得装备的入口漏调 recordEquipCollected」的隐患（只要装备进背包/身上即解锁）。
+// 关键修复：图鉴上线前的装备实体没有 entryId 字段，无法与 EQUIP_DB 对应，故先按「名称+部位」回填 entryId，
+// 再记入 equipCollected，否则商店「已拥有」标注与图鉴收集都会失效。
 function rebuildEquipCollected() {
   if (!player.equipCollected) player.equipCollected = [];
-  const add = (it) => { if (it && it.entryId && !player.equipCollected.includes(it.entryId)) player.equipCollected.push(it.entryId); };
+  // 名称+部位 → EQUIP_DB id（同名跨部位时 slot 作为区分键）
+  const nameSlotToId = {};
+  if (Array.isArray(EQUIP_DB)) EQUIP_DB.forEach(e => { if (e && e.name) nameSlotToId[e.name + '|' + e.slot] = e.id; });
+  let dirty = false;
+  const add = (it) => {
+    if (!it || typeof it !== 'object') return;
+    // 缺 entryId 的老装备：按 名称+部位 反查 EQUIP_DB 补回
+    if (it.entryId == null && it.name && it.slot && nameSlotToId[it.name + '|' + it.slot]) {
+      it.entryId = nameSlotToId[it.name + '|' + it.slot];
+      dirty = true;
+    }
+    if (it.entryId != null && !player.equipCollected.includes(it.entryId)) {
+      player.equipCollected.push(it.entryId);
+    }
+  };
   if (Array.isArray(player.bag)) player.bag.forEach(add);
   if (player.equipment && typeof player.equipment === 'object') {
     ['weapon', 'armor', 'accessory', 'boots'].forEach(s => add(player.equipment[s]));
   }
+  // 回填了 entryId 则落盘，避免下次加载又变回无 entryId
+  if (dirty && typeof saveGame === 'function') { try { saveGame(); } catch (e) {} }
 }
 window.rebuildEquipCollected = rebuildEquipCollected;

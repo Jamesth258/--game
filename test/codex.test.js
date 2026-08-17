@@ -165,6 +165,23 @@ code += `
     assert('isSkillOwned 未命中返回 false', isSkillOwned('sk_z') === false);
     assert('isSkillOwned 空值安全', isSkillOwned(null) === false);
 
+    // ===== 10. 老存档缺 entryId 装备回溯补全（修复商店「已拥有」不提示） =====
+    const eb = EQUIP_DB.find(e => e.slot === 'weapon' && e.rarity === 3) || EQUIP_DB.find(e => e.slot === 'weapon');
+    player.equipCollected = [];
+    player.bag = [{ name: eb.name, slot: eb.slot, rarity: eb.rarity, bonus: { atk: 10 } }]; // 图鉴上线前的老装备，无 entryId
+    player.equipment = { weapon: null, armor: null, accessory: null, boots: null };
+    rebuildEquipCollected();
+    assert('老装备被回填 entryId', player.bag[0].entryId === eb.id);
+    assert('老装备回填后 equipCollected 含该 id', player.equipCollected.includes(eb.id));
+    assert('老装备回填后 isEquipOwned=true', isEquipOwned(eb.id) === true);
+
+    // ===== 11. 实时已拥有集合：仅入 bag（未写入 equipCollected）也应即时识别 =====
+    player.equipCollected = [];
+    player.bag = [ makeItemFromDb(eb, 5) ]; // 当次购买，仅进 bag
+    assert('仅入 bag 即 isEquipOwned=true（无需 reload）', isEquipOwned(eb.id) === true);
+    player.bag = [];
+    assert('移除 bag 后 isEquipOwned=false', isEquipOwned(eb.id) === false);
+
   } catch (e) {
     results.push('FAIL | 异常: ' + (e && e.stack ? e.stack : e));
   }
