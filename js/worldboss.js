@@ -257,24 +257,26 @@ function openWorldBossClaim(slotIdx) {
   const board = wbBoard(slot);
   const rank = board.rank;
   sd.rank = rank; sd.claimed = true;
-  // 按名次发奖
+  // 按名次发放宝箱道具（入背包，玩家去背包手动开启）
   const results = [];
-  if (rank === 1) { results.push(['功法', openSkillChest(2)]); results.push(['装备', openEquipChest(2)]); }
-  else if (rank === 2) { results.push(['装备', openEquipChest(1)]); }
-  else if (rank === 3) { results.push(['功法', openSkillChest(1)]); }
-  else { for (let i = 0; i < 5; i++) results.push(['灵石', openStoneChest()]); for (let i = 0; i < 5; i++) results.push(['经验', openExpChest()]); }
+  if (rank === 1) { results.push(['功法宝箱', makeChestItem('skill', 2)]); results.push(['装备宝箱', makeChestItem('equip', 2)]); }
+  else if (rank === 2) { results.push(['装备宝箱', makeChestItem('equip', 1)]); }
+  else if (rank === 3) { results.push(['功法宝箱', makeChestItem('skill', 1)]); }
+  else { for (let i = 0; i < 5; i++) results.push(['灵石宝箱', makeChestItem('stone', 0)]); for (let i = 0; i < 5; i++) results.push(['经验宝箱', makeChestItem('exp', 0)]); }
+  results.forEach(r => player.bag.push(r[1]));
   saveGame();
   let html = `<div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg><h3 style="margin:0">世界BOSS 领奖</h3></div>`;
   html += `<p style="margin:4px 0">你在「${esc(slot.name)}」时段获得 <b style="color:#D4A843">第 ${rank} 名</b>（累计伤害 ${wbFmt(sd.dmg)}）</p>`;
   const rewardDesc = r => {
-    if (r[0] === '功法') return '习得《' + r[1].name + '》';
-    if (r[0] === '装备') return r[1].name + '（' + r[1].rarityName + '）';
-    if (r[0] === '灵石') return '+' + wbFmt(r[1]) + ' 灵石';
-    if (r[0] === '经验') return '+' + wbFmt(r[1]) + ' 修为';
+    if (r[0] === '功法宝箱') return '随机功法（越高阶越稀有）· 已存入背包';
+    if (r[0] === '装备宝箱') return (r[1].bias >= 2 ? '高品质' : (r[1].bias === 1 ? '精良' : '随机品质')) + '装备 · 已存入背包';
+    if (r[0] === '灵石宝箱') return '200~800 灵石 · 已存入背包';
+    if (r[0] === '经验宝箱') return '2000~10000 修为 · 已存入背包';
     return '';
   };
-  html += `<div class="bag-list">` + results.map(r => `<div class="bag-item"><div class="bag-info"><span class="bag-name" style="color:#D4A843">${r[0]}宝箱</span><span class="equip-bonus">${rewardDesc(r)}</span></div></div>`).join('') + `</div>`;
-  html += `<button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`;
+  html += `<div class="bag-list">` + results.map(r => `<div class="bag-item"><div class="bag-info"><span class="bag-name" style="color:#D4A843">${esc(r[0])}</span><span class="equip-bonus">${rewardDesc(r)}</span></div></div>`).join('') + `</div>`;
+  html += `<button class="btn-full" onclick="showBagModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">前往背包开启</button>`;
+  html += `<button class="btn-full" onclick="returnToHub()" style="margin-top:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`;
   openModal(html);
 }
 
@@ -314,6 +316,49 @@ function openChestInfo() {
   openModal(html);
 }
 window.openChestInfo = openChestInfo;
+
+// ====== 宝箱道具：入背包、玩家手动开启 ======
+// 生成宝箱道具（存背包，开启时才开奖）。kind: skill/equip/exp/stone；bias: 来源品质加成（世界BOSS名次越高越大）
+function makeChestItem(kind, bias) {
+  bias = bias || 0;
+  const META = {
+    skill: { name: '功法宝箱', icon: '📜', desc: '开启随机习得一件未拥有的功法（越高阶越稀有）' },
+    equip: { name: '装备宝箱', icon: '🛡️', desc: '开启获得随机品质装备（品质随境界提升）' },
+    exp:   { name: '经验宝箱', icon: '✨', desc: '开启获得 2000~10000 修为' },
+    stone: { name: '灵石宝箱', icon: '💰', desc: '开启获得 200~800 灵石' },
+  };
+  const m = META[kind] || META.equip;
+  const biasTxt = bias >= 2 ? '（极品）' : (bias === 1 ? '（精良）' : '');
+  return { type: 'chest', chestKind: kind, bias: bias, uid: 'chest_' + Date.now() + '_' + Math.floor(Math.random() * 1e6), name: m.name + biasTxt, icon: m.icon, desc: m.desc };
+}
+// 开启背包中的宝箱道具：按 kind 调对应开奖，展示结果，从 bag 移除该宝箱
+function openChestItem(uid) {
+  if (typeof uid !== 'string') return;
+  const i = player.bag.findIndex(it => it.uid === uid);
+  if (i < 0) return;
+  const box = player.bag[i];
+  if (!box || box.type !== 'chest') return;
+  player.bag.splice(i, 1);
+  let res = '';
+  if (box.chestKind === 'skill') {
+    const s = openSkillChest(box.bias);
+    res = '习得功法《' + (s.name || '?') + '》' + (s.tierName ? '（' + s.tierName + '·' + (s.schoolCn || '') + '）' : '');
+  } else if (box.chestKind === 'equip') {
+    const it = openEquipChest(box.bias);
+    res = '获得 ' + (it.name || '?') + '（' + (it.rarityName || '') + '·' + ((it.slot && EQUIP_SLOTS[it.slot]) ? EQUIP_SLOTS[it.slot].name : '') + '）';
+  } else if (box.chestKind === 'stone') {
+    const g = openStoneChest(); res = '获得 ' + g + ' 灵石';
+  } else if (box.chestKind === 'exp') {
+    const x = openExpChest(); res = '获得 ' + x + ' 修为';
+  }
+  saveGame();
+  openModal(`<div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg><h3 style="margin:0">开启${esc(box.name)}</h3></div>
+    <p style="margin:6px 0;color:rgba(241,239,232,0.85);font-size:14px">${esc(res)}</p>
+    <button class="btn-full" onclick="showBagModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回背包</button>
+    <button class="btn-full" onclick="returnToHub()" style="margin-top:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
+}
+window.makeChestItem = makeChestItem;
+window.openChestItem = openChestItem;
 
 window.openWorldBossScreen = openWorldBossScreen;
 window.startWorldBossBattle = startWorldBossBattle;

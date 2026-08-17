@@ -343,9 +343,10 @@ function initHub() {
       </div>`;
     };
 
-    // 背包列表
-    const bagHtml = player.bag.length
-      ? player.bag.map(it => `<div class="bag-item">
+    // 背包列表（仅装备，宝箱不可在此装备）
+    const bagEquips = (player.bag || []).filter(it => it && it.type !== 'chest');
+    const bagHtml = bagEquips.length
+      ? bagEquips.map(it => `<div class="bag-item">
           <div class="bag-info"><span class="equip-icon">${EQUIP_SLOTS[it.slot].icon}</span>
             <span class="bag-name" style="color:${it.rarityColor}">${esc(it.name)}</span>
             <span class="equip-bonus">${esc(equipBonusText(it))}</span></div>
@@ -416,13 +417,23 @@ function initHub() {
   window.unequipSlot = unequipSlot;
   window.forgeEquip = forgeEquip;
   window.showEquipModal = showEquipModal;
+  window.showBagModal = showBagModal;
 
   // 背包弹窗：列出全部装备，可装备 / 出售，并对比已穿戴部位标"更优"
   function showBagModal() {
     refreshHub();
     const gold = player.gold || 0;
-    const list = player.bag.length
-      ? player.bag.map(it => {
+    const chests = (player.bag || []).filter(it => it && it.type === 'chest');
+    const equips = (player.bag || []).filter(it => !it || it.type !== 'chest');
+    const chestHtml = chests.map(it => `<div class="bag-item">
+        <div class="bag-info">
+          <span class="bag-name" style="color:#D4A843">${esc(it.icon || '🎁')} ${esc(it.name)}</span>
+          <span class="equip-bonus">${esc(it.desc || '')}</span>
+        </div>
+        <button class="equip-btn" onclick="openChestItem('${it.uid}')">开启</button>
+      </div>`).join('');
+    const list = equips.length
+      ? equips.map(it => {
           const equipped = player.equipment[it.slot];
           const better = compareEquip(it, equipped);
           const sell = SELL_PRICE[it.rarity] || 8;
@@ -438,12 +449,16 @@ function initHub() {
             </div>
           </div>`;
         }).join('')
-      : `<p style="color:rgba(241,239,232,0.4);font-size:12px;margin:6px 0">背包为空 — 击败江湖敌人可掉落装备，或去商店/锻造获取。</p>`;
+      : `<p style="color:rgba(241,239,232,0.4);font-size:12px;margin:6px 0">背包为空 — 击败江湖敌人可掉落宝箱，或去商店/锻造获取。</p>`;
+    const chestSection = chests.length
+      ? `<div class="equip-sec-title">宝箱（${chests.length}）· 点击开启</div><div class="bag-list">${chestHtml}</div><hr>`
+      : '';
     openModal(`
       <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
       <h3 style="margin:0">背包</h3></div>
-      <p style="margin:2px 0 10px;font-size:12px;color:rgba(241,239,232,0.6)">灵石 <b style="color:#D4A843">${gold}</b> · 装备 <b style="color:#fff">${player.bag.length}</b></p>
-      <div class="equip-sec-title">背包装备</div>
+      <p style="margin:2px 0 10px;font-size:12px;color:rgba(241,239,232,0.6)">灵石 <b style="color:#D4A843">${gold}</b> · 装备 <b style="color:#fff">${equips.length}</b> · 宝箱 <b style="color:#D4A843">${chests.length}</b></p>
+      ${chestSection}
+      <div class="equip-sec-title">背包装备（${equips.length}）</div>
       <div class="bag-list">${list}</div>
       <button class="btn-full" onclick="showShopModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">前往商店</button>
       <button class="btn-full" onclick="returnToHub()" style="margin-top:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
@@ -533,10 +548,7 @@ function initHub() {
     if (price == null) return;
     if ((player.diamond || 0) < price) { showShopModal(); return; }
     player.diamond -= price;
-    if (type === 'skill') openSkillChest();
-    else if (type === 'equip') openEquipChest();
-    else if (type === 'stone') openStoneChest();
-    else if (type === 'exp') openExpChest();
+    player.bag.push(makeChestItem(type, 0));   // type: skill/equip/stone/exp → 入背包，玩家手动开启
     saveGame();
     refreshHub();
     showShopModal();

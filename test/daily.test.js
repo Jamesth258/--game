@@ -94,13 +94,13 @@ code += `
     signNext(); // 3 → 功法宝箱
     const learnedAt3 = player.learned.length;
     assert('签到满3次 已领里程碑3', player.daily.monthClaimed[3] === true);
-    assert('签到满3次 习得1功法(learned+1)', player.learned.length === learnedAt3 && learnedAt3 === DEFAULT_LEARNED.length + 1);
+    assert('签到满3次 功法宝箱入背包', player.bag.filter(it => it && it.type === 'chest' && it.chestKind === 'skill').length === 1);
 
     signNext(); // 4
     signNext(); // 5 → 装备宝箱
     assert('签到满5次 已领里程碑5', player.daily.monthClaimed[5] === true);
     const bagAt5 = player.bag.length;
-    assert('签到满5次 装备进背包(bag+1)', bagAt5 === 1);
+    assert('签到满5次 装备宝箱入背包', player.bag.filter(it => it && it.type === 'chest' && it.chestKind === 'equip').length === 1);
 
     signNext(); // 6
     signNext(); // 7 → +1000 钻石
@@ -115,8 +115,8 @@ code += `
     const learnedBefore20 = player.learned.length;
     for (let i=15;i<=20;i++) signNext(); // 20 → 装备×2 + 功法×2
     assert('签到满20次 已领里程碑20', player.daily.monthClaimed[20] === true);
-    assert('签到满20次 装备×2(背包+2)', player.bag.length === bagBefore20 + 2);
-    assert('签到满20次 功法×2(learned+2)', player.learned.length === learnedBefore20 + 2);
+    assert('签到满20次 宝箱×4入背包(2功法+2装备)', player.bag.length === bagBefore20 + 4);
+    assert('签到满20次 功法未因宝箱即时增加(learned=初始)', player.learned.length === DEFAULT_LEARNED.length);
     assert('签到满20次 本月次数=20', player.daily.monthSignCount === 20);
 
     // ---- 第二重：在线时长奖励 ----
@@ -163,7 +163,7 @@ code += `
     assert('钻石购买装备宝箱 进背包', player.bag.length === bagS + 1);
     window.buyDiamondChest('skill');
     assert('钻石购买功法宝箱 扣200钻(累计600)', player.diamond === 600);
-    assert('钻石购买功法宝箱 习得(learned+1)', player.learned.length === learnS + 1);
+    assert('钻石购买功法宝箱 入背包', player.bag.length === bagS + 2);
     player.diamond = 0; const d0 = player.diamond;
     window.buyDiamondChest('skill'); // 余额不足 → 不扣费
     assert('钻石不足时不扣费', player.diamond === d0);

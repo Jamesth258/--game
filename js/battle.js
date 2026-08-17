@@ -474,12 +474,10 @@ function endBattle(win) {
         gainXp(STORY_BY_CH[ch].levels[lv - 1], false);
         player.score = player.xp;
         player.gold = (player.gold || 0) + (10 + ch);
-        // 小概率装备掉落（仅首通）
+        // 小概率装备掉落（仅首通）→ 装备宝箱入背包，开启时再结算
         if (Math.random() < 0.35) {
-          const dslot = EQUIP_SLOT_KEYS[Math.floor(Math.random() * EQUIP_SLOT_KEYS.length)];
-          const drop = genEquip(dslot, rollRarity());
-          player.bag.push(drop);
-          dropMsg = ' 拾得' + drop.name + '！';
+          player.bag.push(makeChestItem('equip', 0));
+          dropMsg = ' 拾得装备宝箱！';
         }
       } else {
         dropMsg = '（已通关，重战无额外奖励）';
@@ -491,21 +489,16 @@ function endBattle(win) {
       const goldGain = 20 + battle.node.id * 15;
       player.gold = (player.gold || 0) + goldGain;
       if (Math.random() < 0.4) {
-        const dslot = EQUIP_SLOT_KEYS[Math.floor(Math.random() * EQUIP_SLOT_KEYS.length)];
-        const drop = genEquip(dslot, rollRarity());
-        player.bag.push(drop);
-        recordEquipCollected(drop);
-        dropMsg = ' 拾得' + drop.name + '！';
+        player.bag.push(makeChestItem('equip', 0));
+        dropMsg = ' 拾得装备宝箱！';
       }
-      // 功法掉落：BOSS 高概率、普通战低概率；只掉未习得且非「待副本」锁定的功法
+      // 功法掉落：BOSS 高概率、普通战低概率；只掉未习得且非「待副本」锁定的功法 → 功法宝箱入背包，开启时再学
       const skillChance = battle.node.type === 'boss' ? 0.6 : 0.2;
       if (Math.random() < skillChance) {
         const pool = SKILLS_DB.filter(s => !player.learned.includes(s.id) && !s.lockedUntil);
         if (pool.length) {
-          const ds = pool[Math.floor(Math.random() * pool.length)];
-          player.learned.push(ds.id);
-          checkCodexReward();
-          dropMsg += ' 习得功法《' + ds.name + '》！';
+          player.bag.push(makeChestItem('skill', 0));
+          dropMsg += ' 拾得功法宝箱！';
         }
       }
       if (battle.node.id === nodes.length - 1) clearAll = true;

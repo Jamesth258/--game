@@ -78,17 +78,17 @@ function ensureDaily() {
   return d;
 }
 
-// 发放一份奖励，返回可读描述（用于弹窗/提示）。宝箱复用 worldboss.js 的 chest 函数。
+// 发放一份奖励，返回可读描述（用于弹窗/提示）。随机奖励以「宝箱道具」存入背包，玩家手动开启（diamond 直接发放）。
 function dailyGrant(kind, amount) {
-  if (kind === 'skill')   { const s = openSkillChest();  return '习得《' + s.name + '》'; }
-  if (kind === 'equip')   { const it = openEquipChest(); return it.name + '（' + it.rarityName + '）'; }
+  if (kind === 'skill')   { player.bag.push(makeChestItem('skill', 0)); return '功法宝箱 ×1'; }
+  if (kind === 'equip')   { player.bag.push(makeChestItem('equip', 0)); return '装备宝箱 ×1'; }
   if (kind === 'diamond') { player.diamond = (player.diamond || 0) + (amount || 0); return '+' + (amount || 0) + ' 钻石'; }
-  if (kind === 'double')  { openSkillChest(); openEquipChest(); openSkillChest(); openEquipChest(); return '功法 ×2 + 装备 ×2'; }
+  if (kind === 'double')  { player.bag.push(makeChestItem('skill', 0)); player.bag.push(makeChestItem('skill', 0)); player.bag.push(makeChestItem('equip', 0)); player.bag.push(makeChestItem('equip', 0)); return '功法宝箱 ×2 + 装备宝箱 ×2'; }
   if (kind === 'mixed')   {
-    const e = openExpChest();
-    const stones = []; for (let i = 0; i < 5; i++) stones.push(openStoneChest());
+    player.bag.push(makeChestItem('exp', 0));
+    for (let i = 0; i < 5; i++) player.bag.push(makeChestItem('stone', 0));
     player.diamond = (player.diamond || 0) + 30;
-    return '经验 +' + e + '、灵石 +' + stones.reduce((a, b) => a + b, 0) + '、钻石 +30';
+    return '经验宝箱 ×1、灵石宝箱 ×5、钻石 +30';
   }
   return '';
 }
