@@ -175,11 +175,14 @@ function initHub() {
     if (videoSrc) {
       charStatic.setAttribute('hidden', '');
       charVideo.removeAttribute('hidden');
+      // 仅在 src 变化时才重新 load+play，避免每次 refreshHub 都 play() 导致视频被 seek 回开头而“闪一下”
       if (charVideo.getAttribute('src') !== videoSrc) {
         charVideo.setAttribute('src', videoSrc);
         charVideo.load();
+        charVideo.play().catch(() => {});
+      } else if (charVideo.paused) {
+        charVideo.play().catch(() => {});
       }
-      charVideo.play().catch(() => {});
     } else {
       charVideo.setAttribute('hidden', '');
       charStatic.removeAttribute('hidden');

@@ -699,7 +699,10 @@ function drawOverlay(text) {
   ctx.fillText(text, W / 2, H / 2);
 }
 
+let _lastRenderState;
 function render() {
+  // 可观测：状态机切换时打印一次，便于排查主页下 canvas 是否仍在后台重绘
+  if (_lastRenderState !== state) { _lastRenderState = state; console.warn('[render] state ->', state); }
   // 主页/创建界面是 DOM 层，不需要画布持续重绘；跳过 60fps 空转，把算力让给视频解码
   if (state === 'hub' || state === 'create') { requestAnimationFrame(render); return; }
   ctx.clearRect(0, 0, W, H);

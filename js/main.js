@@ -58,6 +58,7 @@ function checkSavedCharacter() {
       if (window.syncRealmDOM) syncRealmDOM();
       createScreen.setAttribute('hidden', '');
       // 有存档 → 初始化并进入主页
+      state = 'hub'; // 关键：进入主页必须把状态机切到 hub，否则底层 canvas 渲染循环会持续重绘地图/战斗帧（白耗算力）
       initHub();
       window.HUB.show();
       if (offlineGain > 0) openModal(`<h3 style="color:#D4A843">离线挂机结算</h3><p style="color:rgba(241,239,232,0.8)">离线期间自动修炼，获得修为 <b style="color:#639922">+${formatNum(offlineGain)}</b>（含挂机加成 ${Math.round(player.xpBonus * 100)}%）。</p><button class="btn-full" onclick="closeModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">收下</button>`);
