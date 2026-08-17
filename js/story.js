@@ -9,6 +9,7 @@ let _storyCh = 1;      // 最近挑战的章节（战斗结束返回用）
 let _selSkill = null;  // 三选一当前选中的功法 id
 let _selEquip = 0;     // 三选一当前选中的装备序号
 let _rewardCh = 1;     // 当前三选一对应的章节号
+let _rewardEquipItems = []; // 三选一装备卡片预生成的具体装备（含 entryId，用于「已拥有」判定）
 
 function sTierColor(t) { return ({ 1: '#9aa0a6', 2: '#639922', 3: '#378ADD', 4: '#9B6BCC', 5: '#D4A843', 6: '#E87B7B', 7: '#E8D9A0' })[t] || '#9aa0a6'; }
 
@@ -152,21 +153,25 @@ function showStoryReward(ch) {
   _rewardCh = ch;
   _selSkill = rw.skills[0];
   _selEquip = 0;
+  _rewardEquipItems = rw.equip.map(e => genEquip(e.slot, e.rarity)); // 预生成具体装备（含 entryId，供「已拥有」判定与展示真名）
   const skillCards = rw.skills.map(id => {
     const s = SKILLS_DB_MAP[id]; if (!s) return '';
+    const owned = isSkillOwned(id);
     return `<div class="reward-card" data-kind="skill" data-id="${id}" onclick="storySelReward('skill','${id}')">
-      <div style="color:${sTierColor(s.tier)};font-weight:700">${s.tierName}·${esc(s.name)}</div>
+      <div style="color:${sTierColor(s.tier)};font-weight:700">${s.tierName}·${esc(s.name)}${owned ? ' <span class="owned-badge">已拥有</span>' : ''}</div>
       <div style="font-size:11px;color:rgba(241,239,232,0.6)">${esc(s.schoolCn)} · ${s.cost}灵</div>
       <div style="font-size:11px;color:rgba(241,239,232,0.5)">${esc(s.desc)}</div>
       <span class="reward-tag" style="display:none">已选</span>
     </div>`;
   }).join('');
   const eqCards = rw.equip.map((e, i) => {
+    const it = _rewardEquipItems[i];
     const r = RARITY[e.rarity], slot = EQUIP_SLOTS[e.slot];
+    const owned = isEquipOwned(it.entryId);
     return `<div class="reward-card" data-kind="equip" data-i="${i}" onclick="storySelReward('equip',${i})">
-      <div style="color:${r.color};font-weight:700">${r.name}·${slot.name}</div>
-      <div style="font-size:11px;color:rgba(241,239,232,0.6)">${slot.icon} 部位</div>
-      <div style="font-size:11px;color:rgba(241,239,232,0.5)">随机属性随境界生成</div>
+      <div style="color:${r.color};font-weight:700">${r.name}·${slot.name}${owned ? ' <span class="owned-badge">已拥有</span>' : ''}</div>
+      <div style="font-size:12px;color:${it.rarityColor}">${esc(it.name)}</div>
+      <div style="font-size:11px;color:rgba(241,239,232,0.5)">${esc(equipBonusText(it))}</div>
       <span class="reward-tag" style="display:none">已选</span>
     </div>`;
   }).join('');
@@ -206,8 +211,9 @@ function updateRewardPick() {
   const rw = STORY_BY_CH[_rewardCh] && STORY_BY_CH[_rewardCh].reward;
   const sk = SKILLS_DB_MAP[_selSkill];
   const eq = rw && rw.equip[_selEquip];
+  const it = rw && _rewardEquipItems[_selEquip];
   const skName = sk ? sk.name : (_selSkill || '—');
-  const eqName = eq ? (RARITY[eq.rarity].name + '·' + EQUIP_SLOTS[eq.slot].name) : (_selEquip || '—');
+  const eqName = it ? it.name : (eq ? (RARITY[eq.rarity].name + '·' + EQUIP_SLOTS[eq.slot].name) : (_selEquip || '—'));
   el.innerHTML = '已选：功法 <b style="color:#D4A843">' + esc(skName) + '</b> ＋ 装备 <b style="color:#D4A843">' + esc(eqName) + '</b>';
 }
 
@@ -217,7 +223,7 @@ function storyClaimReward(ch) {
   if (!player.learned.includes(sid)) player.learned.push(sid);   // 功法入功法库
   checkCodexReward();
   const eq = rw.equip[_selEquip] || rw.equip[0];
-  const eqItem = genEquip(eq.slot, eq.rarity);
+  const eqItem = _rewardEquipItems[_selEquip] || genEquip(eq.slot, eq.rarity);
   player.bag.push(eqItem);                                       // 装备入背包
   recordEquipCollected(eqItem);
   player.storyRewardClaimed[ch] = true;

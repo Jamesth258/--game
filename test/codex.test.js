@@ -155,6 +155,16 @@ code += `
     assert('回溯后图鉴装备计数 4/94', h2.indexOf('装备收集 4/94') >= 0);
     assert('回溯后已拥有装备亮显真名(' + EQUIP_DB[0].name + ')', h2.indexOf(EQUIP_DB[0].name) >= 0);
 
+    // ===== 9. 已拥有判定（供商店 / 三选一标注「已拥有」） =====
+    player.equipCollected = ['eq_a', 'eq_b'];
+    player.learned = ['sk_a'];
+    assert('isEquipOwned 命中已收集', isEquipOwned('eq_a') === true);
+    assert('isEquipOwned 未命中返回 false', isEquipOwned('eq_z') === false);
+    assert('isEquipOwned 空值安全', isEquipOwned(null) === false && isEquipOwned(undefined) === false);
+    assert('isSkillOwned 命中已习得', isSkillOwned('sk_a') === true);
+    assert('isSkillOwned 未命中返回 false', isSkillOwned('sk_z') === false);
+    assert('isSkillOwned 空值安全', isSkillOwned(null) === false);
+
   } catch (e) {
     results.push('FAIL | 异常: ' + (e && e.stack ? e.stack : e));
   }

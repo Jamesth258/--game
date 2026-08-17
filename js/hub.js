@@ -455,13 +455,18 @@ function initHub() {
     const rows = shopStock.map(it => {
       const price = SHOP_PRICE[it.rarity] || 30;
       const can = gold >= price;
-      const btn = can
-        ? `<button class="equip-btn" onclick="buyShopItem('${it.uid}')">购买·${price}灵石</button>`
-        : `<button class="equip-btn" disabled style="background:rgba(255,255,255,0.06);color:rgba(241,239,232,0.3);cursor:default">${price}灵石</button>`;
+      const owned = isEquipOwned(it.entryId);
+      const nameHtml = `<span class="bag-name" style="color:${it.rarityColor}">${esc(it.name)}</span>` +
+        (owned ? ` <span class="owned-badge">已拥有</span>` : '');
+      const btn = owned
+        ? `<button class="equip-btn" disabled style="background:rgba(255,255,255,0.06);color:rgba(241,239,232,0.3);cursor:default">已拥有</button>`
+        : (can
+          ? `<button class="equip-btn" onclick="buyShopItem('${it.uid}')">购买·${price}灵石</button>`
+          : `<button class="equip-btn" disabled style="background:rgba(255,255,255,0.06);color:rgba(241,239,232,0.3);cursor:default">${price}灵石</button>`);
       return `<div class="bag-item">
         <div class="bag-info">
           <span class="equip-icon">${EQUIP_SLOTS[it.slot].icon}</span>
-          <span class="bag-name" style="color:${it.rarityColor}">${esc(it.name)}</span>
+          ${nameHtml}
           <span class="equip-bonus">${esc(equipBonusText(it))}</span>
         </div>
         ${btn}
@@ -471,7 +476,7 @@ function initHub() {
       <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
       <h3 style="margin:0">商店</h3></div>
       <p style="margin:2px 0 10px;font-size:12px;color:rgba(241,239,232,0.6)">灵石 <b style="color:#D4A843">${gold}</b> ｜ 钻石 <b style="color:#378ADD">${player.diamond || 0}</b></p>
-      <div class="equip-sec-title">在售装备（每次刷新随机品质）</div>
+      <div class="equip-sec-title">在售装备（每次刷新随机品质；已拥有的会标注「已拥有」并不可购买）</div>
       <div class="bag-list">${rows}</div>
       <hr>
       <div class="equip-sec-title">钻石专区（钻石消费）</div>

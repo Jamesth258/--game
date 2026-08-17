@@ -15,6 +15,14 @@ function recordEquipCollected(item) {
   checkCodexReward();
 }
 
+// 是否已拥有：供商店 / 副本三选一界面标注「（已拥有）」，防重复购买 / 重复选择
+function isEquipOwned(entryId) {
+  return !!(player.equipCollected && entryId != null && player.equipCollected.includes(entryId));
+}
+function isSkillOwned(id) {
+  return !!(player.learned && id != null && player.learned.includes(id));
+}
+
 // 图鉴里程碑奖励：每收集满 10 个功法 / 10 个装备，奖励 1000 钻石（可连发多档）
 function checkCodexReward() {
   if (!player.codexReward) player.codexReward = { skill: 0, equip: 0 };
@@ -99,6 +107,8 @@ function codexCard(got, name, sub, desc, color) {
 window.openCodex = openCodex;
 window.recordEquipCollected = recordEquipCollected;
 window.checkCodexReward = checkCodexReward;
+window.isEquipOwned = isEquipOwned;
+window.isSkillOwned = isSkillOwned;
 
 // 重建装备图鉴收集集合：把背包(bag)与已穿戴(equipment)中带 entryId 的装备并入 equipCollected（去重）。
 // 用于图鉴功能上线前的旧存档回溯——老玩家历史已拥有的装备在 bag/equipment 里但从未写入 equipCollected，

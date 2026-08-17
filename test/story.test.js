@@ -122,6 +122,25 @@ code += `
     assert('领取后 标记已领 storyRewardClaimed[1]=true', player.storyRewardClaimed[1] === true);
     assert('领取后 learned 仅+1(只发所选功法)', player.learned.length === learnBefore + 1);
 
+    // ===== 2b) 三选一「已拥有」标注（防重复选择） =====
+    player.storyCleared = {}; player.storyRewardClaimed = {};
+    player.storyCleared[1] = 10; player.storyRewardClaimed[1] = false;
+    player.bag = []; player.xp = 364;
+    const rwOwn = STORY_BY_CH[1].reward;
+    if (!player.learned.includes(rwOwn.skills[0])) player.learned.push(rwOwn.skills[0]);
+    player.equipCollected = [];
+    rwOwn.equip.forEach(e => EQUIP_DB.filter(x => x.slot === e.slot).forEach(x => player.equipCollected.push(x.id)));
+    showStoryReward(1);
+    const rewardHtmlOwn = document.getElementById('modal-box').innerHTML;
+    const ownCount = (rewardHtmlOwn.match(/已拥有/g) || []).length;
+    assert('三选一 出现「已拥有」徽标(owned-badge)', rewardHtmlOwn.indexOf('owned-badge') !== -1);
+    assert('三选一 已拥有标注数 >= 4（1功法+3装备）', ownCount >= 4);
+    // 反向：全部未拥有时不应出现「已拥有」
+    player.learned = []; player.equipCollected = [];
+    showStoryReward(1);
+    const rewardHtmlNone = document.getElementById('modal-box').innerHTML;
+    assert('未拥有时 三选一不标注已拥有', rewardHtmlNone.indexOf('已拥有') === -1);
+
     // ===== 3) 战斗结束后出现 DOM 返回按钮（不再卡 canvas） =====
     // 场景A：章节通关 -> endBattle(win) 应调用 showBattleReturnBtn
     _createdElements = []; // 重置追踪
