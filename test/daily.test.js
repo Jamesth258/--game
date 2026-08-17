@@ -9,7 +9,7 @@ const vm = require('vm');
 
 const ROOT = path.join(__dirname, '..');
 const FILES = [
-  'config.js', 'cultivation.js', 'js/core.js', 'js/player.js', 'js/skills-data.js',
+  'config.js', 'cultivation.js', 'js/core.js', 'js/equip_db.js', 'js/player.js', 'js/skills-data.js',
   'js/story-data.js', 'js/battle.js', 'js/hub.js', 'js/create.js', 'js/story.js',
   'js/worldboss.js', 'js/daily.js', 'js/main.js',
 ];

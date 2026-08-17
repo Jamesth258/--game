@@ -75,10 +75,14 @@ function startBattle(node, mode) {
   const enemy = isWB ? makeWorldBoss(node._wb) : makeEnemy(node);
   // 重置玩家本场战斗的临时状态（buff/debuff/护盾/僵直），避免跨场残留
   player.buffs = []; player.debuffs = []; player.shield = null; player.stun = 0;
+  // 聚合装备特效；若带「罡气」类特效则开局获得护盾
+  const mods = (typeof computeEquipMods === 'function') ? computeEquipMods(player) : null;
+  if (mods && mods.shieldPct > 0) player.shield = { pct: mods.shieldPct, dur: 999 };
   battle = {
     node, player, enemy,
     mode: mode || 'map',          // 'map' = 江湖节点；'story' = 剧情副本；'worldboss' = 世界BOSS
-    queue: [], turn: 0, roundCount: 0, playerDmg: 0,
+    queue: [], turn: 0, roundCount: 0, playerDmg: 0, mods,
+    _stackCrit: 0, _reviveUsed: false,
     msg: (isWB ? '世界BOSS · ' : '遭遇 ') + enemy.name + '！',
   };
   state = 'battle';
@@ -91,6 +95,53 @@ function startBattle(node, mode) {
 // 状态乘区：buff 加成（amt 为比例，1 即 +0%）、debuff 削减（下限 0）
 function buffMul(u, stat) { let m = 1; (u.buffs || []).forEach(b => { if (b.stat === stat) m += b.amt; }); return m; }
 function debuffMul(u, stat) { let m = 1; (u.debuffs || []).forEach(b => { if (b.stat === stat) m -= b.amt; }); return Math.max(0, m); }
+
+// 聚合玩家已穿戴装备 + 套装的战斗特效，返回统一的 mods 对象（battle.mods 使用）
+function computeEquipMods(p) {
+  const m = {
+    critRate: 0, critDmg: 0, lifesteal: 0, reflect: 0, pierce: 0, dmgAmp: 0,
+    reduceDmg: 0, shieldPct: 0, regenHp: 0, regenMp: 0, extraActions: 0,
+    burn: 0, lowHpCrit: 0, lowHpDmg: 0, stackCrit: 0, revive: 0,
+  };
+  const worn = p.equipment || {};
+  const setCount = {};
+  for (const slot in worn) {
+    const it = worn[slot];
+    if (!it) continue;
+    if (it.extraActions) m.extraActions += it.extraActions;
+    if (it.effect) {
+      const e = it.effect, v = e.v || 0;
+      switch (e.type) {
+        case 'crit':      m.critRate  += v / 100; break;
+        case 'critdmg':   m.critDmg   += v / 100; break;
+        case 'lifesteal': m.lifesteal += v / 100; break;
+        case 'reflect':   m.reflect   += v / 100; break;
+        case 'pierce':    m.pierce    += v / 100; break;
+        case 'dmgamp':    m.dmgAmp    += v / 100; break;
+        case 'reducedmg': m.reduceDmg += v / 100; break;
+        case 'shield':    m.shieldPct += v / 100; break;
+        case 'regenhp':   m.regenHp   += v / 100; break;
+        case 'regenmp':   m.regenMp   += v; break;
+        case 'burn':      m.burn      += v / 100; break;
+        case 'lowhpcrit': m.lowHpCrit += v / 100; break;
+        case 'lowhpdmg':  m.lowHpDmg  += v / 100; break;
+        case 'stackcrit': m.stackCrit += v / 100; break;
+        case 'revive':    m.revive = Math.max(m.revive, v / 100); break;
+      }
+    }
+    if (it.set) setCount[it.set] = (setCount[it.set] || 0) + 1;
+  }
+  // 套装加成（集 2 件触发二件套，4 件触发四件套）
+  for (const s in setCount) {
+    const def = (typeof EQUIP_SETS !== 'undefined') ? EQUIP_SETS[s] : null;
+    if (!def) continue;
+    const n = setCount[s];
+    if (n >= 2 && def.two)   applySetMods(m, def.two);
+    if (n >= 4 && def.four)  applySetMods(m, def.four);
+  }
+  return m;
+}
+function applySetMods(m, eff) { if (!eff) return; for (const k in eff) m[k] = (m[k] || 0) + eff[k]; }
 // 回合开始：衰减 buff/debuff/shield 持续时间（stun 在下面单独处理）
 function tickDurations(u) {
   if (u.buffs) u.buffs = u.buffs.filter(b => (b.dur -= 1) > 0);
@@ -109,6 +160,23 @@ function beginRound() {
   [p, e].forEach(u => { if (u.hp > 0) { u.mp = Math.min(u.maxMp, u.mp + 5); u.defending = false; } });
   // 衰减 buff/debuff/shield 持续时间
   [p, e].forEach(tickDurations);
+  // 装备特效：每回合回血/回蓝、积威累加暴击、灼烧结算
+  const m = battle.mods;
+  if (m) {
+    if (m.regenHp && p.hp > 0) p.hp = Math.min(p.maxHp, p.hp + Math.round(p.maxHp * m.regenHp));
+    if (m.regenMp && p.hp > 0) p.mp = Math.min(p.maxMp, p.mp + m.regenMp);
+    if (m.stackCrit) battle._stackCrit = Math.min(0.40, (battle._stackCrit || 0) + m.stackCrit);
+  }
+  [p, e].forEach(u => {
+    if (!u.debuffs) return;
+    u.debuffs.forEach(d => {
+      if (d.stat === 'burn') {
+        const dmg = d.amt || 0;
+        u.hp = Math.max(0, u.hp - dmg);
+        floats.push({ x: u._x, y: u._y, text: '灼烧-' + dmg, color: '#E8743B', ttl: 60 });
+      }
+    });
+  });
   // 僵直（stun）：本回合无法行动，并递减
   const pStun = (p.stun || 0) > 0, eStun = (e.stun || 0) > 0;
   if (pStun) p.stun--;
@@ -180,15 +248,30 @@ function damage(attacker, target, mult, type) {
   }
   // 物理攻击用 atk/def，精神攻击用 spiAtk/spiDef；增益/减益乘区实时生效
   const isSpirit = type === 'spirit';
+  const aMods = (!attacker.isEnemy && battle && battle.mods) ? battle.mods : null; // 攻击者=玩家时的装备特效
+  const tMods = (!target.isEnemy && battle && battle.mods)  ? battle.mods : null; // 受击者=玩家时的装备特效
   const atkStat = (isSpirit ? attacker.spiAtk : attacker.atk) * buffMul(attacker, isSpirit ? 'spiAtk' : 'atk');
-  const defStat = (isSpirit ? target.spiDef : target.def) * debuffMul(target, isSpirit ? 'spiDef' : 'def');
+  let defStat = (isSpirit ? target.spiDef : target.def) * debuffMul(target, isSpirit ? 'spiDef' : 'def');
+  if (aMods && aMods.pierce) defStat *= (1 - aMods.pierce); // 破甲：无视部分防御
   let base = atkStat * mult - defStat * 0.5;
-  // 暴击：基础 15% + 增益·暴击 buff
-  const critChance = 0.15 + Math.max(0, buffMul(attacker, 'crit') - 1);
-  const crit = Math.random() < critChance;
-  if (crit) base *= 1.5;
+  // 暴击：基础 15% + 增益·暴击 buff + 装备暴击率 + 濒锋(血<30%) + 积威(每回合累加，上限40%)
+  let critChance = 0.15 + Math.max(0, buffMul(attacker, 'crit') - 1);
+  if (aMods) {
+    critChance += aMods.critRate;
+    if (aMods.lowHpCrit && attacker.hp / attacker.maxHp < 0.3) critChance += aMods.lowHpCrit;
+    if (battle._stackCrit) critChance += battle._stackCrit;
+  }
+  const crit = Math.random() < Math.min(0.95, critChance);
+  let critMul = 1.5 + (aMods ? aMods.critDmg : 0); // 会心：装备暴伤加成
+  if (crit) base *= critMul;
   if (target.defending) base *= 0.5;
-  // 护体（shield）：按比例减伤
+  // 增伤（装备）/ 死战（血<30%）
+  if (aMods) {
+    if (aMods.dmgAmp) base *= (1 + aMods.dmgAmp);
+    if (aMods.lowHpDmg && attacker.hp / attacker.maxHp < 0.3) base *= (1 + aMods.lowHpDmg);
+  }
+  // 玩家受击：护体减伤（装备）+ 护盾
+  if (tMods && tMods.reduceDmg) base *= (1 - tMods.reduceDmg);
   if (target.shield && target.shield.pct) base *= (1 - target.shield.pct);
   base = Math.max(1, Math.round(base));
   target.hp = Math.max(0, target.hp - base);
@@ -196,6 +279,22 @@ function damage(attacker, target, mult, type) {
   const col = crit ? '#A32D2D' : '#2C2C2A';
   const txt = (crit ? '暴击 ' : '') + '-' + base;
   floats.push({ x: target._x, y: target._y, text: txt, color: col, ttl: 60 });
+  // 吸血（玩家攻击触发）
+  if (aMods && aMods.lifesteal && base > 0) {
+    const h = Math.round(base * aMods.lifesteal);
+    attacker.hp = Math.min(attacker.maxHp, attacker.hp + h);
+    floats.push({ x: attacker._x, y: attacker._y, text: '+' + h, color: '#3B6D11', ttl: 60 });
+  }
+  // 反伤（玩家受击触发，把伤害按比率弹回给攻击者）
+  if (tMods && tMods.reflect && base > 0) {
+    const r = Math.round(base * tMods.reflect);
+    attacker.hp = Math.max(0, attacker.hp - r);
+    floats.push({ x: attacker._x, y: attacker._y, text: '反伤-' + r, color: '#A32D2D', ttl: 60 });
+  }
+  // 灼烧（玩家攻击附带，持续 2 回合按比例掉血）
+  if (aMods && aMods.burn && base > 0) {
+    target.debuffs.push({ stat: 'burn', amt: Math.round(attacker.atk * aMods.burn), dur: 2 });
+  }
   return base;
 }
 
@@ -339,6 +438,15 @@ function checkEnd() {
     endBattle(true); return true;
   }
   if (battle.player.hp <= 0) {
+    // 装备特效「涅槃」：阵亡复活 1 次
+    if (battle.mods && battle.mods.revive > 0 && !battle._reviveUsed) {
+      battle._reviveUsed = true;
+      battle.player.hp = Math.round(battle.player.maxHp * battle.mods.revive);
+      battle.player.shield = { pct: 0.2, dur: 999 };
+      floats.push({ x: battle.player._x, y: battle.player._y, text: '涅槃复活!', color: '#D4A843', ttl: 90 });
+      battle.msg = '装备特效触发：涅槃复活，重回战场！';
+      return false;
+    }
     endBattle(false); return true;
   }
   return false;

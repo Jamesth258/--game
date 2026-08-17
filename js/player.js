@@ -75,21 +75,9 @@ let _equipUid = 1;
 function nextEquipUid() { return 'E' + Date.now().toString(36) + (_equipUid++); }
 
 // 生成一件装备（slot：部位；rarityIdx：品质序号）
+// 装备生成改为从固定数据库（equip_db.js）按 部位+品质 抽取，越高级越带特效
 function genEquip(slot, rarityIdx) {
-  const r = RARITY[rarityIdx];
-  const def = EQUIP_SLOTS[slot];
-  const tier = (typeof CULTIVATION !== 'undefined') ? CULTIVATION.realmFromXp(player.xp).globalIndex : 0;
-  const scale = 1 + tier * 0.18; // 境界越高，装备数值越强
-  const item = { uid: nextEquipUid(), slot, slotName: def.name, rarity: r.key, rarityName: r.name, rarityColor: r.color, bonus: {}, extraActions: 0, name: '' };
-  def.attrs.forEach(a => {
-    let v = Math.round(EQUIP_BASE[a] * r.mult * scale);
-    if (a === 'eva') v = Math.round(EQUIP_BASE[a] * r.mult * 100) / 100; // eva 以比率增量存储（如 0.03）
-    item.bonus[a] = v;
-  });
-  if (Math.random() < r.ea) item.extraActions = 1; // 极品：战斗额外连动一次
-  const pool = _EQUIP_NAMES[slot];
-  item.name = r.name + '·' + pool[Math.floor(Math.random() * pool.length)];
-  return item;
+  return drawEquipFromDb(slot, rarityIdx);
 }
 
 // 锻造时的品质随机（境界越高越容易出高品）
@@ -118,6 +106,8 @@ function equipBonusText(item) {
     parts.push((names[k] || k) + (k === 'eva' ? '+' + Math.round(bonus[k] * 100) + '%' : '+' + bonus[k]));
   }
   if (item.extraActions) parts.push('连动+' + item.extraActions);
+  const eff = equipEffectText(item);
+  if (eff) parts.push('｜ ' + eff);
   return parts.join(' ');
 }
 
