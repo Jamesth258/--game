@@ -35,11 +35,19 @@ function checkSavedCharacter() {
       player.worldBoss = (saved.worldBoss && typeof saved.worldBoss === 'object') ? saved.worldBoss : null;
       player.diamond = (saved.diamond != null) ? saved.diamond : 0;
       player.daily = (saved.daily && typeof saved.daily === 'object') ? saved.daily : null;
+      // 图鉴收集集合与里程碑档位（旧存档可能缺字段，补默认）
+      player.equipCollected = Array.isArray(saved.equipCollected) ? saved.equipCollected : [];
+      player.codexReward = (saved.codexReward && typeof saved.codexReward === 'object') ? saved.codexReward : { skill: 0, equip: 0 };
       const _all = CHARACTERS.male.concat(CHARACTERS.female);
       const _ch = _all.find(c => c.id === saved.avatarId);
       art.hero.src = _ch ? _ch.img : saved.avatarImg;
       art.hero.failed = false;
       recalcStats(player);
+      // 图鉴奖励档位对齐：旧档已收集的部分不补发钻石，仅把「已发档位」预置为 floor(已收集数/10)
+      if (player.codexReward) {
+        player.codexReward.skill = Math.floor((player.learned || []).length / 10);
+        player.codexReward.equip = Math.floor((player.equipCollected || []).length / 10);
+      }
       // 离线挂机结算（按离开时长累加修为，并回满气血）
       const offlineGain = applyOfflineXp();
       player.hp = player.maxHp; player.mp = player.maxMp;

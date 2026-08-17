@@ -11,7 +11,7 @@ const ROOT = path.join(__dirname, '..');
 const FILES = [
   'config.js', 'cultivation.js', 'js/core.js', 'js/equip_db.js', 'js/player.js', 'js/skills-data.js',
   'js/story-data.js', 'js/battle.js', 'js/hub.js', 'js/create.js', 'js/story.js',
-  'js/worldboss.js', 'js/main.js',
+  'js/worldboss.js', 'js/codex.js', 'js/main.js',
 ];
 
 // ---- DOM / canvas 桩 ----

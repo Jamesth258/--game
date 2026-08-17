@@ -214,7 +214,7 @@ function makeItemFromDb(entry, tier) {
     rarity: r.key, rarityName: r.name, rarityColor: r.color,
     bonus, extraActions: 0, name: entry.name,
     effect: entry.effect ? { type: entry.effect.type, v: entry.effect.v } : null,
-    set: entry.set || null, setId: entry.id,
+    set: entry.set || null, setId: entry.id, entryId: entry.id,
   };
   if (entry.effect && entry.effect.type === 'extra') item.extraActions = entry.effect.v || 1;
   return item;

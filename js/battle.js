@@ -494,6 +494,7 @@ function endBattle(win) {
         const dslot = EQUIP_SLOT_KEYS[Math.floor(Math.random() * EQUIP_SLOT_KEYS.length)];
         const drop = genEquip(dslot, rollRarity());
         player.bag.push(drop);
+        recordEquipCollected(drop);
         dropMsg = ' 拾得' + drop.name + '！';
       }
       // 功法掉落：BOSS 高概率、普通战低概率；只掉未习得且非「待副本」锁定的功法
@@ -503,6 +504,7 @@ function endBattle(win) {
         if (pool.length) {
           const ds = pool[Math.floor(Math.random() * pool.length)];
           player.learned.push(ds.id);
+          checkCodexReward();
           dropMsg += ' 习得功法《' + ds.name + '》！';
         }
       }

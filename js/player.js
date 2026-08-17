@@ -127,7 +127,9 @@ const player = {
   extraActions: 0,                                           // 极品装备附加的本回合连动次数（recalcStats 重算）
   xpBonus: 0,                                                // 挂机经验加成（比例）
   learned: DEFAULT_LEARNED.slice(),                         // 已习得功法（SKILLS_DB id 数组）
-  equippedSkills: DEFAULT_EQUIPPED.slice(),                 // 已装备功法（≤6，战斗中每回合点选）
+  equippedSkills: DEFAULT_EQUIPPED.slice(),                // 已装备功法（≤6，战斗中每回合点选）
+  equipCollected: [],                                      // 已获得装备的 EQUIP_DB id 集合（图鉴收集，去重，不因出售/更换移除）
+  codexReward: { skill: 0, equip: 0 },                     // 图鉴里程碑已发放档位（每满10个功法/装备发1000钻）
   storyCleared: {},                                         // 剧情副本进度：ch -> 已通关关卡数(0~10)
   storyRewardClaimed: {},                                   // 已领取章节通关奖励的章节号集合
   storyLevelFirstClear: {},                                  // 各关首通标记：'ch_lv' -> true（重战不再发奖励）

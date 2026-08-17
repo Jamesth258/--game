@@ -125,6 +125,7 @@ function openSkillChest() {
   const pool = SKILLS_DB.filter(s => !player.learned.includes(s.id));
   const s = pool.length ? pool[Math.floor(Math.random() * pool.length)] : SKILLS_DB[Math.floor(Math.random() * SKILLS_DB.length)];
   if (!player.learned.includes(s.id)) player.learned.push(s.id);
+  checkCodexReward();
   return s;
 }
 function openEquipChest() {
@@ -132,6 +133,7 @@ function openEquipChest() {
   const r = Math.min(RARITY.length - 1, rollRarity() + 1);   // 宝箱品质略高于常规锻造
   const it = genEquip(slot, r);
   player.bag.push(it);
+  recordEquipCollected(it);
   return it;
 }
 function openStoneChest() { const g = 200 + Math.floor(Math.random() * 600); player.gold = (player.gold || 0) + g; return g; }

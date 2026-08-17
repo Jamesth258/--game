@@ -215,8 +215,11 @@ function storyClaimReward(ch) {
   const rw = STORY_BY_CH[ch].reward;
   const sid = _selSkill || rw.skills[0];
   if (!player.learned.includes(sid)) player.learned.push(sid);   // 功法入功法库
+  checkCodexReward();
   const eq = rw.equip[_selEquip] || rw.equip[0];
-  player.bag.push(genEquip(eq.slot, eq.rarity));                 // 装备入背包
+  const eqItem = genEquip(eq.slot, eq.rarity);
+  player.bag.push(eqItem);                                       // 装备入背包
+  recordEquipCollected(eqItem);
   player.storyRewardClaimed[ch] = true;
   saveGame();
   const sName = SKILLS_DB_MAP[sid] ? SKILLS_DB_MAP[sid].name : sid;

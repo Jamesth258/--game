@@ -15,6 +15,7 @@ const HUB_MENU_ITEMS = [
   { id: 'daily',  label: '每日奖励', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 16l2 2 4-4"/></svg>', action: 'modal_daily' },
   { id: 'rank',   label: '排行榜', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="5"/><path d="M8 21h8M12 13v8"/><path d="M7 4l2 2M17 4l-2 2"/></svg>', action: 'go_rank' },
   { id: 'arena',  label: '竞技场', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6M17 15l4 4M3 3l18 18"/></svg>', action: 'modal_coming' },
+  { id: 'codex',  label: '图鉴', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/></svg>', action: 'modal_codex' },
 ];
 
 function calcCombatPower(p) {
@@ -99,6 +100,9 @@ function initHub() {
           break;
         case 'modal_daily':
           openDailyRewardScreen();
+          break;
+        case 'modal_codex':
+          openCodex();
           break;
         default:
           openModal(`<h3 style="color:#D4A843">${item.label}</h3><p style="color:rgba(241,239,232,0.7)">「${item.label}」功能正在开发中，敬请期待！</p><button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
@@ -308,6 +312,7 @@ function initHub() {
     if ((player.gold || 0) < price) { showSkillShop(); return; }
     player.gold -= price;
     if (!player.learned.includes(id)) player.learned.push(id);
+    checkCodexReward();
     saveGame(); refreshHub(); showSkillShop();
   }
   window.showSkillShop = showSkillShop;
