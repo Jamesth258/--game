@@ -137,6 +137,7 @@ const player = {
   lastSeen: Date.now(),                                      // 离线时间戳（挂机结算）
   maxHp: 0, hp: 0, maxMp: 0, mp: 0, atk: 0, def: 0, spd: 0,
   spiAtk: 0, spiDef: 0, eva: 0, init: 0, luck: 0,
+  critRate: 0.15, critDmg: 1.5,                                // 常驻暴击率 / 暴伤倍率（属性面板展示用）
   potions: 3, defending: false, sect: '', score: 0, xp: 0,
   equipment: { weapon: null, armor: null, accessory: null, boots: null }, // 已穿戴装备（部位→item）
   bag: [], gold: 50, diamond: 0,                            // 背包 + 灵石（锻造货币） + 钻石（商城消费货币）
@@ -184,6 +185,32 @@ function recalcStats(p) {
   p.extraActions = extraActions;
   p.luck = p.des;                                        // 幸运值
   p.xpBonus = (p.com + p.des) * 0.002;                     // 挂机经验加成 = 悟性×0.2% + 天命×0.2%（每点属性各 0.2%）
+
+  // 常驻暴击率 / 暴伤倍率（供属性面板展示）
+  // 仅统计「常驻」来源：基础 15% / 150% + 装备锐利·会心 + 套装常驻项
+  // 战斗内「条件触发」的（濒锋·血<30%、积威·每回合累加、功法暴击buff）不计入面板常驻值
+  let cr = 0.15, cd = 1.5;
+  const _eq2 = p.equipment || {};
+  const _setCnt = {};
+  for (const slot of EQUIP_SLOT_KEYS) {
+    const it = _eq2[slot];
+    if (!it) continue;
+    if (it.effect) {
+      if (it.effect.type === 'crit')    cr += (it.effect.v || 0) / 100;
+      if (it.effect.type === 'critdmg') cd += (it.effect.v || 0) / 100;
+    }
+    if (it.set) _setCnt[it.set] = (_setCnt[it.set] || 0) + 1;
+  }
+  if (typeof EQUIP_SETS !== 'undefined') {
+    for (const s in _setCnt) {
+      const def = EQUIP_SETS[s]; if (!def) continue;
+      const n = _setCnt[s];
+      if (n >= 2 && def.two)   { if (def.two.critRate) cr += def.two.critRate; if (def.two.critDmg) cd += def.two.critDmg; }
+      if (n >= 4 && def.four)  { if (def.four.critRate) cr += def.four.critRate; if (def.four.critDmg) cd += def.four.critDmg; }
+    }
+  }
+  p.critRate = Math.min(0.95, cr);   // 与战斗内暴击率上限一致
+  p.critDmg = cd;                    // 暴击伤害倍率（面板展示时 ×100% 即总倍率）
   return p;
 }
 
