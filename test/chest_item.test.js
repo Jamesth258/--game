@@ -112,6 +112,21 @@ code += `
     assert('旧装备按装备处理：显示在背包装备区', h2.indexOf('背包装备（') >= 0);
     assert('无宝箱时不开启按钮', h2.indexOf('开启') < 0);
 
+    // 7. 动画路径：setTimeout 同步执行时，开箱动画结束应弹出含结果的结果 modal
+    try {
+      globalThis.setTimeout = (fn) => { fn(); return 0; };
+      player.bag = [ makeChestItem('equip', 0) ];
+      globalThis.__MODAL = null;
+      openChestItem(player.bag[0].uid);
+      const hm = globalThis.__MODAL || '';
+      assert('动画结束弹出结果 modal（标题含「开启装备宝箱」）', hm.indexOf('开启装备宝箱') >= 0);
+      assert('结果 modal 含「返回背包」', hm.indexOf('返回背包') >= 0);
+      assert('结果 modal 含「返回主页」', hm.indexOf('返回主页') >= 0);
+      assert('结果 modal 含动画类 chest-result-pop', hm.indexOf('chest-result-pop') >= 0);
+    } catch (e7) {
+      results.push('FAIL | 动画路径异常: ' + (e7 && e7.stack ? e7.stack : e7));
+    }
+
   } catch (e) {
     results.push('FAIL | 异常: ' + (e && e.stack ? e.stack : e));
   }

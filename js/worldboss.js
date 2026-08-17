@@ -331,7 +331,7 @@ function makeChestItem(kind, bias) {
   const biasTxt = bias >= 2 ? '（极品）' : (bias === 1 ? '（精良）' : '');
   return { type: 'chest', chestKind: kind, bias: bias, uid: 'chest_' + Date.now() + '_' + Math.floor(Math.random() * 1e6), name: m.name + biasTxt, icon: m.icon, desc: m.desc };
 }
-// 开启背包中的宝箱道具：按 kind 调对应开奖，展示结果，从 bag 移除该宝箱
+// 开启背包中的宝箱道具：先播放开启动画，动画结束后再展示开奖结果（从 bag 移除已同步完成）
 function openChestItem(uid) {
   if (typeof uid !== 'string') return;
   const i = player.bag.findIndex(it => it.uid === uid);
@@ -352,8 +352,35 @@ function openChestItem(uid) {
     const x = openExpChest(); res = '获得 ' + x + ' 修为';
   }
   saveGame();
+  playChestOpenAnim(box, res);
+}
+// 播放开启动画（纯 CSS）。动画结束回调 showChestResult 弹出结果；环境缺 body/setTimeout 时降级同步展示
+function playChestOpenAnim(box, res) {
+  const done = () => showChestResult(box, res);
+  try {
+    const body = (typeof document !== 'undefined') && (document.body || document.documentElement);
+    if (!body || typeof setTimeout !== 'function') { done(); return; }
+    const ICON = { skill: '📜', equip: '🛡️', exp: '✨', stone: '💰' };
+    const icon = ICON[box.chestKind] || '🎁';
+    let particles = '';
+    for (let p = 0; p < 8; p++) {
+      const ang = (Math.PI * 2 / 8) * p + Math.random() * 0.4;
+      const dist = 90 + Math.random() * 70;
+      const dx = Math.cos(ang) * dist, dy = Math.sin(ang) * dist;
+      particles += '<span class="chest-anim-particle" style="--dx:' + dx.toFixed(1) + 'px;--dy:' + dy.toFixed(1) + 'px"></span>';
+    }
+    const overlay = document.createElement('div');
+    overlay.className = 'chest-anim-overlay';
+    overlay.innerHTML = '<div class="chest-anim-stage"><div class="chest-anim-glow"></div>' + particles +
+      '<div class="chest-anim-icon">' + icon + '</div><div class="chest-anim-label">开启中…</div></div>';
+    body.appendChild(overlay);
+    setTimeout(() => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); done(); }, 1300);
+  } catch (e) { done(); }
+}
+// 弹出开奖结果
+function showChestResult(box, res) {
   openModal(`<div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg><h3 style="margin:0">开启${esc(box.name)}</h3></div>
-    <p style="margin:6px 0;color:rgba(241,239,232,0.85);font-size:14px">${esc(res)}</p>
+    <p class="chest-result-pop" style="margin:6px 0;color:rgba(241,239,232,0.9);font-size:15px;font-weight:600">${esc(res)}</p>
     <button class="btn-full" onclick="showBagModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回背包</button>
     <button class="btn-full" onclick="returnToHub()" style="margin-top:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
 }

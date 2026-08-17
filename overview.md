@@ -1,26 +1,27 @@
-# 宝箱概率系统（A+B+C 全做）
+# 宝箱开启动画
 
-## 改动清单
-- **js/player.js**：默认对象新增 `skillPity: 0`（功法保底计数）。
-- **js/worldboss.js**：
-  - 新增 `SKILL_TIER_WEIGHTS`（黄38/玄26/地16/天10/王5/皇3/帝2，合计100）、`SKILL_PITY_LIMIT = 120`。
-  - 重写 `openSkillChest(biasTier=0)`：在未拥有功法里按 7 阶加权抽取（已集齐的阶权重归零）；累计开启满 120 次强制帝阶，抽到皇/帝阶重置计数。
-  - 重写 `openEquipChest(bias=0)`：品质 = `rollRarity()+1+bias` 封顶神品。
-  - 新增 `equipChestQualityDist(bias)`：解析当前境界下各品质理论概率。
-  - 新增 `openChestInfo()`：概率详情弹窗（装备品质表 + 功法各阶表 + 世界BOSS加成 + 120 保底说明），`window` 暴露。
-  - 世界BOSS 发放按名次传 bias：第1名 功法+2/装备+2，第2名 装备+1，第3名 功法+1。
-- **js/hub.js**：主页菜单新增「抽奖概率」入口（`modal_chestinfo` → `openChestInfo()`）。
-- **js/main.js**：旧档恢复补 `skillPity`。
-- **test/chest.test.js**：16 项真实跑过（加权分布、120 保底、装备 bias 分布、概率页渲染）。
+## 改了什么
+点击背包里的「开启」按钮后，宝箱不再瞬间出结果，而是先播放一段纯 CSS 开启动画（约 1.3 秒），动画结束再弹出开奖结果。
 
-## 关键设计口径
-- **A 功法加权**：黄阶约 39%、帝阶约 2%（实测抽样）；保底每 120 次必出帝阶。
-- **C 装备差异化**（境界等级1 基准）：装备宝箱 bias0 = 灵57%/宝29%/仙14%（无凡无神）；世界BOSS第1名 bias+2 → 仙57%/神43%。名次越高品质基线越高。
-- **B 概率页**：展示当前境界的装备品质表与功法各阶表，并标注世界BOSS加成与 120 保底。概率随境界动态变化（rollRarity 曲线），页面实时按当前境界计算。
+### 1. `css/style.css` — 新增动画类
+- `.chest-anim-overlay` 全屏遮罩（z-index 9997，半透明黑底）
+- `.chest-anim-icon` 宝箱图标（按类型：功法📜 / 装备🛡️ / 经验✨ / 灵石💰）
+- 关键帧：
+  - `chestShake`：盒体左右抖动（开箱前的"酝酿"）
+  - `chestOpen`：上移 + 放大 + 金色辉光增强（开盖迸发）
+  - `chestGlow`：金色光环扩散消失
+  - `chestBurst`：8 颗金色粒子向四周飞散（随机方向）
+  - `chestFade` / `chestPop`：底部"开启中…"文字与结果弹窗奖励文字上浮淡入
 
-## 验证
-- chest 16/16、equip 18、daily 41、story 40、return_to_hub 全过、crit_panel 9、codex 18 全绿。
-- 已提交并 push 到 GitHub（`git push origin master`），GitHub Pages 约 1–2 分钟重建生效。
+### 2. `js/worldboss.js` — `openChestItem` 改造
+- 开奖逻辑（移除宝箱 + 计算奖励 + 写入 player）**保持同步**，数据正确性不受动画影响；
+- 抽 `playChestOpenAnim(box, res)`：注入 body 动画层 → `setTimeout(1300ms)` 后移除层并 `showChestResult` 弹结果；
+- 抽 `showChestResult(box, res)`：结果弹窗（标题 + 奖励文字带 `chest-result-pop` 上浮动画 + 返回背包/主页）；
+- 降级：环境缺 `document.body` / `setTimeout` 时同步直接弹结果（无头测试与极旧环境不会白屏）。
 
-## 待办
-- 可选：在商店钻石专区也加「查看概率」按钮（当前入口在主页菜单）。
+## 验证（真实跑过）
+- `test/chest_item.test.js` 新增动画路径用例：**23/23 通过**——含"同步 setTimeout 时动画结束弹出含结果的结果 modal、含 chest-result-pop 类、返回背包/主页按钮"。
+- 全量无回归：codex 25 / equip 18 / daily 41 / story 40 / return_to_hub / crit 9 / chest 全绿。
+
+## 体验
+背包点「开启」→ 全屏宝箱抖动→开盖金光迸发→约 1.3s 后出"习得《XXX》/获得 XXX"结果弹窗。世界BOSS/每日/战斗掉落/钻石商城开出的宝箱走同一套动画。

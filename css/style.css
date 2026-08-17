@@ -277,3 +277,18 @@
 
   /* 战斗结束浮动返回按钮动画 */
   @keyframes btnPulse { 0%,100%{transform:translate(-50%,-20px) scale(1);} 50%{transform:translate(-50%,-20px) scale(1.05);} }
+
+  /* 宝箱开启动画 */
+  .chest-anim-overlay { position: fixed; inset: 0; z-index: 9997; display: flex; align-items: center; justify-content: center; background: rgba(8,6,14,0.82); }
+  .chest-anim-stage { position: relative; width: 220px; height: 220px; display: flex; align-items: center; justify-content: center; }
+  .chest-anim-icon { font-size: 104px; line-height: 1; filter: drop-shadow(0 0 12px rgba(212,168,67,0.5)); animation: chestShake .5s ease-in-out 0s 2, chestOpen .45s ease-in-out .8s forwards; }
+  .chest-anim-glow { position: absolute; width: 150px; height: 150px; border-radius: 50%; border: 3px solid rgba(212,168,67,0.9); opacity: 0; animation: chestGlow .65s ease-out .82s forwards; }
+  .chest-anim-particle { position: absolute; width: 10px; height: 10px; border-radius: 50%; background: radial-gradient(circle, #ffe9a8, #D4A843); opacity: 0; animation: chestBurst .75s ease-out .9s forwards; }
+  .chest-anim-label { position: absolute; bottom: 6px; left: 0; right: 0; text-align: center; color: #E8D9A0; font: 600 15px/1.4 sans-serif; letter-spacing: 3px; animation: chestFade .4s ease .8s both; }
+  .chest-result-pop { animation: chestPop .45s ease both; }
+  @keyframes chestShake { 0%,100%{transform:rotate(0) scale(1);} 25%{transform:rotate(-9deg) scale(1.06);} 75%{transform:rotate(9deg) scale(1.06);} }
+  @keyframes chestOpen { to { transform: translateY(-12px) scale(1.28); filter: drop-shadow(0 0 30px rgba(255,215,90,1)); } }
+  @keyframes chestGlow { 0%{transform:scale(.3);opacity:.9;} 100%{transform:scale(2.4);opacity:0;} }
+  @keyframes chestBurst { 0%{transform:translate(0,0) scale(1);opacity:1;} 100%{transform:translate(var(--dx,0),var(--dy,0)) scale(.2);opacity:0;} }
+  @keyframes chestFade { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+  @keyframes chestPop { from{opacity:0;transform:scale(.8) translateY(6px);} to{opacity:1;transform:scale(1) translateY(0);} }
