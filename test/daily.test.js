@@ -73,7 +73,7 @@ code += `
     assert('window.buyDiamondChest 存在', typeof window.buyDiamondChest === 'function');
 
     // 基准：清空每日进度与货币，避免旧数据干扰
-    player.daily = { date: dailyTodayStr(), month: dailyTodayStr().slice(0,7), signedToday:false, monthSignCount:0, monthClaimed:{}, onlineSecToday:0, onlineClaimed:{} };
+    player.daily = { date: dailyTodayStr(), month: dailyTodayStr().slice(0,7), signedToday:false, monthSignCount:0, monthClaimed:{}, onlineSecToday:0, onlineClaimed:{}, storyClearToday:0, bossChalToday:0, taskClaimed:{} };
     player.diamond = 0; player.gold = 0; player.learned = DEFAULT_LEARNED.slice(); player.bag = [];
     const lvl0 = realmLevel();
     assert('境界等级>=1（开局=1）', lvl0 >= 1);
@@ -137,12 +137,34 @@ code += `
     dailyTickSeconds(10 * 60);
     assert('在线奖励不重复发放', player.diamond === d60);
 
+    // ---- 第三重：日常任务奖励 ----
+    player.daily.storyClearToday = 0; player.daily.bossChalToday = 0; player.daily.taskClaimed = {};
+    player.gold = 0; player.diamond = 0; player.bag = [];
+    // 副本：通关 10 次 → 500 灵石
+    for (let i = 0; i < 10; i++) dailyRecordStoryClear();
+    assert('副本通关10次 storyClearToday=10', player.daily.storyClearToday === 10);
+    assert('副本通关10次 领500灵石', player.gold === 500 && player.daily.taskClaimed['story10'] === true);
+    // BOSS：5→500灵石；10→50钻+灵石宝箱×1；15→100钻+灵石宝箱×5；20→经验宝箱×10
+    for (let i = 0; i < 20; i++) dailyRecordBossChallenge();
+    assert('BOSS挑战20次 bossChalToday=20', player.daily.bossChalToday === 20);
+    assert('BOSS挑战5次 领500灵石(累计1000)', player.gold === 1000 && player.daily.taskClaimed['boss5'] === true);
+    assert('BOSS挑战10次 已领boss10(50钻+灵石宝箱×1)', player.daily.taskClaimed['boss10'] === true);
+    assert('BOSS挑战15次 领100钻(累计150)', player.diamond === 150 && player.daily.taskClaimed['boss15'] === true);
+    assert('BOSS挑战15次 灵石宝箱累计×6', player.bag.filter(it => it && it.type === 'chest' && it.chestKind === 'stone').length === 6);
+    assert('BOSS挑战20次 经验宝箱×10', player.bag.filter(it => it && it.type === 'chest' && it.chestKind === 'exp').length === 10 && player.daily.taskClaimed['boss20'] === true);
+    // 不重复发放
+    const gB = player.gold, dB = player.diamond, bB = player.bag.length;
+    dailyRecordBossChallenge(); dailyRecordStoryClear();
+    assert('第三重奖励不重复发放', player.gold === gB && player.diamond === dB && player.bag.length === bB);
+
     // ---- 每日/每月重置 ----
     player.daily.date = '2000-01-01';
     player.daily.signedToday = true; player.daily.onlineSecToday = 999; player.daily.onlineClaimed = { 5: true };
     ensureDaily();
     assert('跨天重置 signedToday=false', player.daily.signedToday === false);
     assert('跨天重置 onlineSecToday=0', player.daily.onlineSecToday === 0);
+    assert('跨天重置 storyClearToday=0', player.daily.storyClearToday === 0);
+    assert('跨天重置 taskClaimed 清空', Object.keys(player.daily.taskClaimed || {}).length === 0);
     assert('跨天同月 保留 monthSignCount=20', player.daily.monthSignCount === 20);
     player.daily.month = '2000-01';
     ensureDaily();
@@ -155,6 +177,7 @@ code += `
     assert('每日奖励界面含 返回主页(returnToHub)', sc.indexOf('returnToHub') !== -1);
     assert('每日奖励界面含 每日签到', sc.indexOf('每日签到') !== -1);
     assert('每日奖励界面含 在线时长', sc.indexOf('在线时长') !== -1);
+    assert('每日奖励界面含 第三重日常任务', sc.indexOf('第三重') !== -1);
 
     // ---- 商店钻石消费 ----
     player.diamond = 1000; const bagS = player.bag.length; const learnS = player.learned.length;

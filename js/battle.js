@@ -482,6 +482,7 @@ function endBattle(win) {
       } else {
         dropMsg = '（已通关，重战无额外奖励）';
       }
+      if (typeof dailyRecordStoryClear === 'function') dailyRecordStoryClear();
     } else {
       const gain = 100 * battle.node.id;            // 战绩分：按节点难度递增
       player.xp += gain;

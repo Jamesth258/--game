@@ -219,6 +219,7 @@ function startWorldBossBattle(slotIdx) {
   const sd = player.worldBoss.slots[slotIdx];
   if (sd.attempts >= WB_MAX_ATTEMPTS) { openWorldBossScreen(); return; }
   sd.attempts += 1;
+  if (typeof dailyRecordBossChallenge === 'function') dailyRecordBossChallenge();
   saveGame();
   closeModal();
   if (window.HUB) window.HUB.hide();
