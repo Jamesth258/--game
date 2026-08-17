@@ -99,3 +99,16 @@ function codexCard(got, name, sub, desc, color) {
 window.openCodex = openCodex;
 window.recordEquipCollected = recordEquipCollected;
 window.checkCodexReward = checkCodexReward;
+
+// 重建装备图鉴收集集合：把背包(bag)与已穿戴(equipment)中带 entryId 的装备并入 equipCollected（去重）。
+// 用于图鉴功能上线前的旧存档回溯——老玩家历史已拥有的装备在 bag/equipment 里但从未写入 equipCollected，
+// 导致图鉴大量灰显为未收集；同时兜底「任何获得装备的入口漏调 recordEquipCollected」的隐患（只要装备进背包/身上即解锁）。
+function rebuildEquipCollected() {
+  if (!player.equipCollected) player.equipCollected = [];
+  const add = (it) => { if (it && it.entryId && !player.equipCollected.includes(it.entryId)) player.equipCollected.push(it.entryId); };
+  if (Array.isArray(player.bag)) player.bag.forEach(add);
+  if (player.equipment && typeof player.equipment === 'object') {
+    ['weapon', 'armor', 'accessory', 'boots'].forEach(s => add(player.equipment[s]));
+  }
+}
+window.rebuildEquipCollected = rebuildEquipCollected;

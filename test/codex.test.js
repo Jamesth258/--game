@@ -130,6 +130,31 @@ code += `
     assert('功法装备独立：合计发 2000', player.diamond === d2 + 2000);
     assert('功法档位=1 装备档位=1', player.codexReward.skill === 1 && player.codexReward.equip === 1);
 
+    // ===== 8. 旧存档回溯：图鉴上线前已在 bag/已穿戴的装备应并入收集（去重），图鉴不再误标未收集 =====
+    player.equipCollected = []; player.codexReward.equip = 0; player.diamond = 0;
+    // 模拟老玩家：背包 3 件（含 1 件重复 id）、身上穿戴 2 件，均带 entryId；图鉴上线前从未写入 equipCollected
+    player.bag = [
+      { entryId: EQUIP_DB[0].id, name: 'a' },
+      { entryId: EQUIP_DB[1].id, name: 'b' },
+      { entryId: EQUIP_DB[0].id, name: 'a-dup' },   // 与第 1 件同 id，应去重
+    ];
+    player.equipment = {
+      weapon: { entryId: EQUIP_DB[2].id, name: 'w' },
+      armor: null,
+      accessory: { entryId: EQUIP_DB[3].id, name: 'acc' },
+      boots: null,
+    };
+    rebuildEquipCollected();
+    assert('回溯：图鉴收集含 背包装备 e0', player.equipCollected.includes(EQUIP_DB[0].id));
+    assert('回溯：图鉴收集含 背包装备 e1', player.equipCollected.includes(EQUIP_DB[1].id));
+    assert('回溯：图鉴收集含 穿戴 weapon e2', player.equipCollected.includes(EQUIP_DB[2].id));
+    assert('回溯：图鉴收集含 穿戴 accessory e3', player.equipCollected.includes(EQUIP_DB[3].id));
+    assert('回溯：重复 id 去重（长度=4）', player.equipCollected.length === 4);
+    openCodex();
+    const h2 = globalThis.__MODAL;
+    assert('回溯后图鉴装备计数 4/94', h2.indexOf('装备收集 4/94') >= 0);
+    assert('回溯后已拥有装备亮显真名(' + EQUIP_DB[0].name + ')', h2.indexOf(EQUIP_DB[0].name) >= 0);
+
   } catch (e) {
     results.push('FAIL | 异常: ' + (e && e.stack ? e.stack : e));
   }

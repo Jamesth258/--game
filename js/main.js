@@ -37,6 +37,8 @@ function checkSavedCharacter() {
       player.daily = (saved.daily && typeof saved.daily === 'object') ? saved.daily : null;
       // 图鉴收集集合与里程碑档位（旧存档可能缺字段，补默认）
       player.equipCollected = Array.isArray(saved.equipCollected) ? saved.equipCollected : [];
+      // 回溯图鉴：图鉴上线前已拥有的装备（在 bag / 已穿戴 equipment 中）也计入收集，避免老存档图鉴大量灰显为未收集
+      if (typeof rebuildEquipCollected === 'function') rebuildEquipCollected();
       player.codexReward = (saved.codexReward && typeof saved.codexReward === 'object') ? saved.codexReward : { skill: 0, equip: 0 };
       player.skillPity = (typeof saved.skillPity === 'number') ? saved.skillPity : 0;
       const _all = CHARACTERS.male.concat(CHARACTERS.female);
