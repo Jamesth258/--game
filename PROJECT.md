@@ -47,7 +47,7 @@
 ├── js/
 │   ├── core.js         ← canvas 常量 / 素材加载 / openModal+closeModal / saveGame / window.onerror 红条兜底
 │   ├── player.js       ← ATTR_KEYS/NAMES、player 对象、recalcStats、saveGame/loadGame
-│   ├── battle.js       ← nodes 地图、回合制战斗状态机、Canvas 渲染
+│   ├── battle.js       ← 回合制战斗状态机、Canvas 渲染（map 模式已删除，见 v1.3.0）
 │   ├── hub.js          ← HUB_MENU_ITEMS、calcCombatPower、syncRealmDOM、refreshHub、showAttrModal
 │   ├── create.js       ← CHARACTERS、角色创建流程、checkSavedCharacter
 │   └── main.js         ← 启动入口（创建流程 + 存档恢复 + 首帧渲染）
@@ -318,7 +318,7 @@ git add -A && git commit -m "描述" && git push origin master
 - [x] 获取渠道落地情况：`shop`(秘库灵石兑换) / `boss`(战斗掉落) / `levelup`(境界突破领悟，待接) / `signin` / `sect` / `arena` / `event` / `achievement` 渠道标签已设；`dungeon`(14) 与 `exchange`(13) 渠道的功法已标 `lockedUntil`，待剧情副本系统上线后开放获取，目前不可习得（不崩）
 
 **P1 — 内容量**
-- [x] 更多地图 / 关卡 / BOSS（nodes 由 4 → 12 节点，BOSS 由 1 → 5：魔教教主/幽冥谷主/血河神君/剑魔独孤/逍遥天主；数值 hp 280→1300 平滑成长；BOSS 节点红色描边；通关提示读取真实敌名）
+- [x] 地图 / 关卡 / BOSS（nodes 由 4 → 12 节点，BOSS 由 1 → 5：魔教教主/幽冥谷主/血河神君/剑魔独孤/逍遥天主；数值 hp 280→1300 平滑成长；**已于 v1.3.0 删除该 map 模式（无 UI 入口的死代码），玩法未上线**）
 - [ ] 剩余 5 角色的动图（M2 已完成，见 `design/角色动图与主体库.md`）
 - [ ] 突破仪式动画/反馈
 
@@ -369,7 +369,7 @@ online.js         根目录，联网层
 assets/vendor/tcb.js   CloudBase 前端 SDK 助手
 js/core.js        canvas 常量 / 素材加载 / 弹窗 / saveGame / onerror 兜底
 js/player.js      player 对象 + recalcStats + 存档读写
-js/battle.js      地图 nodes + 回合制战斗状态机 + Canvas 渲染
+js/battle.js      回合制战斗状态机 + Canvas 渲染（map 模式已删除，见 v1.3.0）
 js/hub.js         主页 UI + syncRealmDOM + refreshHub + 属性/技能弹窗
 js/create.js      角色创建流程
 js/main.js        启动入口
