@@ -11,10 +11,10 @@
 const EQUIP_TPL = {
   weapon: {
     0: { atk: 6,  spiAtk: 6 },
-    1: { atk: 12, spiAtk: 10, hitRate: 0.02 },
-    2: { atk: 20, spiAtk: 16, hitRate: 0.05 },
-    3: { atk: 32, spiAtk: 26, hitRate: 0.10 },
-    4: { atk: 50, spiAtk: 42, hitRate: 0.18 },
+    1: { atk: 12, spiAtk: 10, hitRate: 0.05 },
+    2: { atk: 20, spiAtk: 16, hitRate: 0.12 },
+    3: { atk: 32, spiAtk: 26, hitRate: 0.22 },
+    4: { atk: 50, spiAtk: 42, hitRate: 0.34 },
   },
   armor: {
     0: { def: 5,  maxHp: 45,  spiDef: 4 },
@@ -25,10 +25,10 @@ const EQUIP_TPL = {
   },
   accessory: {
     0: { maxMp: 35, spiAtk: 6,  eva: 0.02 },
-    1: { maxMp: 70, spiAtk: 12, eva: 0.03 },
-    2: { maxMp: 120, spiAtk: 20, eva: 0.04 },
-    3: { maxMp: 200, spiAtk: 34, eva: 0.06 },
-    4: { maxMp: 340, spiAtk: 56, eva: 0.09 },
+    1: { maxMp: 70, spiAtk: 12, eva: 0.03, hitRate: 0.03 },
+    2: { maxMp: 120, spiAtk: 20, eva: 0.04, hitRate: 0.07 },
+    3: { maxMp: 200, spiAtk: 34, eva: 0.06, hitRate: 0.12 },
+    4: { maxMp: 340, spiAtk: 56, eva: 0.09, hitRate: 0.16 },
   },
   boots: {
     0: { init: 5,  eva: 0.02 },
@@ -172,10 +172,10 @@ const EQUIP_DB = [
   { id: 'b3_5', name: '踏虚靴',   slot: 'boots',     rarity: 3, effect: { type: 'burn', v: 10 } },
 
   // ===================== 神品 r4（24，顶级特效 + 2 套） =====================
-  { id: 'w4_1', name: '七杀剑',   slot: 'weapon',    rarity: 4, set: 'qisha',  effect: { type: 'accuracy', v: 22 } },
+  { id: 'w4_1', name: '七杀剑',   slot: 'weapon',    rarity: 4, set: 'qisha',  effect: { type: 'accuracy', v: 6 } },
   { id: 'w4_2', name: '贪狼刃',   slot: 'weapon',    rarity: 4, set: 'tanlang', effect: { type: 'critdmg', v: 45 } },
   { id: 'w4_3', name: '大荒戟',   slot: 'weapon',    rarity: 4, effect: { type: 'lifesteal', v: 12 } },
-  { id: 'w4_4', name: '斩天刀',   slot: 'weapon',    rarity: 4, effect: { type: 'accuracy', v: 20 } },
+  { id: 'w4_4', name: '斩天刀',   slot: 'weapon',    rarity: 4, effect: { type: 'accuracy', v: 6 } },
   { id: 'w4_5', name: '轩辕剑',   slot: 'weapon',    rarity: 4, effect: { type: 'critdmg', v: 50 } },
   { id: 'w4_6', name: '灭世刃',   slot: 'weapon',    rarity: 4, effect: { type: 'burn', v: 18 } },
   { id: 'a4_1', name: '七杀甲',   slot: 'armor',     rarity: 4, set: 'qisha',  effect: { type: 'reducedmg', v: 14 } },

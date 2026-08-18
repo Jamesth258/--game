@@ -256,7 +256,7 @@ function initHub() {
         <tr><td style="padding:4px 6px;color:#FF6B6B;font-weight:500">🎯 暴击率</td><td style="text-align:right;font-weight:600;color:#fff">${pct(player.critRate)}</td><td style="padding:4px 6px;color:#FFB347;font-weight:500">💥 暴击伤害</td><td style="text-align:right;font-weight:600;color:#fff">${Math.round(player.critDmg * 100)}%</td></tr>
         <tr><td style="padding:4px 6px;color:#639922;font-weight:500">📈 挂机加成</td><td style="text-align:right;font-weight:600;color:#fff">${pct(player.xpBonus)}</td><td style="padding:4px 6px;color:#E87B7B;font-weight:700">⚡ 战力</td><td style="text-align:right;font-weight:700;color:#E87B7B">${fmt(calcCombatPower(player))}</td></tr>
       </table>
-      <p style="margin:6px 0 0;font-size:10px;color:rgba(241,239,232,0.4)">命中率=基础25%+等级×0.5%+悟性×0.2%+装备加成(上限100%)。战斗实际命中=自身命中率−对方闪避率；负值时约8次命中1次。暴击率/暴伤为常驻值（装备+套装）。</p>
+      <p style="margin:6px 0 0;font-size:10px;color:rgba(241,239,232,0.4)">命中率=基础25%+等级×0.5%+悟性×0.2%+装备加成。单件装备命中率加成至多+40%，总命中率上限100%。战斗实际命中=自身命中率−对方闪避率；负值时约8次命中1次。暴击率/暴伤为常驻值（装备+套装）。</p>
       <button class="btn-full" onclick="returnToHub()" style="margin-top:16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
   }
 
