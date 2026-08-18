@@ -370,7 +370,7 @@ function initHub() {
       const it = player.equipment[slot];
       const body = it
         ? `<div class="equip-name" style="color:${it.rarityColor}">${esc(it.name)}</div>
-           <div class="equip-bonus">${esc(equipBonusText(it))}</div>
+           <div class="equip-bonus">${esc(equipBonusText(it))}${equipEffectText(it) ? esc(' · ' + equipEffectText(it)) : ''}</div>
            <button class="equip-btn danger" onclick="unequipSlot('${slot}')">卸下</button>`
         : `<div class="equip-name" style="color:rgba(241,239,232,0.4)">未装备</div>`;
       return `<div class="equip-slot">
@@ -385,7 +385,7 @@ function initHub() {
       ? bagEquips.map(it => `<div class="bag-item">
           <div class="bag-info"><span class="equip-icon">${EQUIP_SLOTS[it.slot].icon}</span>
             <span class="bag-name" style="color:${it.rarityColor}">${esc(it.name)}</span>
-            <span class="equip-bonus">${esc(equipBonusText(it))}</span></div>
+            <span class="equip-bonus">${esc(equipBonusText(it))}${equipEffectText(it) ? esc(' · ' + equipEffectText(it)) : ''}</span></div>
           <button class="equip-btn" onclick="equipItem('${it.uid}')">装备</button>
         </div>`).join('')
       : `<p style="color:rgba(241,239,232,0.4);font-size:12px;margin:6px 0">背包为空 — 击败江湖敌人可掉落装备宝箱。</p>`;
@@ -455,7 +455,7 @@ function initHub() {
             <div class="bag-info">
               <span class="equip-icon">${EQUIP_SLOTS[it.slot].icon}</span>
               <span class="bag-name" style="color:${it.rarityColor}">${esc(it.name)}</span>
-              <span class="equip-bonus">${esc(equipBonusText(it))}${better ? ' <b style="color:#639922">▲更优</b>' : ''}</span>
+              <span class="equip-bonus">${esc(equipBonusText(it))}${better ? ' <b style="color:#639922">▲更优</b>' : ''}${equipEffectText(it) ? esc(' · ' + equipEffectText(it)) : ''}</span>
             </div>
             <div style="display:flex;gap:6px;flex-shrink:0">
               <button class="equip-btn" onclick="equipItem('${it.uid}')">装备</button>
@@ -506,7 +506,7 @@ function initHub() {
         <div class="bag-info">
           <span class="equip-icon">${EQUIP_SLOTS[it.slot].icon}</span>
           ${nameHtml}
-          <span class="equip-bonus">${esc(equipBonusText(it))}</span>
+          <span class="equip-bonus">${esc(equipBonusText(it))}${equipEffectText(it) ? esc(' · ' + equipEffectText(it)) : ''}</span>
         </div>
         ${btn}
       </div>`;

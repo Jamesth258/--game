@@ -175,7 +175,8 @@ function recalcStats(p) {
     if (it.bonus.spiDef) spiDef += it.bonus.spiDef;
     if (it.bonus.init)   init   += it.bonus.init;
     if (it.bonus.eva)    eva    += it.bonus.eva;
-    if (it.bonus.hitRate) hitR  += it.bonus.hitRate;  // 装备命中率加成
+    if (it.bonus.hitRate) hitR  += it.bonus.hitRate;  // 武器模板命中率（永久，进面板）
+    if (it.effect && it.effect.type === 'accuracy') hitR += (it.effect.v || 0) / 100; // 精准特效（永久，进面板；单件+命中受 100% 总封顶，单装备至多+40%）
     if (it.extraActions) extraActions += it.extraActions;
   }
 

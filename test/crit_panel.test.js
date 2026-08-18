@@ -78,10 +78,11 @@ code += `
     assert('无装备 暴击率=15% (实际=' + player.critRate + ')', Math.abs(player.critRate - 0.15) < 1e-9);
     assert('无装备 暴伤倍率=1.5 (实际=' + player.critDmg + ')', Math.abs(player.critDmg - 1.5) < 1e-9);
 
-    // B) 单件锐利：寒铁剑(w1_1, crit 3%) → 18%
+    // B) 单件精准：寒铁剑(w1_1, 灵品武器模板命中+2% + accuracy 5%) → 命中率较无装备 +7%（命中率系统：装备精准永久进面板）
+    player.equipment = empty; recalcStats(player); const baseHit = player.hitRate;
     player.equipment = { weapon: makeItemFromDb(byId('w1_1'), 0), armor: null, accessory: null, boots: null };
     recalcStats(player);
-    assert('寒铁剑(crit3%) → 暴击率=18% (实际=' + player.critRate + ')', Math.abs(player.critRate - 0.18) < 1e-9);
+    assert('寒铁剑(模板2%+精准5%) → 命中率较无装备+7% (实际+' + (player.hitRate - baseHit).toFixed(3) + ')', Math.abs((player.hitRate - baseHit) - 0.07) < 1e-9);
 
     // C) 2 件诛仙：诛仙剑(w2_3 crit6%) + 诛仙佩(c2_3 crit5%) → 触发2件套 critRate+8% → 15+6+5+8=34%
     player.equipment = {

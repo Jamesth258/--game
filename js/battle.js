@@ -84,7 +84,7 @@ function debuffMul(u, stat) { let m = 1; (u.debuffs || []).forEach(b => { if (b.
 // 聚合玩家已穿戴装备 + 套装的战斗特效，返回统一的 mods 对象（battle.mods 使用）
 // 注：recalcStats(player) 也算 critRate/critDmg/套装 面板值（player.js:195-216），
 //   但本函数是战斗运行时的唯一真源。两处独立维护，改特效时须同步。
-//   accuracy(精准)特效在此处转为战斗临时命中率加成（叠加到 attacker.hitRate 上）。
+//   accuracy(精准)特效在 recalcStats 中已永久并入 player.hitRate（面板可见、受 100% 封顶），不在战斗内临时叠加。
 function computeEquipMods(p) {
   const m = {
     critRate: 0, critDmg: 0, lifesteal: 0, reflect: 0, pierce: 0, dmgAmp: 0,
@@ -231,9 +231,8 @@ function damage(attacker, target, mult, type) {
   // 命中判定：实际命中率 = 攻击方命中率 − 目标闪避率
   const attackerHR = attacker.hitRate || 0.25;
   const targetEva = target.eva || 0;
-  // 装备「精准」特效临时提高命中率（仅本次战斗有效）
-  const accBuff = ((!attacker.isEnemy && battle && battle.mods) ? (battle.mods.accuracy || 0) : 0)
-                  + (battle._tempHitRateBuff || 0);  // 功法临时命中率buff
+  // 装备命中率已永久并入 player.hitRate（recalcStats 处理）；此处仅叠加功法临时命中率buff
+  const accBuff = (battle._tempHitRateBuff || 0); // 功法临时命中率buff（单次生效，攻击后消费）
   const effectiveHR = Math.min(1.0, attackerHR + accBuff);
   const actualHitRate = effectiveHR - targetEva;
   let hitChance;
