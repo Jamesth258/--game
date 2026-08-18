@@ -358,6 +358,7 @@ function initHub() {
   }
   window.showSkillShop = showSkillShop;
   window.buySkill = buySkill;
+  window.showSkillsModal = showSkillsModal;   // 暴露：秘库"返回功法"按钮 onclick 调用
   // 装备弹窗（穿戴 / 卸下 / 背包）
   function showEquipModal() {
     refreshHub(); // 同步主页战力
