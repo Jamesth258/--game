@@ -84,6 +84,7 @@ function debuffMul(u, stat) { let m = 1; (u.debuffs || []).forEach(b => { if (b.
 // 聚合玩家已穿戴装备 + 套装的战斗特效，返回统一的 mods 对象（battle.mods 使用）
 // 注：recalcStats(player) 也算 critRate/critDmg/套装 面板值（player.js:195-216），
 //   但本函数是战斗运行时的唯一真源。两处独立维护，改特效时须同步。
+//   accuracy(精准)特效在此处转为战斗临时命中率加成（叠加到 attacker.hitRate 上）。
 function computeEquipMods(p) {
   const m = {
     critRate: 0, critDmg: 0, lifesteal: 0, reflect: 0, pierce: 0, dmgAmp: 0,
@@ -227,12 +228,29 @@ function setButtons(on) {
 }
 
 function damage(attacker, target, mult, type) {
-  // 闪避判定：目标闪避率越高越易躲开
-  if (target.eva && Math.random() < target.eva) {
-    floats.push({ x: target._x, y: target._y, text: '闪避', color: '#9B6BCC', ttl: 60 });
-    battle.msg = target.name + ' 身形一晃，闪开了攻击！';
+  // 命中判定：实际命中率 = 攻击方命中率 − 目标闪避率
+  const attackerHR = attacker.hitRate || 0.25;
+  const targetEva = target.eva || 0;
+  // 装备「精准」特效临时提高命中率（仅本次战斗有效）
+  const accBuff = ((!attacker.isEnemy && battle && battle.mods) ? (battle.mods.accuracy || 0) : 0)
+                  + (battle._tempHitRateBuff || 0);  // 功法临时命中率buff
+  const effectiveHR = Math.min(1.0, attackerHR + accBuff);
+  const actualHitRate = effectiveHR - targetEva;
+  let hitChance;
+  if (actualHitRate >= 0.5) {
+    hitChance = Math.min(0.95, actualHitRate);       // 高命中率时上限95%（保留一点随机性）
+  } else if (actualHitRate > 0) {
+    hitChance = actualHitRate;                         // 正常区间
+  } else {
+    hitChance = Math.max(0.125, 1 + actualHitRate);   // 负值时约8次命中1次（floor~12.5%）
+  }
+  if (Math.random() > hitChance) {
+    floats.push({ x: target._x, y: target._y, text: '未命中', color: '#888888', ttl: 60 });
+    battle.msg = attacker.name + ' 的攻击落空了！';
+    if (battle && battle._tempHitRateBuff) { delete battle._tempHitRateBuff; } // 消耗临时命中率buff
     return 0;
   }
+  if (battle && battle._tempHitRateBuff) { delete battle._tempHitRateBuff; } // 命中后也消耗（单次生效）
   // 物理攻击用 atk/def，精神攻击用 spiAtk/spiDef；增益/减益乘区实时生效
   const isSpirit = type === 'spirit';
   const aMods = (!attacker.isEnemy && battle && battle.mods) ? battle.mods : null; // 攻击者=玩家时的装备特效
@@ -288,6 +306,10 @@ function damage(attacker, target, mult, type) {
 // 施展功法（player 的 SKILLS_DB 条目，含 effect）
 function applySkill(actor, target, sk) {
   actor.mp -= sk.cost;
+  // 功法临时命中率buff（仅对玩家生效，下次攻击时消耗）
+  if (!actor.isEnemy && sk.buffHitRate && battle) {
+    battle._tempHitRateBuff = sk.buffHitRate;
+  }
   const e = sk.effect || { kind: 'dmg', type: sk.type, mult: sk.mult };
   const floatAt = (u, text, color) => floats.push({ x: u._x, y: u._y, text, color, ttl: 60 });
   switch (e.kind) {

@@ -98,12 +98,12 @@ function rollRarity() {
 
 // 装备加成文字（用于弹窗展示）
 function equipBonusText(item) {
-  const names = { atk: '攻', def: '防', maxHp: '气血', maxMp: '灵力', spiAtk: '精攻', spiDef: '精防', init: '先攻', eva: '闪避' };
+  const names = { atk: '攻', def: '防', maxHp: '气血', maxMp: '灵力', spiAtk: '精攻', spiDef: '精防', init: '先攻', eva: '闪避', hitRate: '命中' };
   const parts = [];
   const bonus = item.bonus || {};
   for (const k in bonus) {
     if (!bonus[k]) continue;
-    parts.push((names[k] || k) + (k === 'eva' ? '+' + Math.round(bonus[k] * 100) + '%' : '+' + bonus[k]));
+    parts.push((names[k] || k) + ((k === 'eva' || k === 'hitRate') ? '+' + Math.round(bonus[k] * 100) + '%' : '+' + bonus[k]));
   }
   if (item.extraActions) parts.push('连动+' + item.extraActions);
   const eff = equipEffectText(item);
@@ -141,6 +141,7 @@ const player = {
   maxHp: 0, hp: 0, maxMp: 0, mp: 0, atk: 0, def: 0, spd: 0,
   spiAtk: 0, spiDef: 0, eva: 0, init: 0, luck: 0,
   critRate: 0.15, critDmg: 1.5,                                // 常驻暴击率 / 暴伤倍率（属性面板展示用）
+  hitRate: 0.25,                                              // 命中率（基础25%+等级*0.5%+悟性*0.2%+装备加成，上限100%）
   potions: 3, defending: false, sect: '', score: 0, xp: 0,
   equipment: { weapon: null, armor: null, accessory: null, boots: null }, // 已穿戴装备（部位→item）
   bag: [], gold: 50, diamond: 0,                            // 背包 + 灵石（装备/商店货币） + 钻石（商城消费货币）
@@ -158,6 +159,7 @@ function recalcStats(p) {
   let spd    = p.spd;                                        // 速度（战斗速度=属性值）
   let init   = Math.round(10 + p.spd * 2 + idx * 2);        // 先攻值
   let eva    = 0.10 + idx * 0.001 + p.spd * 0.001 + p.des * 0.001; // 闪避率（基础）
+  let hitR   = 0.25 + idx * 0.005 + p.com * 0.002;               // 命中率：基础25%+等级*0.5%+悟性*0.2%
   let extraActions = 0;
 
   // 装备加成：叠加到派生属性；extraActions 注入战斗连动 hook（battle.js beginRound 读取）
@@ -173,6 +175,7 @@ function recalcStats(p) {
     if (it.bonus.spiDef) spiDef += it.bonus.spiDef;
     if (it.bonus.init)   init   += it.bonus.init;
     if (it.bonus.eva)    eva    += it.bonus.eva;
+    if (it.bonus.hitRate) hitR  += it.bonus.hitRate;  // 装备命中率加成
     if (it.extraActions) extraActions += it.extraActions;
   }
 
@@ -185,6 +188,7 @@ function recalcStats(p) {
   p.spd = spd;
   p.init = Math.round(init);
   p.eva = Math.min(0.95, eva);
+  p.hitRate = Math.min(1.0, hitR);                      // 命中率上限100%
   p.extraActions = extraActions;
   p.luck = p.des;                                        // 幸运值
   p.xpBonus = (p.com + p.des) * 0.002;                     // 挂机经验加成 = 悟性×0.2% + 天命×0.2%（每点属性各 0.2%）

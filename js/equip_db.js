@@ -11,10 +11,10 @@
 const EQUIP_TPL = {
   weapon: {
     0: { atk: 6,  spiAtk: 6 },
-    1: { atk: 12, spiAtk: 10 },
-    2: { atk: 20, spiAtk: 16 },
-    3: { atk: 32, spiAtk: 26 },
-    4: { atk: 50, spiAtk: 42 },
+    1: { atk: 12, spiAtk: 10, hitRate: 0.02 },
+    2: { atk: 20, spiAtk: 16, hitRate: 0.05 },
+    3: { atk: 32, spiAtk: 26, hitRate: 0.10 },
+    4: { atk: 50, spiAtk: 42, hitRate: 0.18 },
   },
   armor: {
     0: { def: 5,  maxHp: 45,  spiDef: 4 },
@@ -57,6 +57,7 @@ const EFFECT_META = {
   lowhpdmg:  { name: '死战',     text: v => '气血<30% 时伤害 +' + v + '%' },
   stackcrit: { name: '积威',     text: v => '每回合暴击率 +' + v + '%（上限40%）' },
   revive:    { name: '涅槃',     text: v => '阵亡复活 1 次（回复 ' + v + '% 气血）' },
+  accuracy:  { name: '精准',     text: v => '命中率 +' + v + '%' },
 };
 
 // 套装：每件跨 4 部位各一，集 2 件触发二件套、4 件触发四件套
@@ -107,16 +108,16 @@ const EQUIP_DB = [
   { id: 'b0_3', name: '麻履',     slot: 'boots',     rarity: 0 },
 
   // ===================== 灵品 r1（16，单条小特效） =====================
-  { id: 'w1_1', name: '寒铁剑',   slot: 'weapon',    rarity: 1, effect: { type: 'crit', v: 3 } },
+  { id: 'w1_1', name: '寒铁剑',   slot: 'weapon',    rarity: 1, effect: { type: 'accuracy', v: 5 } },
   { id: 'w1_2', name: '青锋刃',   slot: 'weapon',    rarity: 1, effect: { type: 'dmgamp', v: 4 } },
-  { id: 'w1_3', name: '玄铁枪',   slot: 'weapon',    rarity: 1, effect: { type: 'crit', v: 4 } },
+  { id: 'w1_3', name: '玄铁枪',   slot: 'weapon',    rarity: 1, effect: { type: 'accuracy', v: 6 } },
   { id: 'w1_4', name: '赤霄剑',   slot: 'weapon',    rarity: 1, effect: { type: 'dmgamp', v: 5 } },
   { id: 'a1_1', name: '玄龟甲',   slot: 'armor',     rarity: 1, effect: { type: 'reducedmg', v: 4 } },
   { id: 'a1_2', name: '锁子铠',   slot: 'armor',     rarity: 1, effect: { type: 'regenhp', v: 2 } },
   { id: 'a1_3', name: '霓裳衣',   slot: 'armor',     rarity: 1, effect: { type: 'reducedmg', v: 5 } },
   { id: 'a1_4', name: '玄武袍',   slot: 'armor',     rarity: 1, effect: { type: 'regenhp', v: 3 } },
   { id: 'c1_1', name: '聚灵珠',   slot: 'accessory', rarity: 1, effect: { type: 'regenmp', v: 10 } },
-  { id: 'c1_2', name: '乾坤戒',   slot: 'accessory', rarity: 1, effect: { type: 'crit', v: 3 } },
+  { id: 'c1_2', name: '乾坤戒',   slot: 'accessory', rarity: 1, effect: { type: 'accuracy', v: 4 } },
   { id: 'c1_3', name: '引魂幡',   slot: 'accessory', rarity: 1, effect: { type: 'regenmp', v: 12 } },
   { id: 'c1_4', name: '太极符',   slot: 'accessory', rarity: 1, effect: { type: 'reducedmg', v: 4 } },
   { id: 'b1_1', name: '追风靴',   slot: 'boots',     rarity: 1, effect: { type: 'crit', v: 3 } },
@@ -126,7 +127,7 @@ const EQUIP_DB = [
 
   // ===================== 宝品 r2（20，中等特效 + 2 套） =====================
   { id: 'w2_1', name: '赤血刀',   slot: 'weapon',    rarity: 2, effect: { type: 'lifesteal', v: 6 } },
-  { id: 'w2_2', name: '破军戟',   slot: 'weapon',    rarity: 2, effect: { type: 'pierce', v: 10 } },
+  { id: 'w2_2', name: '破军戟',   slot: 'weapon',    rarity: 2, effect: { type: 'accuracy', v: 10 } },
   { id: 'w2_3', name: '诛仙剑',   slot: 'weapon',    rarity: 2, set: 'zhuxian', effect: { type: 'crit', v: 6 } },
   { id: 'w2_4', name: '太极剑',   slot: 'weapon',    rarity: 2, set: 'taiji',   effect: { type: 'dmgamp', v: 8 } },
   { id: 'w2_5', name: '流光剑',   slot: 'weapon',    rarity: 2, effect: { type: 'lifesteal', v: 8 } },
@@ -139,7 +140,7 @@ const EQUIP_DB = [
   { id: 'c2_2', name: '回春铃',   slot: 'accessory', rarity: 2, effect: { type: 'regenmp', v: 18 } },
   { id: 'c2_3', name: '诛仙佩',   slot: 'accessory', rarity: 2, set: 'zhuxian', effect: { type: 'crit', v: 5 } },
   { id: 'c2_4', name: '太极印',   slot: 'accessory', rarity: 2, set: 'taiji',   effect: { type: 'regenmp', v: 20 } },
-  { id: 'c2_5', name: '噬魂符',   slot: 'accessory', rarity: 2, effect: { type: 'dmgamp', v: 8 } },
+  { id: 'c2_5', name: '噬魂符',   slot: 'accessory', rarity: 2, effect: { type: 'accuracy', v: 8 } },
   { id: 'b2_1', name: '疾影靴',   slot: 'boots',     rarity: 2, effect: { type: 'extra', v: 1 } },
   { id: 'b2_2', name: '追星履',   slot: 'boots',     rarity: 2, effect: { type: 'crit', v: 6 } },
   { id: 'b2_3', name: '诛仙靴',   slot: 'boots',     rarity: 2, set: 'zhuxian', effect: { type: 'dmgamp', v: 6 } },
@@ -147,7 +148,7 @@ const EQUIP_DB = [
   { id: 'b2_5', name: '踏雪靴',   slot: 'boots',     rarity: 2, effect: { type: 'burn', v: 8 } },
 
   // ===================== 仙品 r3（22，强特效 + 2 套） =====================
-  { id: 'w3_1', name: '焚天剑',   slot: 'weapon',    rarity: 3, effect: { type: 'pierce', v: 15 } },
+  { id: 'w3_1', name: '焚天剑',   slot: 'weapon',    rarity: 3, effect: { type: 'accuracy', v: 15 } },
   { id: 'w3_2', name: '裂空刃',   slot: 'weapon',    rarity: 3, effect: { type: 'critdmg', v: 30 } },
   { id: 'w3_3', name: '玄武剑',   slot: 'weapon',    rarity: 3, set: 'xuanwu', effect: { type: 'lifesteal', v: 8 } },
   { id: 'w3_4', name: '紫薇剑',   slot: 'weapon',    rarity: 3, set: 'ziwei',  effect: { type: 'lowhpcrit', v: 25 } },
@@ -160,7 +161,7 @@ const EQUIP_DB = [
   { id: 'a3_5', name: '玄龟神甲', slot: 'armor',     rarity: 3, effect: { type: 'reducedmg', v: 12 } },
   { id: 'c3_1', name: '玄武珠',   slot: 'accessory', rarity: 3, set: 'xuanwu', effect: { type: 'regenmp', v: 25 } },
   { id: 'c3_2', name: '紫薇铃',   slot: 'accessory', rarity: 3, set: 'ziwei',  effect: { type: 'crit', v: 8 } },
-  { id: 'c3_3', name: '演天珠',   slot: 'accessory', rarity: 3, effect: { type: 'dmgamp', v: 12 } },
+  { id: 'c3_3', name: '演天珠',   slot: 'accessory', rarity: 3, effect: { type: 'accuracy', v: 12 } },
   { id: 'c3_4', name: '生灭天辰', slot: 'accessory', rarity: 3, effect: { type: 'critdmg', v: 30 } },
   { id: 'c3_5', name: '七窍珠',   slot: 'accessory', rarity: 3, effect: { type: 'regenmp', v: 28 } },
   { id: 'c3_6', name: '天魔舍利', slot: 'accessory', rarity: 3, effect: { type: 'lowhpcrit', v: 20 } },
@@ -171,10 +172,10 @@ const EQUIP_DB = [
   { id: 'b3_5', name: '踏虚靴',   slot: 'boots',     rarity: 3, effect: { type: 'burn', v: 10 } },
 
   // ===================== 神品 r4（24，顶级特效 + 2 套） =====================
-  { id: 'w4_1', name: '七杀剑',   slot: 'weapon',    rarity: 4, set: 'qisha',  effect: { type: 'pierce', v: 20 } },
+  { id: 'w4_1', name: '七杀剑',   slot: 'weapon',    rarity: 4, set: 'qisha',  effect: { type: 'accuracy', v: 22 } },
   { id: 'w4_2', name: '贪狼刃',   slot: 'weapon',    rarity: 4, set: 'tanlang', effect: { type: 'critdmg', v: 45 } },
   { id: 'w4_3', name: '大荒戟',   slot: 'weapon',    rarity: 4, effect: { type: 'lifesteal', v: 12 } },
-  { id: 'w4_4', name: '斩天刀',   slot: 'weapon',    rarity: 4, effect: { type: 'dmgamp', v: 18 } },
+  { id: 'w4_4', name: '斩天刀',   slot: 'weapon',    rarity: 4, effect: { type: 'accuracy', v: 20 } },
   { id: 'w4_5', name: '轩辕剑',   slot: 'weapon',    rarity: 4, effect: { type: 'critdmg', v: 50 } },
   { id: 'w4_6', name: '灭世刃',   slot: 'weapon',    rarity: 4, effect: { type: 'burn', v: 18 } },
   { id: 'a4_1', name: '七杀甲',   slot: 'armor',     rarity: 4, set: 'qisha',  effect: { type: 'reducedmg', v: 14 } },
@@ -185,7 +186,7 @@ const EQUIP_DB = [
   { id: 'a4_6', name: '万钧铠',   slot: 'armor',     rarity: 4, effect: { type: 'reflect', v: 16 } },
   { id: 'c4_1', name: '七杀珠',   slot: 'accessory', rarity: 4, set: 'qisha',  effect: { type: 'crit', v: 12 } },
   { id: 'c4_2', name: '贪狼佩',   slot: 'accessory', rarity: 4, set: 'tanlang', effect: { type: 'critdmg', v: 35 } },
-  { id: 'c4_3', name: '天魔离光尺', slot: 'accessory', rarity: 4, effect: { type: 'dmgamp', v: 18 } },
+  { id: 'c4_3', name: '天魔离光尺', slot: 'accessory', rarity: 4, effect: { type: 'accuracy', v: 18 } },
   { id: 'c4_4', name: '大自在天魔幡', slot: 'accessory', rarity: 4, effect: { type: 'lifesteal', v: 12 } },
   { id: 'c4_5', name: '浑天魔鉴', slot: 'accessory', rarity: 4, effect: { type: 'lowhpdmg', v: 25 } },
   { id: 'c4_6', name: '九华界',   slot: 'accessory', rarity: 4, effect: { type: 'regenmp', v: 40 } },
@@ -206,7 +207,7 @@ function makeItemFromDb(entry, tier) {
   const bonus = {};
   for (const k in base) {
     let v = Math.round(base[k] * scale);
-    if (k === 'eva') v = Math.round(base[k] * scale * 100) / 100;
+    if (k === 'eva' || k === 'hitRate') v = Math.round(base[k] * scale * 100) / 100;
     bonus[k] = v;
   }
   const item = {
