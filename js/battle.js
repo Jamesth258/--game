@@ -2,25 +2,10 @@
  * 由 index.html 拆分而来。加载顺序见 index.html 底部 <script> 列表，勿随意调整。
  * 注意：顶层 const/let 跨文件可直接引用，但不会挂到 window（详见 PROJECT.md 坑点 8.1）。
  */
-// ---- 地图节点 ----
-const nodes = [
-  { id: 0, name: '清风镇',   x: 80,  y: 280, type: 'start',  cleared: true,  enemy: null },
-  { id: 1, name: '黑松林',   x: 230, y: 210, type: 'battle', cleared: false, enemy: { name: '山贼头目', hp: 120, atk: 22, def: 9,  spd: 14 } },
-  { id: 2, name: '断魂崖',   x: 390, y: 140, type: 'battle', cleared: false, enemy: { name: '血刀老祖', hp: 190, atk: 28, def: 11, spd: 20 } },
-  { id: 3, name: '武林大会', x: 540, y: 70,  type: 'boss',   cleared: false, enemy: { name: '魔教教主', hp: 280, atk: 34, def: 15, spd: 22 } },
-  { id: 4, name: '毒龙潭',   x: 590, y: 110, type: 'battle', cleared: false, enemy: { name: '毒龙尊者', hp: 350,  atk: 40,  def: 18, spd: 26 } },
-  { id: 5, name: '幽冥谷',   x: 560, y: 180, type: 'boss',   cleared: false, enemy: { name: '幽冥谷主', hp: 520,  atk: 52,  def: 26, spd: 30 } },
-  { id: 6, name: '落魂涧',   x: 610, y: 250, type: 'battle', cleared: false, enemy: { name: '噬魂魔将', hp: 600,  atk: 58,  def: 30, spd: 34 } },
-  { id: 7, name: '血河渊',   x: 550, y: 310, type: 'boss',   cleared: false, enemy: { name: '血河神君', hp: 780,  atk: 70,  def: 38, spd: 40 } },
-  { id: 8, name: '白骨岭',   x: 470, y: 280, type: 'battle', cleared: false, enemy: { name: '白骨夫人', hp: 850,  atk: 76,  def: 42, spd: 44 } },
-  { id: 9, name: '剑冢',     x: 400, y: 220, type: 'boss',   cleared: false, enemy: { name: '剑魔独孤', hp: 1000, atk: 90,  def: 50, spd: 52 } },
-  { id: 10, name: '焚天崖',  x: 500, y: 150, type: 'battle', cleared: false, enemy: { name: '焚天火尊', hp: 1080, atk: 96,  def: 54, spd: 56 } },
-  { id: 11, name: '逍遥天',  x: 610, y: 80,  type: 'boss',   cleared: false, enemy: { name: '逍遥天主', hp: 1300, atk: 110, def: 62, spd: 60 } },
-];
-const unlocked = id => id === 0 || nodes[id - 1].cleared;
+// ---- 地图节点（已移除：map 模式无 UI 入口）----
 
 // ---- 状态机 ----
-let state = 'map';          // 'map' | 'battle' | 'win' | 'lose' | 'clear'
+let state = 'hub';          // 'hub' | 'battle' | 'win' | 'lose'
 let battle = null;
 let floats = [];            // 飘字
 let toast = '';             // 底部提示
@@ -80,7 +65,7 @@ function startBattle(node, mode) {
   if (mods && mods.shieldPct > 0) player.shield = { pct: mods.shieldPct, dur: 999 };
   battle = {
     node, player, enemy,
-    mode: mode || 'map',          // 'map' = 江湖节点；'story' = 剧情副本；'worldboss' = 世界BOSS
+    mode: mode || 'story',         // 'story' = 剧情副本；'worldboss' = 世界BOSS
     queue: [], turn: 0, roundCount: 0, playerDmg: 0, mods,
     _stackCrit: 0, _reviveUsed: false,
     msg: (isWB ? '世界BOSS · ' : '遭遇 ') + enemy.name + '！',
@@ -97,6 +82,8 @@ function buffMul(u, stat) { let m = 1; (u.buffs || []).forEach(b => { if (b.stat
 function debuffMul(u, stat) { let m = 1; (u.debuffs || []).forEach(b => { if (b.stat === stat) m -= b.amt; }); return Math.max(0, m); }
 
 // 聚合玩家已穿戴装备 + 套装的战斗特效，返回统一的 mods 对象（battle.mods 使用）
+// 注：recalcStats(player) 也算 critRate/critDmg/套装 面板值（player.js:195-216），
+//   但本函数是战斗运行时的唯一真源。两处独立维护，改特效时须同步。
 function computeEquipMods(p) {
   const m = {
     critRate: 0, critDmg: 0, lifesteal: 0, reflect: 0, pierce: 0, dmgAmp: 0,
@@ -459,7 +446,6 @@ function endBattle(win) {
     battle.node.cleared = true;
     const before = CULTIVATION.realmFromXp(player.xp).globalIndex;
     let dropMsg = '';
-    let clearAll = false; // 江湖地图全通
     if (battle.mode === 'story') {
       const st = battle.node._story || {};
       const ch = st.ch, lv = st.lv;
@@ -483,26 +469,6 @@ function endBattle(win) {
         dropMsg = '（已通关，重战无额外奖励）';
       }
       if (typeof dailyRecordStoryClear === 'function') dailyRecordStoryClear();
-    } else {
-      const gain = 100 * battle.node.id;            // 战绩分：按节点难度递增
-      player.xp += gain;
-      player.score = player.xp;                     // 战绩分=累计修为，排行榜可直接显示境界
-      const goldGain = 20 + battle.node.id * 15;
-      player.gold = (player.gold || 0) + goldGain;
-      if (Math.random() < 0.4) {
-        player.bag.push(makeChestItem('equip', 0));
-        dropMsg = ' 拾得装备宝箱！';
-      }
-      // 功法掉落：BOSS 高概率、普通战低概率；只掉未习得且非「待副本」锁定的功法 → 功法宝箱入背包，开启时再学
-      const skillChance = battle.node.type === 'boss' ? 0.6 : 0.2;
-      if (Math.random() < skillChance) {
-        const pool = SKILLS_DB.filter(s => !player.learned.includes(s.id) && !s.lockedUntil);
-        if (pool.length) {
-          player.bag.push(makeChestItem('skill', 0));
-          dropMsg += ' 拾得功法宝箱！';
-        }
-      }
-      if (battle.node.id === nodes.length - 1) clearAll = true;
     }
     if (window.Online && window.Online.onProgress) window.Online.onProgress(player.score);
     const after = CULTIVATION.realmFromXp(player.xp);
@@ -510,12 +476,12 @@ function endBattle(win) {
     recalcStats(player);                          // 境界提升 → 属性增强
     player.hp = Math.min(player.maxHp, (player.hp || 0) + (player.maxHp - oldMax) + 40); // 突破增益 + 胜利回血
     player.mp = player.maxMp;
-    state = (battle.mode === 'story') ? 'win' : (clearAll ? 'clear' : 'win');
+    state = 'win';
     const broke = after.globalIndex > before;
     const realmUp = after.realmIndex > CULTIVATION.FLAT[before].realmIndex;
-    let toastMsg = clearAll ? '你击败了' + battle.node.enemy.name + '，江湖太平！' : '胜利！';
+    let toastMsg = '胜利！';
     if (broke) toastMsg = (realmUp ? '★ 突破大境界！晋升【' : '突破！晋升【') + after.label + '】';
-    toast = toastMsg + dropMsg + (battle.mode === 'story' ? ' 点击继续。' : ' 点击地图继续。');
+    toast = toastMsg + dropMsg + ' 点击继续。';
     saveGame();
     // 副本战斗结束：立即在 canvas 上方显示可见的「返回」按钮（不再依赖不可靠的 setTimeout + modal）
     if (battle.mode === 'story') {
@@ -526,7 +492,7 @@ function endBattle(win) {
     }
   } else {
     state = 'lose';
-    toast = battle.mode === 'story' ? '你倒下了…点击重新挑战。' : '你倒下了…点击地图重新挑战。';
+    toast = battle.mode === 'story' ? '你倒下了…点击重新挑战。' : '你倒下了…点击重新挑战。';
     // 副本失败：也显示返回按钮
     if (battle.mode === 'story') {
       showBattleReturnBtn('返回副本', function() {
@@ -562,24 +528,14 @@ canvas.addEventListener('click', e => {
   const r = canvas.getBoundingClientRect();
   const x = (e.clientX - r.left) * (W / r.width);
   const y = (e.clientY - r.top) * (H / r.height);
-  if (state === 'map') {
-    for (const n of nodes) {
-      if (Math.hypot(x - n.x, y - n.y) < 26 && unlocked(n.id)) {
-        if (n.type === 'start') { toast = '清风镇 — 休整之地，点击前方地点出发。'; }
-        else startBattle(n);
-        return;
-      }
-    }
-    // 点击空白区域 → 返回主页
-    if (window.HUB) { window.HUB.show(); }
-  } else if (state === 'win' || state === 'lose' || state === 'clear') {
+  if (state === 'win' || state === 'lose') {
     // 战斗结束 → 剧情副本返回副本界面，世界BOSS 弹排行，江湖战斗返回主页
     if (battle && battle.mode === 'story') {
       storyAfterBattle();   // 抽到 story.js：章节通关弹三选一，否则回本章
     } else if (battle && battle.mode === 'worldboss') {
       openWorldBossResult(battle.node._wb);
     } else if (window.HUB) { window.HUB.refresh(); window.HUB.show(); }
-    else { state = 'map'; toast = ''; }
+    else { state = 'hub'; toast = ''; }
   }
 });
 
@@ -606,37 +562,6 @@ function bar(x, y, w, ratio, color) {
   ctx.strokeRect(x, y, w, 8);
 }
 
-function drawMap() {
-  // 路径
-  ctx.strokeStyle = '#B4B2A9';
-  ctx.lineWidth = 2;
-  for (let i = 1; i < nodes.length; i++) {
-    ctx.beginPath();
-    ctx.moveTo(nodes[i - 1].x, nodes[i - 1].y);
-    ctx.lineTo(nodes[i].x, nodes[i].y);
-    ctx.stroke();
-  }
-  // 节点
-  for (const n of nodes) {
-    const on = unlocked(n.id);
-    ctx.beginPath();
-    ctx.arc(n.x, n.y, 18, 0, Math.PI * 2);
-    ctx.fillStyle = n.cleared ? '#97C459' : (on ? '#85B7EB' : '#D3D1C7');
-    ctx.fill();
-    ctx.strokeStyle = n.type === 'boss' ? '#C0392B' : '#5F5E5A';
-    ctx.lineWidth = n.type === 'boss' ? 3 : 1;
-    ctx.stroke();
-    ctx.fillStyle = '#2C2C2A';
-    ctx.font = '12px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(n.name, n.x, n.y + 34);
-    if (n.cleared) { ctx.fillStyle = '#3B6D11'; ctx.fillText('✓', n.x, n.y + 4); }
-  }
-  ctx.fillStyle = '#2C2C2A';
-  ctx.font = '13px sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText('江湖地图 · ' + CULTIVATION.realmFromXp(player.xp).label + ' — 点击蓝色地点启程（空白处返回主页）', 20, 30);
-}
 
 function drawBattle() {
   // 背景
@@ -701,23 +626,17 @@ function drawOverlay(text) {
 
 let _lastRenderState;
 function render() {
-  // 可观测：状态机切换时打印一次，便于排查主页下 canvas 是否仍在后台重绘
-  if (_lastRenderState !== state) { _lastRenderState = state; console.warn('[render] state ->', state); }
   // 主页/创建界面是 DOM 层，不需要画布持续重绘；跳过 60fps 空转，把算力让给视频解码
   if (state === 'hub' || state === 'create') { requestAnimationFrame(render); return; }
   ctx.clearRect(0, 0, W, H);
   if (state === 'create') {
     ctx.fillStyle = '#111'; ctx.fillRect(0, 0, W, H);
-  } else if (state === 'map') {
-    drawMap();
   } else if (state === 'battle') {
     drawBattle();
   } else if (state === 'win') {
     drawBattle(); drawOverlay('胜 利');
   } else if (state === 'lose') {
     drawBattle(); drawOverlay('败 北');
-  } else if (state === 'clear') {
-    drawBattle(); drawOverlay('江 湖 太 平');
   }
   if (toast) {
     ctx.fillStyle = 'rgba(241,239,232,0.95)';

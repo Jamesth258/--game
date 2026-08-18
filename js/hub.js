@@ -128,7 +128,7 @@ function initHub() {
           <span style="font-size:11px;color:rgba(241,239,232,0.5)">查看功法/装备宝箱各品质掉落概率与保底机制</span>
         </button>
 
-        <button class="btn-full" onclick="if(confirm('确定要清空存档重新开始吗？所有进度将丢失！')){localStorage.removeItem('wuxia_save');location.reload();}" style="background:rgba(232,123,123,0.08);border:1px solid rgba(232,123,123,0.25);text-align:left;padding:12px 14px">
+        <button class="btn-full" onclick="openModal('<h3 style=color:#D4A843>清空存档</h3><p style=color:rgba(241,239,232,0.7)>确定要清空存档重新开始吗？所有进度将丢失！</p><button class=btn-full onclick=localStorage.removeItem(&apos;wuxia_save&apos;);location.reload(); style=margin-top:14px;background:rgba(232,123,123,0.15);border:1px solid rgba(232,123,123,0.4)>确认清空</button><button class=btn-full onclick=closeModal() style=margin-top:14px>取消</button')" style="background:rgba(232,123,123,0.08);border:1px solid rgba(232,123,123,0.25);text-align:left;padding:12px 14px">
           <span style="font-size:14px;font-weight:600;color:#E87B7B">🗑️ 清空存档</span><br>
           <span style="font-size:11px;color:rgba(241,239,232,0.5)">删除所有游戏数据，重新创建角色（不可恢复）</span>
         </button>
@@ -136,7 +136,7 @@ function initHub() {
         <div style="padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:8px;border:0.5px solid rgba(255,255,255,0.08)">
           <div style="font-size:11px;color:rgba(241,239,232,0.45);margin-bottom:6px">游戏信息</div>
           <div style="font-size:12px;color:rgba(241,239,232,0.7);line-height:1.7">
-            版本：v1.2.2<br>
+            版本：v1.3.0<br>
             存档：浏览器本地存储<br>
             灵石：<b style="color:#D4A843">${formatNum(player.gold)}</b> · 钻石：<b style="color:#378ADD">${player.diamond || 0}</b><br>
             战力：<b style="color:#E87B7B">${formatNum(calcCombatPower(player))}</b>
@@ -155,7 +155,7 @@ function initHub() {
     const r = CULTIVATION.realmFromXp(player.xp);
     const el = (id) => document.getElementById(id);
     const re = el('hub-realm'), xf = el('hub-xp-fill'), xr = el('hub-xp-realm'), xn = el('hub-xp-nums');
-    console.log('[syncRealm]', r.label, 'progress:', Math.round((r.progress||0)*100) + '%', 'xp:', r.xpIntoStage + '/' + r.xpForStage);
+    // [syncRealm] debug removed in production
     if (re) re.textContent = r.label || '凡人';
     if (xf) xf.style.width = Math.round((r.progress || 0) * 100) + '%';
     if (xr) xr.textContent = (r.label || '凡人').split(' ')[0]; // 只取"筑基境"不含重天
@@ -195,7 +195,7 @@ function initHub() {
     window._hubIdleStarted = true;
     let _saveTick = 0;
     setInterval(() => {
-      if (state === 'hub' || state === 'map' || state === 'battle') {
+      if (state === 'hub' || state === 'battle') {  /* map mode removed */
         gainXp(ONLINE_XP_PER_SEC * (1 + player.xpBonus), false);
         powerEl.textContent = formatNum(calcCombatPower(player));
         syncRealmDOM(); // 每秒同步境界+进度条
@@ -608,4 +608,4 @@ function initHub() {
   refreshHub();
 }
 
-window.GAME = { player, nodes }; // 暴露给 online.js 做云端存档/排行榜
+window.GAME = { player }; // 暴露给 online.js 做云端存档/排行榜（nodes 已随地图模式移除）

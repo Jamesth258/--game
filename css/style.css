@@ -324,3 +324,12 @@
   @keyframes chestBurst { 0%{transform:translate(0,0) scale(1);opacity:1;} 100%{transform:translate(var(--dx,0),var(--dy,0)) scale(.2);opacity:0;} }
   @keyframes chestFade { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
   @keyframes chestPop { from{opacity:0;transform:scale(.8) translateY(6px);} to{opacity:1;transform:scale(1) translateY(0);} }
+
+/* ---- 响应式：窄屏适配（移动端基础断点） ---- */
+@media screen and (max-width: 400px) {
+  .hub-topbar { flex-direction: column; padding: 6px 8px; gap: 4px; }
+  .hub-top-right { justify-content: center; }
+  .hub-bottombar { flex-wrap: wrap; gap: 6px; }
+  .hub-bottom-btn { flex: 1 1 calc(33% - 6px); min-width: 80px; font-size: 12px; }
+  canvas { width: 100% !important; height: auto !important; }
+}

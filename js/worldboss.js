@@ -27,10 +27,12 @@ const WB_RIVAL_COUNT = 8;      // 模拟对手数量
 
 // ====== 时间辅助（支持测试注入）======
 function wbNowMinutes() {
+  // [TEST HOOK] 仅测试桩注入，生产环境不触发
   if (typeof window !== 'undefined' && window.__WB_TEST_MINUTES != null) return window.__WB_TEST_MINUTES;
   const d = new Date(); return d.getHours() * 60 + d.getMinutes();
 }
 function wbTodayStr() {
+  // [TEST HOOK] 仅测试桩注入，生产环境不触发
   if (typeof window !== 'undefined' && window.__WB_TEST_DATE) return window.__WB_TEST_DATE;
   const d = new Date(); const p = n => String(n).padStart(2, '0');
   return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());

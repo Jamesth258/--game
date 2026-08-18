@@ -93,7 +93,7 @@ document.getElementById('avatar-back').addEventListener('click', () => goToStep(
 document.getElementById('avatar-confirm').addEventListener('click', () => {
   if (!createData.avatar) return;
   player.name = createData.name;
-  player.sect = createData.avatar.desc; // 用形象描述作为初始门派/定位
+  player.sect = createData.avatar.desc; // 门派=形象描述标签（与 online.js 门派下拉列表语义不同，待后续门派系统统一）
   player.avatarId = createData.avatar.id;
   // 立绘已在选择时设置 (art.hero.src)
   applyStarterEquip(); // 赠送初始凡品套装（自动穿戴）

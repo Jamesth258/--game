@@ -83,6 +83,9 @@ function saveGame() {
       storyLevelFirstClear: player.storyLevelFirstClear,
       worldBoss: player.worldBoss,
       daily: player.daily, diamond: player.diamond,
+      equipCollected: player.equipCollected,
+      codexReward: player.codexReward,
+      skillPity: player.skillPity,
     }));
   } catch (e) {}
 }
