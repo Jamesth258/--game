@@ -258,14 +258,17 @@ function damage(attacker, target, mult, type) {
   let defStat = (isSpirit ? target.spiDef : target.def) * debuffMul(target, isSpirit ? 'spiDef' : 'def');
   if (aMods && aMods.pierce) defStat *= (1 - aMods.pierce); // 破甲：无视部分防御
   let base = atkStat * mult - defStat * 0.5;
-  // 暴击：基础 15% + 增益·暴击 buff + 装备暴击率 + 濒锋(血<30%) + 积威(每回合累加，上限40%)
-  let critChance = 0.15 + Math.max(0, buffMul(attacker, 'crit') - 1);
+  // 暴击：基础 15% + 等级×0.2% + 天命×0.2% + 增益·暴击 buff + 装备暴击率 + 濒锋(血<30%) + 积威(每回合累加，上限40%)
+  let baseCrit = 0.15;
+  if (attacker.level) baseCrit += attacker.level * 0.002;
+  if (attacker.des)   baseCrit += attacker.des * 0.002;
+  let critChance = baseCrit + Math.max(0, buffMul(attacker, 'crit') - 1);
   if (aMods) {
     critChance += aMods.critRate;
     if (aMods.lowHpCrit && attacker.hp / attacker.maxHp < 0.3) critChance += aMods.lowHpCrit;
     if (battle._stackCrit) critChance += battle._stackCrit;
   }
-  const crit = Math.random() < Math.min(0.95, critChance);
+  const crit = Math.random() < Math.min(1.0, critChance);
   let critMul = 1.5 + (aMods ? aMods.critDmg : 0); // 会心：装备暴伤加成
   if (crit) base *= critMul;
   if (target.defending) base *= 0.5;

@@ -64,8 +64,8 @@ const EFFECT_META = {
 const EQUIP_SETS = {
   zhuxian: { name: '诛仙', color: '#C0392B',
     two:   { critRate: 0.08, dmgAmp: 0.05 },
-    four:  { pierce: 0.15, shieldPct: 0.20 },
-    desc:  '攻伐之道。2件：暴击+8%、增伤5%；4件：破甲15%、开局20%护盾' },
+    four:  { pierce: 0.15, shieldPct: 0.20, critRate: 0.15 },
+    desc:  '攻伐之道。2件：暴击+8%、增伤5%；4件：破甲15%、开局20%护盾、暴击+15%' },
   taiji:   { name: '太极', color: '#3B6D11',
     two:   { regenMp: 15, regenHp: 0.03 },
     four:  { extraActions: 1, shieldPct: 0.15 },
@@ -76,21 +76,21 @@ const EQUIP_SETS = {
     desc:  '龟息镇守。2件：减伤8%；4件：反伤15%、每回合回5%气血' },
   ziwei:   { name: '紫薇', color: '#9B6BCC',
     two:   { lowHpCrit: 0.25 },
-    four:  { lowHpDmg: 0.20, dmgAmp: 0.10 },
-    desc:  '绝境锋芒。2件：血<30%暴击+25%；4件：血<30%增伤20%、增伤10%' },
+    four:  { lowHpDmg: 0.20, dmgAmp: 0.10, critRate: 0.15 },
+    desc:  '绝境锋芒。2件：血<30%暴击+25%；4件：血<30%增伤20%、增伤10%、暴击+15%' },
   qisha:   { name: '七杀', color: '#A32D2D',
     two:   { reflect: 0.10 },
-    four:  { stackCrit: 0.05, dmgAmp: 0.10 },
-    desc:  '杀伐决断。2件：反伤10%；4件：每回合暴击+5%、增伤10%' },
+    four:  { stackCrit: 0.05, dmgAmp: 0.10, critRate: 0.15 },
+    desc:  '杀伐决断。2件：反伤10%；4件：每回合暴击+5%、增伤10%、暴击+15%' },
   tanlang: { name: '贪狼', color: '#D4A843',
     two:   { critDmg: 0.20 },
-    four:  { lowHpDmg: 0.20, critDmg: 0.15 },
-    desc:  '贪婪凶星。2件：暴伤+20%；4件：血<30%增伤20%、暴伤+15%' },
+    four:  { lowHpDmg: 0.20, critDmg: 0.15, critRate: 0.15 },
+    desc:  '贪婪凶星。2件：暴伤+20%；4件：血<30%增伤20%、暴伤+15%、暴击+15%' },
 };
 
 /* EQUIP_DB — 94 种固定装备
  * 字段：id, name, slot, rarity(0~4), effect(可选 {type,v}), set(可选 套装key), desc
- * 凡品(r0) 12 / 灵品(r1) 16 / 宝品(r2) 20 / 仙品(r3) 22 / 神品(r4) 24 = 94
+ * 凡品(r0) 12 / 灵品(r1) 19 / 宝品(r2) 23 / 仙品(r3) 25 / 神品(r4) 27 = 106（含暴击流补充装备）
  */
 const EQUIP_DB = [
   // ===================== 凡品 r0（12，纯属性，入门过渡） =====================
@@ -196,6 +196,20 @@ const EQUIP_DB = [
   { id: 'b4_4', name: '无量履',   slot: 'boots',     rarity: 4, effect: { type: 'regenhp', v: 6 } },
   { id: 'b4_5', name: '神行太保靴', slot: 'boots',   rarity: 4, effect: { type: 'critdmg', v: 40 } },
   { id: 'b4_6', name: '涅槃履',   slot: 'boots',     rarity: 4, effect: { type: 'revive', v: 50 } },
+
+  // ===================== 暴击流补充装备（单件暴击率 ≤20%） =====================
+  { id: 'w1_5', name: '寒星剑',   slot: 'weapon',    rarity: 1, effect: { type: 'crit', v: 5 } },
+  { id: 'c1_5', name: '锐金铃',   slot: 'accessory', rarity: 1, effect: { type: 'crit', v: 4 } },
+  { id: 'b1_5', name: '疾风靴',   slot: 'boots',     rarity: 1, effect: { type: 'crit', v: 5 } },
+  { id: 'w2_6', name: '裂云刀',   slot: 'weapon',    rarity: 2, effect: { type: 'crit', v: 9 } },
+  { id: 'c2_6', name: '寒芒戒',   slot: 'accessory', rarity: 2, effect: { type: 'crit', v: 7 } },
+  { id: 'b2_6', name: '凌风靴',   slot: 'boots',     rarity: 2, effect: { type: 'crit', v: 9 } },
+  { id: 'w3_7', name: '碎星刃',   slot: 'weapon',    rarity: 3, effect: { type: 'crit', v: 14 } },
+  { id: 'c3_7', name: '离火珠',   slot: 'accessory', rarity: 3, effect: { type: 'crit', v: 11 } },
+  { id: 'b3_6', name: '踏星靴',   slot: 'boots',     rarity: 3, effect: { type: 'crit', v: 13 } },
+  { id: 'w4_7', name: '弑神枪',   slot: 'weapon',    rarity: 4, effect: { type: 'crit', v: 20 } },
+  { id: 'c4_7', name: '戮仙环',   slot: 'accessory', rarity: 4, effect: { type: 'crit', v: 16 } },
+  { id: 'b4_7', name: '太虚靴',   slot: 'boots',     rarity: 4, effect: { type: 'crit', v: 18 } },
 ];
 
 // 由数据库条目生成一个可穿戴 item（按当前境界缩放基础属性）

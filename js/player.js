@@ -198,9 +198,10 @@ function recalcStats(p) {
   p.xpBonus = (p.com + p.des) * 0.002;                     // 挂机经验加成 = 悟性×0.2% + 天命×0.2%（每点属性各 0.2%）
 
   // 常驻暴击率 / 暴伤倍率（供属性面板展示）
-  // 仅统计「常驻」来源：基础 15% / 150% + 装备锐利·会心 + 套装常驻项
+  // 基础 = 15% + 等级×0.2% + 天命×0.2%（属性点来源，与命中率同源但比例更低）
+  // 仅统计「常驻」来源：基础 + 装备锐利·会心 + 套装常驻项（含 4 件套 +15% 暴击）
   // 战斗内「条件触发」的（濒锋·血<30%、积威·每回合累加、功法暴击buff）不计入面板常驻值
-  let cr = 0.15, cd = 1.5;
+  let cr = 0.15 + (p.level || 0) * 0.002 + (p.des || 0) * 0.002, cd = 1.5;
   const _eq2 = p.equipment || {};
   const _setCnt = {};
   for (const slot of EQUIP_SLOT_KEYS) {
@@ -220,7 +221,7 @@ function recalcStats(p) {
       if (n >= 4 && def.four)  { if (def.four.critRate) cr += def.four.critRate; if (def.four.critDmg) cd += def.four.critDmg; }
     }
   }
-  p.critRate = Math.min(0.95, cr);   // 与战斗内暴击率上限一致
+  p.critRate = Math.min(1.0, cr);    // 暴击率上限 100%（与命中/闪避一致）
   p.critDmg = cd;                    // 暴击伤害倍率（面板展示时 ×100% 即总倍率）
   return p;
 }

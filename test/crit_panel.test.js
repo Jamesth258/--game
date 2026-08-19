@@ -75,7 +75,7 @@ code += `
     // A) 无装备：基础 15% 暴击 / 150% 暴伤
     player.equipment = empty;
     recalcStats(player);
-    assert('无装备 暴击率=15% (实际=' + player.critRate + ')', Math.abs(player.critRate - 0.15) < 1e-9);
+    assert('无装备 暴击率=基础15%+等级×0.2%+天命×0.2% (实际=' + player.critRate + ')', Math.abs(player.critRate - (0.15 + (Number(player.level)||0)*0.002 + (Number(player.des)||0)*0.002)) < 1e-9);
     assert('无装备 暴伤倍率=1.5 (实际=' + player.critDmg + ')', Math.abs(player.critDmg - 1.5) < 1e-9);
 
     // B) 单件精准：寒铁剑(w1_1, 灵品武器模板命中+5% + accuracy 5%) → 命中率较无装备 +10%（命中率系统：装备精准永久进面板）
@@ -92,7 +92,7 @@ code += `
       boots: null
     };
     recalcStats(player);
-    assert('诛仙2件 → 暴击率=34% (实际=' + player.critRate + ')', Math.abs(player.critRate - 0.34) < 1e-9);
+    assert('诛仙2件 → 暴击率=34%+等级/天命加成 (实际=' + player.critRate + ')', Math.abs(player.critRate - (0.34 + (Number(player.level)||0)*0.002 + (Number(player.des)||0)*0.002)) < 1e-9);
 
     // D) 2 件贪狼：贪狼刃(w4_2 critdmg45%) + 贪狼佩(c4_2 critdmg35%) → 2件套 critDmg+20% → 1.5+0.45+0.35+0.20=2.5
     player.equipment = {
@@ -112,7 +112,7 @@ code += `
       boots: null
     };
     recalcStats(player);
-    assert('紫薇2件 → 面板暴击率=23%(条件lowHpCrit不计入) (实际=' + player.critRate + ')', Math.abs(player.critRate - 0.23) < 1e-9);
+    assert('紫薇2件 → 面板暴击率=23%+等级/天命加成(条件lowHpCrit不计入) (实际=' + player.critRate + ')', Math.abs(player.critRate - (0.23 + (Number(player.level)||0)*0.002 + (Number(player.des)||0)*0.002)) < 1e-9);
 
     // F) 面板 HTML 含「暴击率 / 暴击伤害」标签并渲染数值
     player.equipment = { weapon: makeItemFromDb(byId('w1_1'), 0), armor: null, accessory: null, boots: null };
