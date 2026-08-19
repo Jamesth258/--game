@@ -279,6 +279,15 @@ HTML 的 `Cache-Control` 无法用 `<meta>` 覆盖。破缓存只能靠：
 （字符串 `rarity`、bonus 缺 `hitRate`），断言 `resolvedEquipBonus` / `equipBonusText` / `recalcStats` 三路均正确回填，
 并断言功法（存 id）经 `SKILLS_DB_MAP` 实时取到 `buffHitRate`。**以后每次改模板/数据库都必须跑此测试防回归。**
 
+**单件装备百分比硬上限（2026-08-19 闪避率重做时确立）**：`resolvedEquipBonus` 在回填后夹断
+`hitRate ≤ 0.40`、`eva ≤ 0.50`。双重作用：①满足"单件命中至多+40%、单件闪避至多+50%"的设计约束；
+②**保护旧存档中被境界缩放放大的异常值**（见下条 `makeItemFromDb` 缩放坑）——比如旧靴子 `eva=0.98` 会被当场压回 0.50，
+无需重掉装备。总命中率/闪避率仍由 `recalcStats` 的 `Math.min(1.0, …)` 封顶 100%。
+
+**`makeItemFromDb` 缩放坑（同源，已修）**：原第 210 行把 `eva`/`hitRate` 也乘了境界缩放 `scale=1+境界×0.18`，
+导致高境界下 0.10 的靴子模板被放大到 0.98+（即用户看到的"靴子加98%闪避"）。✅ 修复：命中/闪避是百分比，**不随境界放大**，
+模板给多少就是多少（神靴 38%、神饰品 22% 等）。旧存档里已被放大的值由上面的 `resolvedEquipBonus` 夹断兜底。
+
 ---
 
 ## 9. 数据同步铁律
