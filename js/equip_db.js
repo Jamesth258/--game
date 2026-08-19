@@ -235,8 +235,11 @@ function drawEquipFromDb(slot, rarityIdx) {
 
 // 获取装备的有效加成（已保存bonus + 当前模板回填缺失字段）
 // 解决：改模板后旧装备(已序列化进localStorage)缺少新增属性的问题
+// 注意：item.rarity 存的是字符串 key（'shen'/'ling'…），而 EQUIP_TPL[slot] 按数字 0~4 索引，
+//       必须先按 RARITY 映射回数字索引再查模板，否则旧装备永远查不到模板、回填失效。
 function resolvedEquipBonus(item) {
-  const tpl = (EQUIP_TPL[item.slot] || {})[item.rarity];
+  const ri = (typeof RARITY !== 'undefined') ? RARITY.findIndex(r => r.key === item.rarity) : -1;
+  const tpl = (ri >= 0 && EQUIP_TPL[item.slot]) ? EQUIP_TPL[item.slot][ri] : null;
   const bonus = Object.assign({}, item.bonus || {});
   if (tpl) {
     for (const k in tpl) {

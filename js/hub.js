@@ -32,12 +32,14 @@ function calcCombatPower(p) {
 
 function formatNum(n) { return n.toLocaleString('zh-CN'); }
 
-// 装备对比：关键派生属性之和（eva 按 *100 折算），用于标"更优"
+// 装备对比：关键派生属性之和（eva 按 *100 折算，命中率按 *100 折算），用于标"更优"
+// 走 resolvedEquipBonus 回填，保证旧装备(缺 hitRate 字段)也能公平参与对比
 function equipScore(item) {
   if (!item) return 0;
-  const b = item.bonus || {};
+  const b = (typeof resolvedEquipBonus === 'function') ? resolvedEquipBonus(item) : (item.bonus || {});
   return (b.atk || 0) + (b.def || 0) + (b.maxHp || 0) + (b.maxMp || 0) +
-         (b.spiAtk || 0) + (b.spiDef || 0) + (b.init || 0) + (b.eva || 0) * 100;
+         (b.spiAtk || 0) + (b.spiDef || 0) + (b.init || 0) +
+         (b.eva || 0) * 100 + (b.hitRate || 0) * 100;
 }
 // a 是否优于 b（b 为空部位则视为更好）
 function compareEquip(a, b) {
