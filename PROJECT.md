@@ -275,6 +275,10 @@ HTML 的 `Cache-Control` 无法用 `<meta>` 覆盖。破缓存只能靠：
 **审计结论（2026-08-19）**：全量排查后，需要动态回填的**只有装备 `bonus`**（已修）；
 其余系统（功法/图鉴/每日/世界BOSS）均用 id 或配置实时查表，无此问题。
 
+**回归守护（2026-08-19 新增）**：`test/backfill.test.js` 固化本铁律——用无头脚本模拟"旧存档装备对象"
+（字符串 `rarity`、bonus 缺 `hitRate`），断言 `resolvedEquipBonus` / `equipBonusText` / `recalcStats` 三路均正确回填，
+并断言功法（存 id）经 `SKILLS_DB_MAP` 实时取到 `buffHitRate`。**以后每次改模板/数据库都必须跑此测试防回归。**
+
 ---
 
 ## 9. 数据同步铁律
