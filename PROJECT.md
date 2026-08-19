@@ -252,6 +252,29 @@ HTML 的 `Cache-Control` 无法用 `<meta>` 覆盖。破缓存只能靠：
 ### 8.8 git push 网络不稳
 本环境 `git push` 常报 `Recv failure: Connection was reset`，**重试 2–3 次即可成功**（有时需 `sleep 5`）。
 
+### 8.9 ★动态回填铁律（改任何模板/数据库，旧存档对象必须回填）
+**核心认知**：装备/物品在 `makeItemFromDb` 时把模板值**冻结**进 `item.bonus` 并序列化到 `localStorage`。
+改 `EQUIP_TPL` 等模板**只影响新掉落的装备**，已存进存档的旧装备对象里**没有新字段**（如后来加的 `hitRate`），
+→ 读 `item.bonus.hitRate` 得到 `undefined` → 显示和计算都看不到新属性。**这是"改了没反应"的头号根因。**
+
+**铁律（用户 2026-08-19 明确下达）**：以后在设计改动**任何一个细节**时，都必须做**动态回填**，
+把旧装备 / 旧功法 / 旧存档对象也修正，**绝不能只改新获取的内容**。
+
+**正确做法**：所有"读装备属性"的地方统一走 `resolvedEquipBonus(item)`（equip_db.js），
+它在运行时把"已保存的 bonus"与"当前模板"合并，缺失字段自动回填。显示(`equipBonusText`)、
+计算(`recalcStats`)、对比(`equipScore`)三处都已接此函数。
+
+**已踩的致命坑**：`resolvedEquipBonus` 初版用 `EQUIP_TPL[slot][item.rarity]` 查模板，但
+`item.rarity` 存的是**字符串** key（如 `'shen'`），`EQUIP_TPL[slot]` 却是按**数字 0~4** 索引 → 永远查不到 → 回填彻底失效。
+✅ 修复：先 `RARITY.findIndex(r => r.key === item.rarity)` 把字符串映射回数字索引再查模板（commit bfaa8a4）。
+
+**功法例外（无需回填）**：功法在存档里存的是 `SKILLS_DB` 的 **id 数组**（`player.learned` / `player.equippedSkills`），
+每次使用都 `SKILLS_DB_MAP[id]` **实时查最新数据库**。所以给功法加 `buffHitRate` 等字段，对"旧习得"功法天然生效，
+不存在旧对象缺字段问题——这与装备（存具体对象）的存储方式本质不同，不要混淆。
+
+**审计结论（2026-08-19）**：全量排查后，需要动态回填的**只有装备 `bonus`**（已修）；
+其余系统（功法/图鉴/每日/世界BOSS）均用 id 或配置实时查表，无此问题。
+
 ---
 
 ## 9. 数据同步铁律
