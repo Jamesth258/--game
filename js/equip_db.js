@@ -24,18 +24,18 @@ const EQUIP_TPL = {
     4: { def: 50, maxHp: 480, spiDef: 40 },
   },
   accessory: {
-    0: { maxMp: 35, spiAtk: 6,  eva: 0.02 },
-    1: { maxMp: 70, spiAtk: 12, eva: 0.03, hitRate: 0.03 },
-    2: { maxMp: 120, spiAtk: 20, eva: 0.04, hitRate: 0.07 },
-    3: { maxMp: 200, spiAtk: 34, eva: 0.06, hitRate: 0.12 },
-    4: { maxMp: 340, spiAtk: 56, eva: 0.09, hitRate: 0.16 },
+    0: { maxMp: 35, spiAtk: 6,  eva: 0.03 },
+    1: { maxMp: 70, spiAtk: 12, eva: 0.07, hitRate: 0.03 },
+    2: { maxMp: 120, spiAtk: 20, eva: 0.12, hitRate: 0.07 },
+    3: { maxMp: 200, spiAtk: 34, eva: 0.17, hitRate: 0.12 },
+    4: { maxMp: 340, spiAtk: 56, eva: 0.22, hitRate: 0.16 },
   },
   boots: {
-    0: { init: 5,  eva: 0.02 },
-    1: { init: 10, eva: 0.03 },
-    2: { init: 17, eva: 0.045 },
-    3: { init: 28, eva: 0.065 },
-    4: { init: 46, eva: 0.10 },
+    0: { init: 5,  eva: 0.03 },
+    1: { init: 10, eva: 0.08 },
+    2: { init: 17, eva: 0.16 },
+    3: { init: 28, eva: 0.27 },
+    4: { init: 46, eva: 0.38 },
   },
 };
 
@@ -207,7 +207,7 @@ function makeItemFromDb(entry, tier) {
   const bonus = {};
   for (const k in base) {
     let v = Math.round(base[k] * scale);
-    if (k === 'eva' || k === 'hitRate') v = Math.round(base[k] * scale * 100) / 100;
+    if (k === 'eva' || k === 'hitRate') v = Math.round(base[k] * 100) / 100; // 命中/闪避为百分比，不随境界放大（避免高境界单件闪避/命中率爆表；单件上限由 resolvedEquipBonus 夹断）
     bonus[k] = v;
   }
   const item = {
@@ -246,6 +246,10 @@ function resolvedEquipBonus(item) {
       if (!(k in bonus)) bonus[k] = tpl[k]; // 缺失字段用模板原始值回填
     }
   }
+  // 单件装备命中率/闪避率硬上限（用户铁律：闪避单件至多+50%、命中单件至多+40%）
+  // 同时保护旧存档中曾被境界缩放放大的异常值（如 eva=0.98 的靴子），无需重掉装备即生效
+  if (bonus.hitRate > 0.40) bonus.hitRate = 0.40;
+  if (bonus.eva > 0.50) bonus.eva = 0.50;
   return bonus;
 }
 

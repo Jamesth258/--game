@@ -73,7 +73,7 @@ function bossBaseStats() {
     spiAtk:Math.round(20 + sou * 2 + idx * 10),
     spiDef:Math.round(10 + sou * 1 + idx * 2),
     init:  Math.round(10 + spd * 2 + idx * 2),
-    eva:   Math.min(0.95, 0.10 + idx * 0.001 + spd * 0.001 + des * 0.001),
+    eva:   Math.min(1.0, 0.10 + idx * 0.001 + spd * 0.001 + des * 0.001),
     spd,
   };
 }

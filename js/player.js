@@ -191,7 +191,7 @@ function recalcStats(p) {
   p.spiDef = spiDef;
   p.spd = spd;
   p.init = Math.round(init);
-  p.eva = Math.min(0.95, eva);
+  p.eva = Math.min(1.0, eva);                      // 闪避率上限100%（与命中率一致）
   p.hitRate = Math.min(1.0, hitR);                      // 命中率上限100%
   p.extraActions = extraActions;
   p.luck = p.des;                                        // 幸运值

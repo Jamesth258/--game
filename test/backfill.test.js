@@ -123,6 +123,20 @@ code += `
     const wStrip = oldEq('w4_1', 'weapon', 'shen', { atk: 509 }, { type: 'accuracy', v: 6 });
     assert('旧神武器 缺失 spiAtk → 回填 42 (实际=' + resolvedEquipBonus(wStrip).spiAtk + ')', resolvedEquipBonus(wStrip).spiAtk === 42);
 
+    // A8) 单件闪避率硬上限 50%：旧存档靴子被境界缩放放大到 0.98 → 夹断 0.50；新神靴模板 0.38 不超
+    const bOldBloated = oldEq('b4_1', 'boots', 'shen', { init: 46, eva: 0.98 }); // 模拟高境界放大后的旧靴子
+    const bb = resolvedEquipBonus(bOldBloated);
+    assert('旧靴子(冻结eva=0.98) 单件夹断至 0.50 (实际=' + bb.eva + ')', Math.abs((bb.eva||0) - 0.50) < 1e-9);
+    assert('旧靴子 显示含「闪避+50%」', equipBonusText(bOldBloated).indexOf('闪避+50%') !== -1);
+    const bNew = oldEq('b4_1', 'boots', 'shen', { init: 46, eva: 0.38 }); // 新模板（已无境界缩放）
+    assert('新神靴 模板闪避=0.38 不超上限 (实际=' + resolvedEquipBonus(bNew).eva + ')', Math.abs((resolvedEquipBonus(bNew).eva||0) - 0.38) < 1e-9);
+
+    // A9) 总闪避率封顶 100%：双件各被夹断到 0.50（神靴+神饰品），加基础后超 1.0 → 整体夹到 1.0
+    const cBloated = oldEq('c4_1', 'accessory', 'shen', { maxMp: 340, spiAtk: 56, eva: 0.98 });
+    player.equipment = { weapon: null, armor: null, accessory: cBloated, boots: bOldBloated };
+    recalcStats(player);
+    assert('总闪避率封顶 100% (双0.50+基础, 实际=' + player.eva.toFixed(3) + ')', Math.abs(player.eva - 1.0) < 1e-9);
+
     // ---------- B) 功法实时查表（无需回填，但须守护旧习得功法拿到最新字段）----------
     const total = Object.keys(SKILLS_DB_MAP).length;
     assert('SKILLS_DB_MAP 已加载 (' + total + ' 功法)', total > 0);
