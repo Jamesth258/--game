@@ -233,6 +233,19 @@ function drawEquipFromDb(slot, rarityIdx) {
   return makeItemFromDb(pick, tier);
 }
 
+// 获取装备的有效加成（已保存bonus + 当前模板回填缺失字段）
+// 解决：改模板后旧装备(已序列化进localStorage)缺少新增属性的问题
+function resolvedEquipBonus(item) {
+  const tpl = (EQUIP_TPL[item.slot] || {})[item.rarity];
+  const bonus = Object.assign({}, item.bonus || {});
+  if (tpl) {
+    for (const k in tpl) {
+      if (!(k in bonus)) bonus[k] = tpl[k]; // 缺失字段用模板原始值回填
+    }
+  }
+  return bonus;
+}
+
 // 装备特效文字（用于面板展示）
 function equipEffectText(item) {
   const parts = [];

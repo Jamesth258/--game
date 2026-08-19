@@ -100,7 +100,7 @@ function rollRarity() {
 function equipBonusText(item) {
   const names = { atk: '攻', def: '防', maxHp: '气血', maxMp: '灵力', spiAtk: '精攻', spiDef: '精防', init: '先攻', eva: '闪避', hitRate: '命中' };
   const parts = [];
-  const bonus = item.bonus || {};
+  const bonus = (typeof resolvedEquipBonus === 'function') ? resolvedEquipBonus(item) : (item.bonus || {});
   for (const k in bonus) {
     if (!bonus[k]) continue;
     parts.push((names[k] || k) + ((k === 'eva' || k === 'hitRate') ? '+' + Math.round(bonus[k] * 100) + '%' : '+' + bonus[k]));
@@ -164,18 +164,21 @@ function recalcStats(p) {
 
   // 装备加成：叠加到派生属性；extraActions 注入战斗连动 hook（battle.js beginRound 读取）
   const eq = p.equipment || {};
+  const _hasResolve = (typeof resolvedEquipBonus === 'function');
   for (const slot of EQUIP_SLOT_KEYS) {
     const it = eq[slot];
-    if (!it || !it.bonus) continue;
-    if (it.bonus.atk)    atk    += it.bonus.atk;
-    if (it.bonus.def)    def    += it.bonus.def;
-    if (it.bonus.maxHp)  maxHp  += it.bonus.maxHp;
-    if (it.bonus.maxMp)  maxMp  += it.bonus.maxMp;
-    if (it.bonus.spiAtk) spiAtk += it.bonus.spiAtk;
-    if (it.bonus.spiDef) spiDef += it.bonus.spiDef;
-    if (it.bonus.init)   init   += it.bonus.init;
-    if (it.bonus.eva)    eva    += it.bonus.eva;
-    if (it.bonus.hitRate) hitR  += it.bonus.hitRate;  // 武器模板命中率（永久，进面板）
+    if (!it) continue;
+    const bonus = _hasResolve ? resolvedEquipBonus(it) : (it.bonus || {});
+    if (!it.bonus && Object.keys(bonus).length === 0) continue;
+    if (bonus.atk)    atk    += bonus.atk;
+    if (bonus.def)    def    += bonus.def;
+    if (bonus.maxHp)  maxHp  += bonus.maxHp;
+    if (bonus.maxMp)  maxMp  += bonus.maxMp;
+    if (bonus.spiAtk) spiAtk += bonus.spiAtk;
+    if (bonus.spiDef) spiDef += bonus.spiDef;
+    if (bonus.init)   init   += bonus.init;
+    if (bonus.eva)    eva    += bonus.eva;
+    if (bonus.hitRate) hitR  += bonus.hitRate;  // 模板命中率（永久，进面板；旧装备通过 resolvedEquipBonus 回填）
     if (it.effect && it.effect.type === 'accuracy') hitR += (it.effect.v || 0) / 100; // 精准特效（永久，进面板；单件+命中受 100% 总封顶，单装备至多+40%）
     if (it.extraActions) extraActions += it.extraActions;
   }
