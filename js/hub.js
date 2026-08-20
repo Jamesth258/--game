@@ -265,6 +265,59 @@ function initHub() {
   // 功法弹窗：最多装备 6 种，战斗中每回合点选；下方为已习得功法库（点选装备/卸下）
   function tierColor(t) { return ({ 1: '#9aa0a6', 2: '#639922', 3: '#378ADD', 4: '#9B6BCC', 5: '#D4A843', 6: '#E87B7B', 7: '#E8D9A0' })[t] || '#9aa0a6'; }
 
+  // 功法库筛选/排序状态（模块级，renderSkillLib 读取 DOM 下拉后更新）
+  let _skillFilterTier = 0, _skillSortBy = 'tier';
+  const SKILL_TIER_OPTS = [['0', '全部品阶'], ['1', '黄阶'], ['2', '玄阶'], ['3', '地阶'], ['4', '天阶'], ['5', '王阶'], ['6', '皇阶'], ['7', '帝阶']]
+    .map(([v, t]) => `<option value="${v}">${t}</option>`).join('');
+
+  // 单条功法行：主动=装备/已装备按钮；被动=显示【被动】自动加成（无装备按钮）
+  function skillRowHtml(s, isEquipped, equipped) {
+    const on = isEquipped(s.id);
+    const isPassive = s.kind === 'passive';
+    let right;
+    if (isPassive) {
+      right = '<span style="color:#9B6BCC;font-size:12px;white-space:nowrap">【被动】自动加成</span>';
+    } else if (on) {
+      right = '<span style="color:#639922;font-size:12px;white-space:nowrap">已装备</span>';
+    } else {
+      const full = equipped.length >= MAX_EQUIPPED;
+      right = `<button class="equip-btn" ${full ? 'disabled' : ''} onclick="equipSkill('${s.id}')">装备</button>`;
+    }
+    return `<div class="bag-item"><div class="bag-info">
+      <span class="equip-icon" style="color:${tierColor(s.tier)}">${s.tierName[0]}</span>
+      <span class="bag-name">${esc(s.name)}</span>
+      <span class="equip-bonus">${esc(s.schoolCn)} · ${s.cost}灵 · ${esc(s.desc)}</span></div>
+      ${right}</div>`;
+  }
+
+  // 渲染已习得功法库：分主动型 / 被动型两栏，支持品阶筛选 + 品阶/类型排序
+  function renderSkillLib() {
+    const tf = document.getElementById('skillTierFilter');
+    const sb = document.getElementById('skillSortBy');
+    if (tf) _skillFilterTier = parseInt(tf.value, 10) || 0;
+    if (sb) _skillSortBy = sb.value || 'tier';
+    const learned = player.learned || [];
+    let list = learned.map(id => SKILLS_DB_MAP[id]).filter(Boolean);
+    if (_skillFilterTier) list = list.filter(s => s.tier === _skillFilterTier);
+    if (_skillSortBy === 'tier') list.sort((a, b) => a.tier - b.tier || a.id.localeCompare(b.id));
+    else list.sort((a, b) => a.school.localeCompare(b.school) || a.tier - b.tier);
+    const equipped = player.equippedSkills || [];
+    const isEquipped = id => equipped.includes(id);
+    const act = list.filter(s => s.kind !== 'passive');
+    const pas = list.filter(s => s.kind === 'passive');
+    const actHtml = act.length ? act.map(s => skillRowHtml(s, isEquipped, equipped)).join('')
+      : '<div style="opacity:.5;padding:8px;font-size:12px">该筛选下暂无主动功法</div>';
+    const pasHtml = pas.length ? pas.map(s => skillRowHtml(s, isEquipped, equipped)).join('')
+      : '<div style="opacity:.5;padding:8px;font-size:12px">该筛选下暂无被动心法</div>';
+    const box = document.getElementById('skillLibBox');
+    if (box) box.innerHTML = `
+      <div class="equip-sec-title">主动型功法（${act.length}）</div>
+      <div class="bag-list">${actHtml}</div>
+      <div class="equip-sec-title">被动型心法（${pas.length}）· 习得即永久加成</div>
+      <div class="bag-list">${pasHtml}</div>`;
+  }
+  window.renderSkillLib = renderSkillLib;
+
   function showSkillsModal() {
     refreshHub(); // 同步主页数据
     const equipped = player.equippedSkills || [];
@@ -283,17 +336,8 @@ function initHub() {
       }
       return `<div class="equip-slot" style="opacity:.45;text-align:center;color:rgba(241,239,232,.4);display:flex;align-items:center;justify-content:center">空槽位 ${i + 1}</div>`;
     }).join('');
-    // 已习得功法库（点击装备）
-    const libHtml = learned.map(id => {
-      const s = SKILLS_DB_MAP[id]; if (!s) return '';
-      const on = isEquipped(id);
-      const full = !on && equipped.length >= MAX_EQUIPPED;
-      return `<div class="bag-item"><div class="bag-info">
-        <span class="equip-icon" style="color:${tierColor(s.tier)}">${s.tierName[0]}</span>
-        <span class="bag-name">${esc(s.name)}</span>
-        <span class="equip-bonus">${esc(s.schoolCn)} · ${s.cost}灵 · ${esc(s.desc)}</span></div>
-        ${on ? '<span style="color:#639922;font-size:12px;white-space:nowrap">已装备</span>' : `<button class="equip-btn" ${full ? 'disabled' : ''} onclick="equipSkill('${id}')">装备</button>`}</div>`;
-    }).join('');
+    // 已习得功法库：由 renderSkillLib() 动态渲染（分主动/被动两栏 + 品阶筛选/排序）
+
     openModal(`
       <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
       <h3 style="margin:0">功法</h3></div>
@@ -301,10 +345,13 @@ function initHub() {
       <div class="equip-sec-title">已装备（${equipped.length}/${MAX_EQUIPPED}）</div>
       <div class="bag-list">${slotHtml}</div>
       <hr>
-      <div class="equip-sec-title">已习得功法库（点击装备）</div>
-      <div class="bag-list">${libHtml}</div>
-      <button class="btn-full" onclick="showSkillShop()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">功法秘库（灵石兑换）</button>
-      <button class="btn-full" onclick="returnToHub()" style="margin-top:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
+      <div style="display:flex;gap:10px;margin:6px 0;flex-wrap:wrap">
+        <label style="font-size:12px;color:rgba(241,239,232,.7)">品阶 <select id="skillTierFilter" onchange="renderSkillLib()">${SKILL_TIER_OPTS}</select></label>
+        <label style="font-size:12px;color:rgba(241,239,232,.7)">排序 <select id="skillSortBy" onchange="renderSkillLib()"><option value="tier">按品阶</option><option value="school">按类型</option></select></label>
+      </div>
+      <div id="skillLibBox"></div>
+      <button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
+    renderSkillLib();
   }
 
   // 装备/卸下功法（≤6）
@@ -324,43 +371,7 @@ function initHub() {
   window.equipSkill = equipSkill;
   window.unequipSkill = unequipSkill;
 
-  // 功法秘库：灵石兑换未习得且非「待副本」锁定的功法
-  const SKILL_SHOP_PRICE = { 1: 40, 2: 80, 3: 160, 4: 320, 5: 640, 6: 1280, 7: 2560 };
-  function showSkillShop() {
-    refreshHub();
-    const gold = player.gold || 0;
-    const pool = SKILLS_DB.filter(s => !player.learned.includes(s.id) && !s.lockedUntil);
-    const copy = pool.slice();
-    const picks = [];
-    for (let i = 0; i < 6 && copy.length; i++) picks.push(copy.splice(Math.floor(Math.random() * copy.length), 1)[0]);
-    const rows = picks.map(s => {
-      const price = SKILL_SHOP_PRICE[s.tier] || 40;
-      const can = gold >= price;
-      return `<div class="bag-item"><div class="bag-info">
-        <span class="equip-icon" style="color:${tierColor(s.tier)}">${s.tierName[0]}</span>
-        <span class="bag-name">${esc(s.name)}</span>
-        <span class="equip-bonus">${esc(s.schoolCn)} · ${s.cost}灵 · ${esc(s.desc)}</span></div>
-        ${can ? `<button class="equip-btn" onclick="buySkill('${s.id}')">兑换·${price}灵</button>` : `<button class="equip-btn" disabled style="background:rgba(255,255,255,0.06);color:rgba(241,239,232,0.3);cursor:default">${price}灵</button>`}</div>`;
-    }).join('');
-    openModal(`
-      <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
-      <h3 style="margin:0">功法秘库</h3></div>
-      <p style="margin:2px 0 10px;font-size:12px;color:rgba(241,239,232,0.6)">灵石 <b style="color:#D4A843">${gold}</b> · 兑换后自动进入功法库</p>
-      <div class="bag-list">${rows}</div>
-      <button class="btn-full" onclick="showSkillsModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回功法</button>`);
-  }
-  function buySkill(id) {
-    const s = SKILLS_DB_MAP[id]; if (!s) return;
-    const price = SKILL_SHOP_PRICE[s.tier] || 40;
-    if ((player.gold || 0) < price) { showSkillShop(); return; }
-    player.gold -= price;
-    if (!player.learned.includes(id)) player.learned.push(id);
-    checkCodexReward();
-    saveGame(); refreshHub(); showSkillShop();
-  }
-  window.showSkillShop = showSkillShop;
-  window.buySkill = buySkill;
-  window.showSkillsModal = showSkillsModal;   // 暴露：秘库"返回功法"按钮 onclick 调用
+  window.showSkillsModal = showSkillsModal;
   // 装备弹窗（穿戴 / 卸下 / 背包）
   function showEquipModal() {
     refreshHub(); // 同步主页战力

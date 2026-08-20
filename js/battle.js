@@ -46,7 +46,7 @@ function makeEnemy(node) {
 
 // 构建战斗指令栏：普攻 + 已装备功法（≤6）+ 防御 + 道具
 function buildSkillBar() {
-  const skills = (player.equippedSkills || []).map(id => SKILLS_DB_MAP[id]).filter(Boolean);
+  const skills = (player.equippedSkills || []).map(id => SKILLS_DB_MAP[id]).filter(s => s && s.kind !== 'passive');
   let html = '<button data-act="attack">攻击</button>';
   skills.forEach(s => {
     html += `<button data-act="skill" data-skill="${s.id}" data-cost="${s.cost}" title="${esc(s.desc)}">${esc(s.name)}<small style="opacity:.7"> ${s.cost}灵</small></button>`;
@@ -97,8 +97,8 @@ function computeEquipMods(p) {
     const it = worn[slot];
     if (!it) continue;
     if (it.extraActions) m.extraActions += it.extraActions;
-    if (it.effect) {
-      const e = it.effect, v = e.v || 0;
+    for (const e of resolvedEquipEffects(it)) {
+      const v = e.v || 0;
       switch (e.type) {
         case 'crit':      m.critRate  += v / 100; break;
         case 'critdmg':   m.critDmg   += v / 100; break;

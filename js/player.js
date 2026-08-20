@@ -179,8 +179,29 @@ function recalcStats(p) {
     if (bonus.init)   init   += bonus.init;
     if (bonus.eva)    eva    += bonus.eva;
     if (bonus.hitRate) hitR  += bonus.hitRate;  // 模板命中率（永久，进面板；旧装备通过 resolvedEquipBonus 回填）
-    if (it.effect && it.effect.type === 'accuracy') hitR += (it.effect.v || 0) / 100; // 精准特效（永久，进面板；单件+命中受 100% 总封顶，单装备至多+40%）
+    for (const _ef of resolvedEquipEffects(it)) { if (_ef.type === 'accuracy') hitR += (_ef.v || 0) / 100; } // 精准特效（永久，进面板；单件+命中受 100% 总封顶，单装备至多+40%）
     if (it.extraActions) extraActions += it.extraActions;
+  }
+
+  // 被动心法：习得即永久加成（不进 equippedSkills、不作为战斗点选技能）
+  // 被动功法存于 player.learned（与主动功法同库），此处遍历累加其 pas* 属性到派生数值
+  let pasCR = 0, pasCD = 0; // 暴击率/暴伤累加，待下方 cr/cd 段合并（面板展示用）
+  if (typeof SKILLS_DB_MAP !== 'undefined') {
+    const _learned = p.learned || [];
+    for (const id of _learned) {
+      const sk = SKILLS_DB_MAP[id];
+      if (!sk || sk.kind !== 'passive' || !sk.passive) continue;
+      const pa = sk.passive;
+      if (pa.pasAtk)    atk    += pa.pasAtk;        // 攻击
+      if (pa.pasSpiAtk) spiAtk += pa.pasSpiAtk;     // 精神攻击
+      if (pa.pasDef)    def    += pa.pasDef;        // 防御
+      if (pa.pasInit)   init   += pa.pasInit;       // 先攻
+      if (pa.pasHp)     maxHp  += pa.pasHp;         // 生命上限
+      if (pa.pasMp)     maxMp  += pa.pasMp;         // 灵力上限
+      if (pa.pasHit)    hitR   += pa.pasHit;        // 命中率（永久，进面板，随命中率封顶100%）
+      if (pa.pasCrit)   pasCR  += pa.pasCrit;       // 暴击率（合并至 cr）
+      if (pa.pasCritDmg) pasCD  += pa.pasCritDmg;   // 暴击伤害（合并至 cd，无封顶）
+    }
   }
 
   p.maxHp = maxHp;
@@ -207,9 +228,9 @@ function recalcStats(p) {
   for (const slot of EQUIP_SLOT_KEYS) {
     const it = _eq2[slot];
     if (!it) continue;
-    if (it.effect) {
-      if (it.effect.type === 'crit')    cr += (it.effect.v || 0) / 100;
-      if (it.effect.type === 'critdmg') cd += (it.effect.v || 0) / 100;
+    for (const _ef of resolvedEquipEffects(it)) {
+      if (_ef.type === 'crit')    cr += (_ef.v || 0) / 100;
+      if (_ef.type === 'critdmg') cd += (_ef.v || 0) / 100;
     }
     if (it.set) _setCnt[it.set] = (_setCnt[it.set] || 0) + 1;
   }
@@ -221,6 +242,8 @@ function recalcStats(p) {
       if (n >= 4 && def.four)  { if (def.four.critRate) cr += def.four.critRate; if (def.four.critDmg) cd += def.four.critDmg; }
     }
   }
+  cr += pasCR;   // 被动心法·暴击率（习得即加成）
+  cd += pasCD;   // 被动心法·暴击伤害（习得即加成，无封顶）
   p.critRate = Math.min(1.0, cr);    // 暴击率上限 100%（与命中/闪避一致）
   p.critDmg = cd;                    // 暴击伤害倍率（面板展示时 ×100% 即总倍率）
   return p;

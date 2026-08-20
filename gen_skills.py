@@ -238,7 +238,7 @@ for sk in entries:
 
 lines.append('];')
 # 查表：id -> skill 对象，供 battle/hub 直接 SKILLS_DB_MAP[id] 取用
-lines.append('const SKILLS_DB_MAP = (function(){ var m = {}; for (var i=0;i<SKILLS_DB.length;i++){ m[SKILLS_DB[i].id] = SKILLS_DB[i]; } return m; })();')
+lines.append('var SKILLS_DB_MAP = (function(){ var m = {}; for (var i=0;i<SKILLS_DB.length;i++){ m[SKILLS_DB[i].id] = SKILLS_DB[i]; } return m; })();')
 lines.append('if (typeof module !== "undefined") module.exports = SKILLS_DB;')
 
 out = '\n'.join(lines) + '\n'

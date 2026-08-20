@@ -42,7 +42,7 @@ const EQUIP_TPL = {
 // 特效类型说明（text 用于面板展示；v 的含义随类型而定，多为百分点或百分比）
 const EFFECT_META = {
   crit:      { name: '锐利',     text: v => '暴击率 +' + v + '%' },
-  critdmg:   { name: '会心',     text: v => '暴击伤害 +' + v + '%' },
+  critdmg:   { name: '暴击伤害', text: v => '+' + v + '%' },
   lifesteal: { name: '吸血',     text: v => '攻击吸血 ' + v + '%' },
   reflect:   { name: '反伤',     text: v => '受击反伤 ' + v + '%' },
   pierce:    { name: '破甲',     text: v => '无视防御 ' + v + '%' },
@@ -108,51 +108,51 @@ const EQUIP_DB = [
   { id: 'b0_3', name: '麻履',     slot: 'boots',     rarity: 0 },
 
   // ===================== 灵品 r1（16，单条小特效） =====================
-  { id: 'w1_1', name: '寒铁剑',   slot: 'weapon',    rarity: 1, effect: { type: 'accuracy', v: 5 } },
-  { id: 'w1_2', name: '青锋刃',   slot: 'weapon',    rarity: 1, effect: { type: 'dmgamp', v: 4 } },
+  { id: 'w1_1', name: '寒铁剑',   slot: 'weapon',    rarity: 1, effect: { type: 'accuracy', v: 5 }, effect2: { type: 'crit', v: 5 } },
+  { id: 'w1_2', name: '青锋刃',   slot: 'weapon',    rarity: 1, effect: { type: 'dmgamp', v: 4 }, effect2: { type: 'critdmg', v: 5 } },
   { id: 'w1_3', name: '玄铁枪',   slot: 'weapon',    rarity: 1, effect: { type: 'accuracy', v: 6 } },
   { id: 'w1_4', name: '赤霄剑',   slot: 'weapon',    rarity: 1, effect: { type: 'dmgamp', v: 5 } },
   { id: 'a1_1', name: '玄龟甲',   slot: 'armor',     rarity: 1, effect: { type: 'reducedmg', v: 4 } },
   { id: 'a1_2', name: '锁子铠',   slot: 'armor',     rarity: 1, effect: { type: 'regenhp', v: 2 } },
   { id: 'a1_3', name: '霓裳衣',   slot: 'armor',     rarity: 1, effect: { type: 'reducedmg', v: 5 } },
   { id: 'a1_4', name: '玄武袍',   slot: 'armor',     rarity: 1, effect: { type: 'regenhp', v: 3 } },
-  { id: 'c1_1', name: '聚灵珠',   slot: 'accessory', rarity: 1, effect: { type: 'regenmp', v: 10 } },
-  { id: 'c1_2', name: '乾坤戒',   slot: 'accessory', rarity: 1, effect: { type: 'accuracy', v: 4 } },
+  { id: 'c1_1', name: '聚灵珠',   slot: 'accessory', rarity: 1, effect: { type: 'regenmp', v: 10 }, effect2: { type: 'critdmg', v: 5 } },
+  { id: 'c1_2', name: '乾坤戒',   slot: 'accessory', rarity: 1, effect: { type: 'accuracy', v: 4 }, effect2: { type: 'crit', v: 4 } },
   { id: 'c1_3', name: '引魂幡',   slot: 'accessory', rarity: 1, effect: { type: 'regenmp', v: 12 } },
   { id: 'c1_4', name: '太极符',   slot: 'accessory', rarity: 1, effect: { type: 'reducedmg', v: 4 } },
   { id: 'b1_1', name: '追风靴',   slot: 'boots',     rarity: 1, effect: { type: 'crit', v: 3 } },
-  { id: 'b1_2', name: '凌波履',   slot: 'boots',     rarity: 1, effect: { type: 'dmgamp', v: 4 } },
-  { id: 'b1_3', name: '踏云靴',   slot: 'boots',     rarity: 1, effect: { type: 'regenhp', v: 2 } },
+  { id: 'b1_2', name: '凌波履',   slot: 'boots',     rarity: 1, effect: { type: 'dmgamp', v: 4 }, effect2: { type: 'critdmg', v: 5 } },
+  { id: 'b1_3', name: '踏云靴',   slot: 'boots',     rarity: 1, effect: { type: 'regenhp', v: 2 }, effect2: { type: 'crit', v: 5 } },
   { id: 'b1_4', name: '神行靴',   slot: 'boots',     rarity: 1, effect: { type: 'crit', v: 4 } },
 
   // ===================== 宝品 r2（20，中等特效 + 2 套） =====================
-  { id: 'w2_1', name: '赤血刀',   slot: 'weapon',    rarity: 2, effect: { type: 'lifesteal', v: 6 } },
+  { id: 'w2_1', name: '赤血刀',   slot: 'weapon',    rarity: 2, effect: { type: 'lifesteal', v: 6 }, effect2: { type: 'crit', v: 9 } },
   { id: 'w2_2', name: '破军戟',   slot: 'weapon',    rarity: 2, effect: { type: 'accuracy', v: 10 } },
   { id: 'w2_3', name: '诛仙剑',   slot: 'weapon',    rarity: 2, set: 'zhuxian', effect: { type: 'crit', v: 6 } },
   { id: 'w2_4', name: '太极剑',   slot: 'weapon',    rarity: 2, set: 'taiji',   effect: { type: 'dmgamp', v: 8 } },
-  { id: 'w2_5', name: '流光剑',   slot: 'weapon',    rarity: 2, effect: { type: 'lifesteal', v: 8 } },
+  { id: 'w2_5', name: '流光剑',   slot: 'weapon',    rarity: 2, effect: { type: 'lifesteal', v: 8 }, effect2: { type: 'critdmg', v: 9 } },
   { id: 'a2_1', name: '玄铁铠',   slot: 'armor',     rarity: 2, effect: { type: 'reflect', v: 8 } },
   { id: 'a2_2', name: '金钟甲',   slot: 'armor',     rarity: 2, effect: { type: 'shield', v: 10 } },
   { id: 'a2_3', name: '诛仙甲',   slot: 'armor',     rarity: 2, set: 'zhuxian', effect: { type: 'reducedmg', v: 8 } },
   { id: 'a2_4', name: '太极袍',   slot: 'armor',     rarity: 2, set: 'taiji',   effect: { type: 'regenhp', v: 3 } },
   { id: 'a2_5', name: '镇岳甲',   slot: 'armor',     rarity: 2, effect: { type: 'reflect', v: 10 } },
-  { id: 'c2_1', name: '血魂珠',   slot: 'accessory', rarity: 2, effect: { type: 'lifesteal', v: 6 } },
-  { id: 'c2_2', name: '回春铃',   slot: 'accessory', rarity: 2, effect: { type: 'regenmp', v: 18 } },
+  { id: 'c2_1', name: '血魂珠',   slot: 'accessory', rarity: 2, effect: { type: 'lifesteal', v: 6 }, effect2: { type: 'crit', v: 7 } },
+  { id: 'c2_2', name: '回春铃',   slot: 'accessory', rarity: 2, effect: { type: 'regenmp', v: 18 }, effect2: { type: 'critdmg', v: 9 } },
   { id: 'c2_3', name: '诛仙佩',   slot: 'accessory', rarity: 2, set: 'zhuxian', effect: { type: 'crit', v: 5 } },
   { id: 'c2_4', name: '太极印',   slot: 'accessory', rarity: 2, set: 'taiji',   effect: { type: 'regenmp', v: 20 } },
   { id: 'c2_5', name: '噬魂符',   slot: 'accessory', rarity: 2, effect: { type: 'accuracy', v: 8 } },
-  { id: 'b2_1', name: '疾影靴',   slot: 'boots',     rarity: 2, effect: { type: 'extra', v: 1 } },
+  { id: 'b2_1', name: '疾影靴',   slot: 'boots',     rarity: 2, effect: { type: 'extra', v: 1 }, effect2: { type: 'crit', v: 9 } },
   { id: 'b2_2', name: '追星履',   slot: 'boots',     rarity: 2, effect: { type: 'crit', v: 6 } },
   { id: 'b2_3', name: '诛仙靴',   slot: 'boots',     rarity: 2, set: 'zhuxian', effect: { type: 'dmgamp', v: 6 } },
   { id: 'b2_4', name: '太极履',   slot: 'boots',     rarity: 2, set: 'taiji',   effect: { type: 'regenhp', v: 3 } },
-  { id: 'b2_5', name: '踏雪靴',   slot: 'boots',     rarity: 2, effect: { type: 'burn', v: 8 } },
+  { id: 'b2_5', name: '踏雪靴',   slot: 'boots',     rarity: 2, effect: { type: 'burn', v: 8 }, effect2: { type: 'critdmg', v: 9 } },
 
   // ===================== 仙品 r3（22，强特效 + 2 套） =====================
-  { id: 'w3_1', name: '焚天剑',   slot: 'weapon',    rarity: 3, effect: { type: 'accuracy', v: 15 } },
+  { id: 'w3_1', name: '焚天剑',   slot: 'weapon',    rarity: 3, effect: { type: 'accuracy', v: 15 }, effect2: { type: 'crit', v: 14 } },
   { id: 'w3_2', name: '裂空刃',   slot: 'weapon',    rarity: 3, effect: { type: 'critdmg', v: 30 } },
   { id: 'w3_3', name: '玄武剑',   slot: 'weapon',    rarity: 3, set: 'xuanwu', effect: { type: 'lifesteal', v: 8 } },
   { id: 'w3_4', name: '紫薇剑',   slot: 'weapon',    rarity: 3, set: 'ziwei',  effect: { type: 'lowhpcrit', v: 25 } },
-  { id: 'w3_5', name: '星河神剑', slot: 'weapon',    rarity: 3, effect: { type: 'dmgamp', v: 12 } },
+  { id: 'w3_5', name: '星河神剑', slot: 'weapon',    rarity: 3, effect: { type: 'dmgamp', v: 12 }, effect2: { type: 'critdmg', v: 14 } },
   { id: 'w3_6', name: '生灭战刀', slot: 'weapon',    rarity: 3, effect: { type: 'burn', v: 12 } },
   { id: 'a3_1', name: '玄武甲',   slot: 'armor',     rarity: 3, set: 'xuanwu', effect: { type: 'reducedmg', v: 10 } },
   { id: 'a3_2', name: '紫薇袍',   slot: 'armor',     rarity: 3, set: 'ziwei',  effect: { type: 'regenhp', v: 4 } },
@@ -161,21 +161,21 @@ const EQUIP_DB = [
   { id: 'a3_5', name: '玄龟神甲', slot: 'armor',     rarity: 3, effect: { type: 'reducedmg', v: 12 } },
   { id: 'c3_1', name: '玄武珠',   slot: 'accessory', rarity: 3, set: 'xuanwu', effect: { type: 'regenmp', v: 25 } },
   { id: 'c3_2', name: '紫薇铃',   slot: 'accessory', rarity: 3, set: 'ziwei',  effect: { type: 'crit', v: 8 } },
-  { id: 'c3_3', name: '演天珠',   slot: 'accessory', rarity: 3, effect: { type: 'accuracy', v: 12 } },
+  { id: 'c3_3', name: '演天珠',   slot: 'accessory', rarity: 3, effect: { type: 'accuracy', v: 12 }, effect2: { type: 'critdmg', v: 14 } },
   { id: 'c3_4', name: '生灭天辰', slot: 'accessory', rarity: 3, effect: { type: 'critdmg', v: 30 } },
-  { id: 'c3_5', name: '七窍珠',   slot: 'accessory', rarity: 3, effect: { type: 'regenmp', v: 28 } },
+  { id: 'c3_5', name: '七窍珠',   slot: 'accessory', rarity: 3, effect: { type: 'regenmp', v: 28 }, effect2: { type: 'crit', v: 11 } },
   { id: 'c3_6', name: '天魔舍利', slot: 'accessory', rarity: 3, effect: { type: 'lowhpcrit', v: 20 } },
   { id: 'b3_1', name: '玄武靴',   slot: 'boots',     rarity: 3, set: 'xuanwu', effect: { type: 'regenhp', v: 4 } },
   { id: 'b3_2', name: '紫薇履',   slot: 'boots',     rarity: 3, set: 'ziwei',  effect: { type: 'dmgamp', v: 10 } },
   { id: 'b3_3', name: '流云靴',   slot: 'boots',     rarity: 3, effect: { type: 'crit', v: 8 } },
-  { id: 'b3_4', name: '罡风履',   slot: 'boots',     rarity: 3, effect: { type: 'extra', v: 1 } },
-  { id: 'b3_5', name: '踏虚靴',   slot: 'boots',     rarity: 3, effect: { type: 'burn', v: 10 } },
+  { id: 'b3_4', name: '罡风履',   slot: 'boots',     rarity: 3, effect: { type: 'extra', v: 1 }, effect2: { type: 'crit', v: 13 } },
+  { id: 'b3_5', name: '踏虚靴',   slot: 'boots',     rarity: 3, effect: { type: 'burn', v: 10 }, effect2: { type: 'critdmg', v: 14 } },
 
   // ===================== 神品 r4（24，顶级特效 + 2 套） =====================
   { id: 'w4_1', name: '七杀剑',   slot: 'weapon',    rarity: 4, set: 'qisha',  effect: { type: 'accuracy', v: 6 } },
   { id: 'w4_2', name: '贪狼刃',   slot: 'weapon',    rarity: 4, set: 'tanlang', effect: { type: 'critdmg', v: 45 } },
-  { id: 'w4_3', name: '大荒戟',   slot: 'weapon',    rarity: 4, effect: { type: 'lifesteal', v: 12 } },
-  { id: 'w4_4', name: '斩天刀',   slot: 'weapon',    rarity: 4, effect: { type: 'accuracy', v: 6 } },
+  { id: 'w4_3', name: '大荒戟',   slot: 'weapon',    rarity: 4, effect: { type: 'lifesteal', v: 12 }, effect2: { type: 'critdmg', v: 20 } },
+  { id: 'w4_4', name: '斩天刀',   slot: 'weapon',    rarity: 4, effect: { type: 'accuracy', v: 6 }, effect2: { type: 'crit', v: 20 } },
   { id: 'w4_5', name: '轩辕剑',   slot: 'weapon',    rarity: 4, effect: { type: 'critdmg', v: 50 } },
   { id: 'w4_6', name: '灭世刃',   slot: 'weapon',    rarity: 4, effect: { type: 'burn', v: 18 } },
   { id: 'a4_1', name: '七杀甲',   slot: 'armor',     rarity: 4, set: 'qisha',  effect: { type: 'reducedmg', v: 14 } },
@@ -186,31 +186,21 @@ const EQUIP_DB = [
   { id: 'a4_6', name: '万钧铠',   slot: 'armor',     rarity: 4, effect: { type: 'reflect', v: 16 } },
   { id: 'c4_1', name: '七杀珠',   slot: 'accessory', rarity: 4, set: 'qisha',  effect: { type: 'crit', v: 12 } },
   { id: 'c4_2', name: '贪狼佩',   slot: 'accessory', rarity: 4, set: 'tanlang', effect: { type: 'critdmg', v: 35 } },
-  { id: 'c4_3', name: '天魔离光尺', slot: 'accessory', rarity: 4, effect: { type: 'accuracy', v: 18 } },
-  { id: 'c4_4', name: '大自在天魔幡', slot: 'accessory', rarity: 4, effect: { type: 'lifesteal', v: 12 } },
+  { id: 'c4_3', name: '天魔离光尺', slot: 'accessory', rarity: 4, effect: { type: 'accuracy', v: 18 }, effect2: { type: 'critdmg', v: 20 } },
+  { id: 'c4_4', name: '大自在天魔幡', slot: 'accessory', rarity: 4, effect: { type: 'lifesteal', v: 12 }, effect2: { type: 'crit', v: 16 } },
   { id: 'c4_5', name: '浑天魔鉴', slot: 'accessory', rarity: 4, effect: { type: 'lowhpdmg', v: 25 } },
   { id: 'c4_6', name: '九华界',   slot: 'accessory', rarity: 4, effect: { type: 'regenmp', v: 40 } },
   { id: 'b4_1', name: '七杀靴',   slot: 'boots',     rarity: 4, set: 'qisha',  effect: { type: 'extra', v: 1 } },
   { id: 'b4_2', name: '贪狼履',   slot: 'boots',     rarity: 4, set: 'tanlang', effect: { type: 'dmgamp', v: 15 } },
   { id: 'b4_3', name: '踏天靴',   slot: 'boots',     rarity: 4, effect: { type: 'stackcrit', v: 5 } },
-  { id: 'b4_4', name: '无量履',   slot: 'boots',     rarity: 4, effect: { type: 'regenhp', v: 6 } },
+  { id: 'b4_4', name: '无量履',   slot: 'boots',     rarity: 4, effect: { type: 'regenhp', v: 6 }, effect2: { type: 'critdmg', v: 20 } },
   { id: 'b4_5', name: '神行太保靴', slot: 'boots',   rarity: 4, effect: { type: 'critdmg', v: 40 } },
-  { id: 'b4_6', name: '涅槃履',   slot: 'boots',     rarity: 4, effect: { type: 'revive', v: 50 } },
+  { id: 'b4_6', name: '涅槃履',   slot: 'boots',     rarity: 4, effect: { type: 'revive', v: 50 }, effect2: { type: 'crit', v: 18 } },
 
-  // ===================== 暴击流补充装备（单件暴击率 ≤20%） =====================
-  { id: 'w1_5', name: '寒星剑',   slot: 'weapon',    rarity: 1, effect: { type: 'crit', v: 5 } },
-  { id: 'c1_5', name: '锐金铃',   slot: 'accessory', rarity: 1, effect: { type: 'crit', v: 4 } },
-  { id: 'b1_5', name: '疾风靴',   slot: 'boots',     rarity: 1, effect: { type: 'crit', v: 5 } },
-  { id: 'w2_6', name: '裂云刀',   slot: 'weapon',    rarity: 2, effect: { type: 'crit', v: 9 } },
-  { id: 'c2_6', name: '寒芒戒',   slot: 'accessory', rarity: 2, effect: { type: 'crit', v: 7 } },
-  { id: 'b2_6', name: '凌风靴',   slot: 'boots',     rarity: 2, effect: { type: 'crit', v: 9 } },
-  { id: 'w3_7', name: '碎星刃',   slot: 'weapon',    rarity: 3, effect: { type: 'crit', v: 14 } },
-  { id: 'c3_7', name: '离火珠',   slot: 'accessory', rarity: 3, effect: { type: 'crit', v: 11 } },
-  { id: 'b3_6', name: '踏星靴',   slot: 'boots',     rarity: 3, effect: { type: 'crit', v: 13 } },
-  { id: 'w4_7', name: '弑神枪',   slot: 'weapon',    rarity: 4, effect: { type: 'crit', v: 20 } },
-  { id: 'c4_7', name: '戮仙环',   slot: 'accessory', rarity: 4, effect: { type: 'crit', v: 16 } },
-  { id: 'b4_7', name: '太虚靴',   slot: 'boots',     rarity: 4, effect: { type: 'crit', v: 18 } },
 ];
+
+// 装备查表 Map（由 id 快速取条目；特效回填经此实时取最新 effect/effect2，旧存档无需重掉即生效）
+var EQUIP_DB_MAP = (function () { var m = {}; for (var i = 0; i < EQUIP_DB.length; i++) { m[EQUIP_DB[i].id] = EQUIP_DB[i]; } return m; })();
 
 // 由数据库条目生成一个可穿戴 item（按当前境界缩放基础属性）
 function makeItemFromDb(entry, tier) {
@@ -229,6 +219,7 @@ function makeItemFromDb(entry, tier) {
     rarity: r.key, rarityName: r.name, rarityColor: r.color,
     bonus, extraActions: 0, name: entry.name,
     effect: entry.effect ? { type: entry.effect.type, v: entry.effect.v } : null,
+    effect2: entry.effect2 ? { type: entry.effect2.type, v: entry.effect2.v } : null,
     set: entry.set || null, setId: entry.id, entryId: entry.id,
   };
   if (entry.effect && entry.effect.type === 'extra') item.extraActions = entry.effect.v || 1;
@@ -267,12 +258,32 @@ function resolvedEquipBonus(item) {
   return bonus;
 }
 
+// 装备特效集合（含本轮回填的 effect2 暴伤副特效）
+// 设计：DB(EQUIP_DB_MAP) 为特效权威来源；旧存档 item.effect/effect2 冻结，经 entryId 实时查表回填最新值，
+//       旧装备改 DB 后无需重掉即生效（回填铁律）。无 DB 映射时退回 item 自身冻结特效兜底。
+function resolvedEquipEffects(item) {
+  if (typeof EQUIP_DB_MAP !== 'undefined' && item && item.entryId && EQUIP_DB_MAP[item.entryId]) {
+    const e = EQUIP_DB_MAP[item.entryId];
+    const arr = [];
+    if (e.effect)  arr.push({ type: e.effect.type,  v: e.effect.v });
+    if (e.effect2) arr.push({ type: e.effect2.type, v: e.effect2.v });
+    if (arr.length) return arr;
+  }
+  const out = [];
+  if (item && item.effect)  out.push(item.effect);
+  if (item && item.effect2) out.push(item.effect2);
+  return out;
+}
+
 // 装备特效文字（用于面板展示）
 function equipEffectText(item) {
   const parts = [];
-  if (item.effect && EFFECT_META[item.effect.type]) {
-    const m = EFFECT_META[item.effect.type];
-    parts.push('【' + m.name + '】' + m.text(item.effect.v));
+  const effs = resolvedEquipEffects(item);
+  for (const e of effs) {
+    if (e && EFFECT_META[e.type]) {
+      const m = EFFECT_META[e.type];
+      parts.push('【' + m.name + '】' + m.text(e.v));
+    }
   }
   if (item.set && EQUIP_SETS[item.set]) {
     parts.push('【' + EQUIP_SETS[item.set].name + '套装】');

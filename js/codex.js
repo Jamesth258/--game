@@ -84,8 +84,10 @@ function openCodex() {
       const got = (player.equipCollected || []).includes(e.id);
       const rar = RARITY[e.rarity];
       const slotName = EQUIP_SLOTS[e.slot] ? EQUIP_SLOTS[e.slot].name : '';
-      const eff = e.effect && EFFECT_META[e.effect.type] ? EFFECT_META[e.effect.type].name
-        : (e.set && EQUIP_SETS[e.set] ? EQUIP_SETS[e.set].name + '套装' : '');
+      let eff = '';
+      if (e.effect && EFFECT_META[e.effect.type]) eff = EFFECT_META[e.effect.type].name;
+      if (e.effect2 && EFFECT_META[e.effect2.type]) eff += (eff ? '+' : '') + EFFECT_META[e.effect2.type].name;
+      if (!eff && e.set && EQUIP_SETS[e.set]) eff = EQUIP_SETS[e.set].name + '套装';
       return codexCard(got, e.name, (rar ? rar.name : '') + '·' + slotName, eff, rar ? rar.color : '#888');
     }).join('') + '</div>';
 
