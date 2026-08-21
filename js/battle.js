@@ -39,7 +39,7 @@ function makeEnemy(node) {
     atk: e.atk, def: e.def, spd: e.spd,
     init: Math.round(10 + e.spd * 2), eva: 0.05, spiAtk: 0, spiDef: e.def, luck: 0,
     potions: 0, defending: false, extraActions: 0,
-    buffs: [], debuffs: [], shield: null, stun: 0,
+    buffs: [], debuffs: [], shield: null, stun: 0, poison: null,
     skill: { name: '敌袭', type: 'phys', mult: 1.8, cost: 10 },
   };
 }
@@ -59,7 +59,7 @@ function startBattle(node, mode) {
   const isWB = mode === 'worldboss';
   const enemy = isWB ? makeWorldBoss(node._wb) : makeEnemy(node);
   // 重置玩家本场战斗的临时状态（buff/debuff/护盾/僵直），避免跨场残留
-  player.buffs = []; player.debuffs = []; player.shield = null; player.stun = 0;
+  player.buffs = []; player.debuffs = []; player.shield = null; player.stun = 0; player.poison = null;
   // 聚合装备特效；若带「罡气」类特效则开局获得护盾
   const mods = (typeof computeEquipMods === 'function') ? computeEquipMods(player) : null;
   if (mods && mods.shieldPct > 0) player.shield = { pct: mods.shieldPct, dur: 999 };
@@ -164,6 +164,14 @@ function beginRound() {
         floats.push({ x: u._x, y: u._y, text: '灼烧-' + dmg, color: '#E8743B', ttl: 60 });
       }
     });
+  });
+  // 中毒：每回合开始按 e.dmg 扣血，持续 e.dur 回合后清除
+  [p, e].forEach(u => {
+    if (!u.poison) return;
+    const dmg = u.poison.dmg || 0;
+    u.hp = Math.max(0, u.hp - dmg);
+    floats.push({ x: u._x, y: u._y, text: '中毒-' + dmg, color: '#7FBF4D', ttl: 60 });
+    if ((u.poison.dur -= 1) <= 0) u.poison = null;
   });
   // 僵直（stun）：本回合无法行动，并递减
   const pStun = (p.stun || 0) > 0, eStun = (e.stun || 0) > 0;
@@ -375,6 +383,11 @@ function applySkill(actor, target, sk) {
     case 'critup': {
       actor.buffs.push({ stat: 'crit', amt: e.amt, dur: e.dur });
       battle.msg = actor.name + ' 施展「' + sk.name + '」暴击提升';
+      break;
+    }
+    case 'poison': {
+      target.poison = { dmg: e.dmg, dur: e.dur }; // 每回合开始扣 e.dmg 点血，持续 e.dur 回合
+      battle.msg = actor.name + ' 施展「' + sk.name + '」令 ' + target.name + ' 中毒';
       break;
     }
     default:
