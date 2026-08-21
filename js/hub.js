@@ -556,7 +556,7 @@ function initHub() {
       <button class="btn-full" onclick="returnToHub()" style="margin-top:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
   }
   // 刷新商店库存（每天最多 50 次免费刷新）
-  window.doRefreshShop = function() {
+  function doRefreshShop() {
     ensureDaily();
     const d = player.daily || {};
     const count = d.shopRefreshCount || 0;
@@ -565,7 +565,7 @@ function initHub() {
     shopStock = EQUIP_SLOT_KEYS.map(slot => genEquip(slot, rollRarity()));
     saveGame();
     renderShopModal();
-  };
+  }
 
   // 出售：背包装备按品质换灵石
   function sellItem(uid) {

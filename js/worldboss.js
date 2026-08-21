@@ -9,7 +9,7 @@
  *      第 1 名：1 功法宝箱 + 1 装备宝箱
  *      第 2 名：1 装备宝箱
  *      第 3 名：1 功法宝箱
- *      其余参与玩家：5 灵石宝箱 + 5 经验宝箱
+ *      其余参与玩家：2 灵石宝箱 + 5 经验宝箱
  *  - 单机离线版：跨玩家排名由「NPC 对手」（按日期+时段种子稳定生成）构成，
  *    对手强度随玩家战力浮动，保证这是一场真实可争的竞速。配好 CloudBase 后可换真实跨服榜。
  */
@@ -266,7 +266,7 @@ function openWorldBossClaim(slotIdx) {
   if (rank === 1) { results.push(['功法宝箱', makeChestItem('skill', 2)]); results.push(['装备宝箱', makeChestItem('equip', 2)]); }
   else if (rank === 2) { results.push(['装备宝箱', makeChestItem('equip', 1)]); }
   else if (rank === 3) { results.push(['功法宝箱', makeChestItem('skill', 1)]); }
-  else { for (let i = 0; i < 5; i++) results.push(['灵石宝箱', makeChestItem('stone', 0)]); for (let i = 0; i < 5; i++) results.push(['经验宝箱', makeChestItem('exp', 0)]); }
+  else { for (let i = 0; i < 2; i++) results.push(['灵石宝箱', makeChestItem('stone', 0)]); for (let i = 0; i < 5; i++) results.push(['经验宝箱', makeChestItem('exp', 0)]); }
   results.forEach(r => player.bag.push(r[1]));
   saveGame();
   let html = `<div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg><h3 style="margin:0">世界BOSS 领奖</h3></div>`;

@@ -57,7 +57,7 @@ const DAILY_ONLINE_MILESTONES = [
   { min: 5,  desc: '10 钻石',                                 kind: 'diamond', amount: 10 },
   { min: 15, desc: '20 钻石',                                 kind: 'diamond', amount: 20 },
   { min: 30, desc: '装备抽奖宝箱 ×1',                         kind: 'equip' },
-  { min: 60, desc: '经验宝箱 ×1 + 灵石宝箱 ×5 + 30 钻石',      kind: 'mixed' },
+  { min: 60, desc: '经验宝箱 ×1 + 灵石宝箱 ×2 + 30 钻石',      kind: 'mixed' },
 ];
 // 第三重 · 日常任务奖励里程碑
 //   metric: 'story' = 当日通关副本关卡数；'boss' = 当日挑战世界BOSS次数
@@ -109,9 +109,9 @@ function dailyGrant(kind, amount) {
   if (kind === 'double')  { player.bag.push(makeChestItem('skill', 0)); player.bag.push(makeChestItem('skill', 0)); player.bag.push(makeChestItem('equip', 0)); player.bag.push(makeChestItem('equip', 0)); return '功法宝箱 ×2 + 装备宝箱 ×2'; }
   if (kind === 'mixed')   {
     player.bag.push(makeChestItem('exp', 0));
-    for (let i = 0; i < 5; i++) player.bag.push(makeChestItem('stone', 0));
+    for (let i = 0; i < 2; i++) player.bag.push(makeChestItem('stone', 0));
     player.diamond = (player.diamond || 0) + 30;
-    return '经验宝箱 ×1、灵石宝箱 ×5、钻石 +30';
+    return '经验宝箱 ×1、灵石宝箱 ×2、钻石 +30';
   }
   return '';
 }
