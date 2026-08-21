@@ -491,17 +491,26 @@ function initHub() {
   }
 
   // 商店弹窗：4 部位各一件随机在售装备，灵石足够可购买；不足则禁用
+  //   不再每次打开自动刷新，改为手动刷新按钮（每天免费 50 次）
   let shopStock = [];
   function showShopModal() {
     refreshHub();
+    renderShopModal();
+  }
+  function renderShopModal() {
     const gold = player.gold || 0;
-    shopStock = EQUIP_SLOT_KEYS.map(slot => genEquip(slot, rollRarity())); // 每次打开随机生成
-    // 钻石专区购买按钮（钻石不足则禁用）
+    ensureDaily(); // 确保 daily 对象存在（用于刷新计数）
+    const d = player.daily || {};
+    const shopRefreshedToday = d.shopRefreshCount || 0;
+    const shopRefreshLeft = Math.max(0, 50 - shopRefreshedToday);
+    // 若尚无库存（首次打开或跨天后），自动刷新一次
+    if (!shopStock || shopStock.length === 0) { doRefreshShop(); }
+    // 钻石专区购买按钮（钻石不足则禁用）—— 统一短宽度
     const diamondBuyBtn = (type, price) => {
       const can = (player.diamond || 0) >= price;
       return can
-        ? `<button class="equip-btn" onclick="buyDiamondChest('${type}')">${price}钻</button>`
-        : `<button class="equip-btn" disabled style="background:rgba(255,255,255,0.06);color:rgba(241,239,232,0.3);cursor:default">${price}钻</button>`;
+        ? `<button class="equip-btn diamond-buy-btn" onclick="buyDiamondChest('${type}')">${price}钻</button>`
+        : `<button class="equip-btn diamond-buy-btn" disabled style="background:rgba(255,255,255,0.06);color:rgba(241,239,232,0.3);cursor:default">${price}钻</button>`;
     };
     const rows = shopStock.map(it => {
       const price = SHOP_PRICE[it.rarity] || 30;
@@ -523,11 +532,17 @@ function initHub() {
         ${btn}
       </div>`;
     }).join('');
+    const refreshBtn = shopRefreshLeft > 0
+      ? `<button class="equip-btn" onclick="doRefreshShop()" style="background:#2a6fd9;white-space:nowrap">🔄 刷新（剩余${shopRefreshLeft}次）</button>`
+      : `<span style="font-size:11px;color:rgba(241,239,232,0.35);padding:4px 10px;border:1px dashed rgba(255,255,255,0.15);border-radius:6px">今日刷新次数已用完（50/50）</span>`;
     openModal(`
       <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
       <h3 style="margin:0">商店</h3></div>
       <p style="margin:2px 0 10px;font-size:12px;color:rgba(241,239,232,0.6)">灵石 <b style="color:#D4A843">${gold}</b> ｜ 钻石 <b style="color:#378ADD">${player.diamond || 0}</b></p>
-      <div class="equip-sec-title">在售装备（每次刷新随机品质；已拥有的会标注「已拥有」并不可购买）</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div class="equip-sec-title" style="margin:0">灵石专区（灵石消费）</div>
+        ${refreshBtn}
+      </div>
       <div class="bag-list">${rows}</div>
       <hr>
       <div class="equip-sec-title">钻石专区（钻石消费）</div>
@@ -540,6 +555,17 @@ function initHub() {
       <button class="btn-full" onclick="showBagModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">背包 / 出售</button>
       <button class="btn-full" onclick="returnToHub()" style="margin-top:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
   }
+  // 刷新商店库存（每天最多 50 次免费刷新）
+  window.doRefreshShop = function() {
+    ensureDaily();
+    const d = player.daily || {};
+    const count = d.shopRefreshCount || 0;
+    if (count >= 50) { /* 已达上限，按钮应已置灰 */ return; }
+    d.shopRefreshCount = count + 1;
+    shopStock = EQUIP_SLOT_KEYS.map(slot => genEquip(slot, rollRarity()));
+    saveGame();
+    renderShopModal();
+  };
 
   // 出售：背包装备按品质换灵石
   function sellItem(uid) {
