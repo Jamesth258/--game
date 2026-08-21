@@ -88,8 +88,9 @@ function makeWorldBoss(slotIdx) {
     atk: Math.round(B.atk * 0.5), def: B.def, spd: B.spd,
     init: B.init, eva: B.eva, spiAtk: Math.round(B.spiAtk * 0.5), spiDef: B.spiDef,
     luck: 0, potions: 0, defending: false, extraActions: 0,
-    buffs: [], debuffs: [], shield: null, stun: 0,
+    buffs: [], debuffs: [], shield: null, stun: 0, poison: null,
     skill: { name: '灭世一击', type: 'phys', mult: 2.2, cost: 10 },
+    _x: 490, _y: 160,
   };
 }
 

@@ -41,6 +41,7 @@ function makeEnemy(node) {
     potions: 0, defending: false, extraActions: 0,
     buffs: [], debuffs: [], shield: null, stun: 0, poison: null,
     skill: { name: '敌袭', type: 'phys', mult: 1.8, cost: 10 },
+    _x: 490, _y: 160,
   };
 }
 
@@ -74,6 +75,9 @@ function startBattle(node, mode) {
   toast = '';
   hideBattleReturnBtn(); // 新战斗开始 → 清掉残留的返回按钮
   buildSkillBar();
+  // 提前锁定飘字坐标（不再依赖 drawBattle 首帧渲染才赋值 _x/_y）
+  battle.player._x = 150; battle.player._y = 200;
+  battle.enemy._x = 490; battle.enemy._y = 160;
   beginRound();
 }
 
