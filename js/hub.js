@@ -47,8 +47,8 @@ function compareEquip(a, b) {
   if (!b) return true;
   return equipScore(a) > equipScore(b);
 }
-const SELL_PRICE = { fan: 8, ling: 15, bao: 28, xian: 50, shen: 90 };   // 出售价（按品质）
-const SHOP_PRICE = { fan: 30, ling: 60, bao: 120, xian: 240, shen: 480 }; // 商店价（按品质）
+const SELL_PRICE = { fan: 80, ling: 250, bao: 900, xian: 3000, shen: 10000 };   // 出售价（按品质，约为商店价 25%）
+const SHOP_PRICE = { fan: 300, ling: 1000, bao: 3500, xian: 12000, shen: 40000 }; // 商店价（按品质，重新平衡：神品≈中等玩家2天收入）
 
 function initHub() {
   const hub = document.getElementById('hub-screen');
@@ -513,7 +513,7 @@ function initHub() {
         : `<button class="equip-btn diamond-buy-btn" disabled style="background:rgba(255,255,255,0.06);color:rgba(241,239,232,0.3);cursor:default">${price}钻</button>`;
     };
     const rows = shopStock.map(it => {
-      const price = SHOP_PRICE[it.rarity] || 30;
+      const price = SHOP_PRICE[it.rarity] || 300;
       const can = gold >= price;
       const owned = isEquipOwned(it.entryId);
       const nameHtml = `<span class="bag-name" style="color:${it.rarityColor}">${esc(it.name)}</span>` +
@@ -584,7 +584,7 @@ function initHub() {
   function buyShopItem(uid) {
     const it = shopStock.find(x => x.uid === uid);
     if (!it) return;
-    const price = SHOP_PRICE[it.rarity] || 30;
+    const price = SHOP_PRICE[it.rarity] || 300;
     if ((player.gold || 0) < price) { showShopModal(); return; }
     player.gold -= price;
     player.bag.push(it);
