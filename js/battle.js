@@ -333,11 +333,15 @@ function applySkill(actor, target, sk) {
         const atkStat = (e.type === 'spirit' ? actor.spiAtk : actor.atk) * buffMul(actor, e.type === 'spirit' ? 'spiAtk' : 'atk');
         const defStat = (e.type === 'spirit' ? target.spiDef : target.def) * 0.25;
         let base = atkStat * e.mult - defStat;
-        if (Math.random() < 0.15) base *= 1.5;
+        const crit = Math.random() < 0.15;
+        if (crit) base *= 1.5;
         if (target.defending) base *= 0.5;
         d = Math.max(1, Math.round(base));
         target.hp = Math.max(0, target.hp - d);
         if (!actor.isEnemy && battle) battle.playerDmg = (battle.playerDmg || 0) + d; // 穿透伤害也累计
+        const col = crit ? '#A32D2D' : '#2C2C2A';
+        const txt = (crit ? '暴击 ' : '') + '-' + d;
+        floatAt(target, txt, col);
       } else {
         d = damage(actor, target, e.mult, e.type);
       }
