@@ -47,7 +47,7 @@ function compareEquip(a, b) {
   if (!b) return true;
   return equipScore(a) > equipScore(b);
 }
-const SELL_PRICE = { fan: 80, ling: 250, bao: 900, xian: 3000, shen: 10000 };   // 出售价（按品质，约为商店价 25%）
+const SELL_PRICE = { fan: 125, ling: 500, bao: 2000, xian: 12500, shen: 50000 }; // 出售价（按品质，统一为商店价 25% 回收率）
 const SHOP_PRICE = { fan: 500, ling: 2000, bao: 8000, xian: 50000, shen: 200000 }; // 商店价（按品质，重新平衡：神品≈中等玩家15天收入）
 
 function initHub() {
