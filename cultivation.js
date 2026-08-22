@@ -5,7 +5,6 @@
  *   r.progress     -> 0~1，当前小阶的进度
  *   r.realmName / r.stageName
  *   r.nextLabel    -> 下一小阶名称（已到顶则为 null）
- *   CULTIVATION.recalc(player) -> 按 xp 刷新 maxHp/atk/def/maxMp 派生属性
  * 经验曲线：每升一小阶所需修为随境界递增（见 STAGE_XP_*），后期突破越来越难。
  */
 const CULTIVATION = (function () {
@@ -85,23 +84,12 @@ const CULTIVATION = (function () {
     };
   }
 
-  // 依据 xp 刷新派生属性（基础值 + 每小阶加成），让境界越高越强
-  const BASE = { maxHp: 150, atk: 30, def: 12, maxMp: 60 };
-  function recalc(p) {
-    const idx = realmFromXp(p.xp).globalIndex;
-    p.maxHp = BASE.maxHp + idx * 4;
-    p.atk   = BASE.atk   + idx * 1;
-    p.def   = BASE.def   + idx * 0.5;
-    p.maxMp = BASE.maxMp + idx * 1;
-    return p;
-  }
-
   return {
     REALMS, FLAT,
     STAGE_XP_BASE, STAGE_XP_STEP, STAGE_XP_QUAD,
     stageXpReq, cumXp: i => CUM[i],
     TOTAL_STAGES: FLAT.length,
     MAX_LABEL: FLAT[FLAT.length - 1].label,
-    BASE, realmFromXp, recalc,
+    realmFromXp,
   };
 })();

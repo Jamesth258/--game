@@ -49,6 +49,9 @@ function compareEquip(a, b) {
 }
 const SELL_PRICE = { fan: 125, ling: 500, bao: 2000, xian: 12500, shen: 50000 }; // 出售价（按品质，统一为商店价 25% 回收率）
 const SHOP_PRICE = { fan: 500, ling: 2000, bao: 8000, xian: 50000, shen: 200000 }; // 商店价（按品质，重新平衡：神品≈中等玩家15天收入）
+const SHOP_REFRESH_FREE = 10;        // 每日免费刷新次数（前 10 次免费）
+const SHOP_REFRESH_PAID_MAX = 10;    // 每日灵石付费刷新上限（第 11~20 次）
+const SHOP_REFRESH_PAID_COST = 500;  // 每次灵石付费刷新消耗的灵石
 
 function initHub() {
   const hub = document.getElementById('hub-screen');
@@ -491,7 +494,7 @@ function initHub() {
   }
 
   // 商店弹窗：4 部位各一件随机在售装备，灵石足够可购买；不足则禁用
-  //   不再每次打开自动刷新，改为手动刷新按钮（每天免费 50 次）
+  //   不再每次打开自动刷新，改为手动刷新按钮（每天前 10 次免费，第 11~20 次每次消耗 500 灵石）
   let shopStock = [];
   function showShopModal() {
     refreshHub();
@@ -502,9 +505,8 @@ function initHub() {
     ensureDaily(); // 确保 daily 对象存在（用于刷新计数）
     const d = player.daily || {};
     const shopRefreshedToday = d.shopRefreshCount || 0;
-    const shopRefreshLeft = Math.max(0, 50 - shopRefreshedToday);
-    // 若尚无库存（首次打开或跨天后），自动刷新一次
-    if (!shopStock || shopStock.length === 0) { window.doRefreshShop(); }
+    // 若尚无库存（首次打开或跨天后内存清空），先补一份库存（不计入刷新次数，仅保证不空白店）
+    if (!shopStock || shopStock.length === 0) { shopStock = EQUIP_SLOT_KEYS.map(slot => genEquip(slot, rollRarity())); }
     // 钻石专区购买按钮（钻石不足则禁用）—— 统一短宽度
     const diamondBuyBtn = (type, price) => {
       const can = (player.diamond || 0) >= price;
@@ -532,9 +534,20 @@ function initHub() {
         ${btn}
       </div>`;
     }).join('');
-    const refreshBtn = shopRefreshLeft > 0
-      ? `<button class="equip-btn" onclick="doRefreshShop()" style="background:#2a6fd9;white-space:nowrap">🔄 刷新（剩余${shopRefreshLeft}次）</button>`
-      : `<span style="font-size:11px;color:rgba(241,239,232,0.35);padding:4px 10px;border:1px dashed rgba(255,255,255,0.15);border-radius:6px">今日刷新次数已用完（50/50）</span>`;
+    const shopRefreshTotal = SHOP_REFRESH_FREE + SHOP_REFRESH_PAID_MAX;
+    let refreshBtn;
+    if (shopRefreshedToday < SHOP_REFRESH_FREE) {
+      const left = SHOP_REFRESH_FREE - shopRefreshedToday;
+      refreshBtn = `<button class="equip-btn" onclick="doRefreshShop()" style="background:#2a6fd9;white-space:nowrap">🔄 刷新（免费·剩${left}次）</button>`;
+    } else if (shopRefreshedToday < shopRefreshTotal) {
+      const left = shopRefreshTotal - shopRefreshedToday;
+      const can = (player.gold || 0) >= SHOP_REFRESH_PAID_COST;
+      refreshBtn = can
+        ? `<button class="equip-btn" onclick="doRefreshShop()" style="background:#2a6fd9;white-space:nowrap">🔄 灵石刷新（${SHOP_REFRESH_PAID_COST}·剩${left}次）</button>`
+        : `<button class="equip-btn" disabled style="background:rgba(255,255,255,0.06);color:rgba(241,239,232,0.3);cursor:default">灵石刷新（需${SHOP_REFRESH_PAID_COST}·剩${left}次）</button>`;
+    } else {
+      refreshBtn = `<span style="font-size:11px;color:rgba(241,239,232,0.35);padding:4px 10px;border:1px dashed rgba(255,255,255,0.15);border-radius:6px">今日刷新次数已用完（${shopRefreshTotal}/${shopRefreshTotal}）</span>`;
+    }
     openModal(`
       <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
       <h3 style="margin:0">商店</h3></div>
@@ -555,17 +568,32 @@ function initHub() {
       <button class="btn-full" onclick="showBagModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">背包 / 出售</button>
       <button class="btn-full" onclick="returnToHub()" style="margin-top:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
   }
-  // 刷新商店库存（每天最多 50 次免费刷新）
+  // 刷新商店库存：每天前 10 次免费；第 11~20 次每次消耗 SHOP_REFRESH_PAID_COST 灵石；共 20 次/天
   // 必须挂到 window：onclick="doRefreshShop()" 在浏览器中查全局作用域
   window.doRefreshShop = function() {
     ensureDaily();
     const d = player.daily || {};
     const count = d.shopRefreshCount || 0;
-    if (count >= 50) { /* 已达上限，按钮应已置灰 */ return; }
-    d.shopRefreshCount = count + 1;
-    shopStock = EQUIP_SLOT_KEYS.map(slot => genEquip(slot, rollRarity()));
-    saveGame();
-    renderShopModal();
+    const total = SHOP_REFRESH_FREE + SHOP_REFRESH_PAID_MAX;
+    if (count < SHOP_REFRESH_FREE) {
+      // 免费刷新
+      d.shopRefreshCount = count + 1;
+      shopStock = EQUIP_SLOT_KEYS.map(slot => genEquip(slot, rollRarity()));
+      saveGame();
+      renderShopModal();
+    } else if (count < total) {
+      // 灵石付费刷新（灵石不足则提示，且不消耗次数）
+      if ((player.gold || 0) < SHOP_REFRESH_PAID_COST) {
+        showToast('灵石不足，无法刷新（需 ' + SHOP_REFRESH_PAID_COST + ' 灵石）');
+        return;
+      }
+      player.gold -= SHOP_REFRESH_PAID_COST;
+      d.shopRefreshCount = count + 1;
+      shopStock = EQUIP_SLOT_KEYS.map(slot => genEquip(slot, rollRarity()));
+      saveGame();
+      renderShopModal();
+    }
+    // 已达上限（20 次/天）：静默返回（按钮此时已置灰）
   }
 
   // 出售：背包装备按品质换灵石
