@@ -76,7 +76,7 @@ function ensureDaily() {
   const month = today.slice(0, 7);
   let d = player.daily;
   if (!d || typeof d !== 'object') {
-    d = { date: today, month, signedToday: false, monthSignCount: 0, monthClaimed: {}, onlineSecToday: 0, onlineClaimed: {}, storyClearToday: 0, bossChalToday: 0, taskClaimed: {} };
+    d = { date: today, month, signedToday: false, monthSignCount: 0, monthClaimed: {}, onlineSecToday: 0, onlineClaimed: {}, storyClearToday: 0, bossChalToday: 0, taskClaimed: {}, shopRefreshCount: 0 };
     player.daily = d;
     return d;
   }
@@ -89,6 +89,7 @@ function ensureDaily() {
     d.storyClearToday = 0;
     d.bossChalToday = 0;
     d.taskClaimed = {};
+    d.shopRefreshCount = 0; // 商店每日免费刷新次数跨天归零（8/22 修复：此前遗漏导致次日按钮永久置灰）
     if (d.month !== month) { d.month = month; d.monthSignCount = 0; d.monthClaimed = {}; }
   } else if (d.month !== month) {
     // 同日跨月（极少，仅 23:59→00:00 边界）：仅重置当月

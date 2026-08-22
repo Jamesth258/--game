@@ -504,7 +504,7 @@ function initHub() {
     const shopRefreshedToday = d.shopRefreshCount || 0;
     const shopRefreshLeft = Math.max(0, 50 - shopRefreshedToday);
     // 若尚无库存（首次打开或跨天后），自动刷新一次
-    if (!shopStock || shopStock.length === 0) { doRefreshShop(); }
+    if (!shopStock || shopStock.length === 0) { window.doRefreshShop(); }
     // 钻石专区购买按钮（钻石不足则禁用）—— 统一短宽度
     const diamondBuyBtn = (type, price) => {
       const can = (player.diamond || 0) >= price;

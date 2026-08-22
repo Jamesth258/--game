@@ -38,6 +38,9 @@ function applyOfflineXp() {
   const elapsed = Math.min(OFFLINE_CAP_SEC, Math.max(0, (Date.now() - player.lastSeen) / 1000));
   const gain = Math.floor(elapsed * OFFLINE_XP_PER_SEC * (1 + player.xpBonus));
   if (gain > 0) gainXp(gain, true);
+  // 8/22 修复：结算后必须回写 lastSeen 并落盘，否则在 5 秒自动落盘前重开可重复领取同一段离线修为
+  player.lastSeen = Date.now();
+  saveGame();
   return gain;
 }
 
