@@ -556,7 +556,8 @@ function initHub() {
       <button class="btn-full" onclick="returnToHub()" style="margin-top:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
   }
   // 刷新商店库存（每天最多 50 次免费刷新）
-  function doRefreshShop() {
+  // 必须挂到 window：onclick="doRefreshShop()" 在浏览器中查全局作用域
+  window.doRefreshShop = function() {
     ensureDaily();
     const d = player.daily || {};
     const count = d.shopRefreshCount || 0;
