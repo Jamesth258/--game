@@ -59,6 +59,15 @@ function buildSkillBar() {
 function startBattle(node, mode) {
   const isWB = mode === 'worldboss';
   const enemy = isWB ? makeWorldBoss(node._wb) : makeEnemy(node);
+  // 根据场景切换战斗背景
+  if (isWB) {
+    const slot = WB_SLOTS.find(s => s.idx === node._wb) || WB_SLOTS[0];
+    loadBattleBg(slot.bg);
+  } else if (node && node._story && node._story.ch && typeof STORY_BY_CH !== 'undefined') {
+    loadBattleBg((STORY_BY_CH[node._story.ch] || {}).bg);
+  } else {
+    loadBattleBg(null);
+  }
   // 重置玩家本场战斗的临时状态（buff/debuff/护盾/僵直），避免跨场残留
   player.buffs = []; player.debuffs = []; player.shield = null; player.stun = 0; player.poison = null;
   // 聚合装备特效；若带「罡气」类特效则开局获得护盾

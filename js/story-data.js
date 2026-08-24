@@ -14,6 +14,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 1,
     "volume": 1,
+    "bg": "bg_story_01_village_dawn",
     "volumeName": "第一卷·初入仙途",
     "realmName": "炼气境",
     "tier": 1,
@@ -35,6 +36,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 2,
     "volume": 1,
+    "bg": "bg_story_01_village_dawn",
     "volumeName": "第一卷·初入仙途",
     "realmName": "炼气境",
     "tier": 1,
@@ -56,6 +58,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 3,
     "volume": 1,
+    "bg": "bg_story_01_village_dawn",
     "volumeName": "第一卷·初入仙途",
     "realmName": "炼气境",
     "tier": 1,
@@ -77,6 +80,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 4,
     "volume": 1,
+    "bg": "bg_story_01_village_dawn",
     "volumeName": "第一卷·初入仙途",
     "realmName": "炼气境",
     "tier": 1,
@@ -98,6 +102,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 5,
     "volume": 1,
+    "bg": "bg_story_01_village_dawn",
     "volumeName": "第一卷·初入仙途",
     "realmName": "炼气境",
     "tier": 1,
@@ -119,6 +124,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 6,
     "volume": 1,
+    "bg": "bg_story_01_village_dawn",
     "volumeName": "第一卷·初入仙途",
     "realmName": "炼气境",
     "tier": 1,
@@ -140,6 +146,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 7,
     "volume": 1,
+    "bg": "bg_story_01_village_dawn",
     "volumeName": "第一卷·初入仙途",
     "realmName": "炼气境",
     "tier": 1,
@@ -161,6 +168,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 8,
     "volume": 1,
+    "bg": "bg_story_01_village_dawn",
     "volumeName": "第一卷·初入仙途",
     "realmName": "炼气境",
     "tier": 1,
@@ -182,6 +190,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 9,
     "volume": 1,
+    "bg": "bg_story_01_village_dawn",
     "volumeName": "第一卷·初入仙途",
     "realmName": "炼气境",
     "tier": 1,
@@ -203,6 +212,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 10,
     "volume": 1,
+    "bg": "bg_story_01_village_dawn",
     "volumeName": "第一卷·初入仙途",
     "realmName": "炼气境",
     "tier": 1,
@@ -224,6 +234,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 11,
     "volume": 2,
+    "bg": "bg_story_02_forbidden_ruins",
     "volumeName": "第二卷·秘境试炼",
     "realmName": "筑基境",
     "tier": 1,
@@ -245,6 +256,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 12,
     "volume": 2,
+    "bg": "bg_story_02_forbidden_ruins",
     "volumeName": "第二卷·秘境试炼",
     "realmName": "筑基境",
     "tier": 1,
@@ -266,6 +278,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 13,
     "volume": 2,
+    "bg": "bg_story_02_forbidden_ruins",
     "volumeName": "第二卷·秘境试炼",
     "realmName": "筑基境",
     "tier": 1,
@@ -287,6 +300,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 14,
     "volume": 2,
+    "bg": "bg_story_02_forbidden_ruins",
     "volumeName": "第二卷·秘境试炼",
     "realmName": "筑基境",
     "tier": 1,
@@ -308,6 +322,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 15,
     "volume": 2,
+    "bg": "bg_story_02_forbidden_ruins",
     "volumeName": "第二卷·秘境试炼",
     "realmName": "筑基境",
     "tier": 1,
@@ -329,6 +344,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 16,
     "volume": 2,
+    "bg": "bg_story_02_forbidden_ruins",
     "volumeName": "第二卷·秘境试炼",
     "realmName": "筑基境",
     "tier": 2,
@@ -350,6 +366,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 17,
     "volume": 2,
+    "bg": "bg_story_02_forbidden_ruins",
     "volumeName": "第二卷·秘境试炼",
     "realmName": "筑基境",
     "tier": 2,
@@ -371,6 +388,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 18,
     "volume": 2,
+    "bg": "bg_story_02_forbidden_ruins",
     "volumeName": "第二卷·秘境试炼",
     "realmName": "筑基境",
     "tier": 2,
@@ -392,6 +410,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 19,
     "volume": 2,
+    "bg": "bg_story_02_forbidden_ruins",
     "volumeName": "第二卷·秘境试炼",
     "realmName": "筑基境",
     "tier": 2,
@@ -413,6 +432,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 20,
     "volume": 2,
+    "bg": "bg_story_02_forbidden_ruins",
     "volumeName": "第二卷·秘境试炼",
     "realmName": "筑基境",
     "tier": 2,
@@ -434,6 +454,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 21,
     "volume": 3,
+    "bg": "bg_story_03_blood_altar",
     "volumeName": "第三卷·逆命修行",
     "realmName": "真武境",
     "tier": 2,
@@ -455,6 +476,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 22,
     "volume": 3,
+    "bg": "bg_story_03_blood_altar",
     "volumeName": "第三卷·逆命修行",
     "realmName": "真武境",
     "tier": 2,
@@ -476,6 +498,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 23,
     "volume": 3,
+    "bg": "bg_story_03_blood_altar",
     "volumeName": "第三卷·逆命修行",
     "realmName": "真武境",
     "tier": 2,
@@ -497,6 +520,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 24,
     "volume": 3,
+    "bg": "bg_story_03_blood_altar",
     "volumeName": "第三卷·逆命修行",
     "realmName": "真武境",
     "tier": 2,
@@ -518,6 +542,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 25,
     "volume": 3,
+    "bg": "bg_story_03_blood_altar",
     "volumeName": "第三卷·逆命修行",
     "realmName": "真武境",
     "tier": 2,
@@ -539,6 +564,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 26,
     "volume": 3,
+    "bg": "bg_story_03_blood_altar",
     "volumeName": "第三卷·逆命修行",
     "realmName": "真武境",
     "tier": 2,
@@ -560,6 +586,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 27,
     "volume": 3,
+    "bg": "bg_story_03_blood_altar",
     "volumeName": "第三卷·逆命修行",
     "realmName": "真武境",
     "tier": 2,
@@ -581,6 +608,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 28,
     "volume": 3,
+    "bg": "bg_story_03_blood_altar",
     "volumeName": "第三卷·逆命修行",
     "realmName": "真武境",
     "tier": 2,
@@ -602,6 +630,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 29,
     "volume": 3,
+    "bg": "bg_story_03_blood_altar",
     "volumeName": "第三卷·逆命修行",
     "realmName": "真武境",
     "tier": 2,
@@ -623,6 +652,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 30,
     "volume": 3,
+    "bg": "bg_story_03_blood_altar",
     "volumeName": "第三卷·逆命修行",
     "realmName": "真武境",
     "tier": 2,
@@ -644,6 +674,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 31,
     "volume": 4,
+    "bg": "bg_story_04_volcano",
     "volumeName": "第四卷·焚炎觉醒",
     "realmName": "化海境",
     "tier": 3,
@@ -665,6 +696,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 32,
     "volume": 4,
+    "bg": "bg_story_04_volcano",
     "volumeName": "第四卷·焚炎觉醒",
     "realmName": "化海境",
     "tier": 3,
@@ -686,6 +718,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 33,
     "volume": 4,
+    "bg": "bg_story_04_volcano",
     "volumeName": "第四卷·焚炎觉醒",
     "realmName": "化海境",
     "tier": 3,
@@ -707,6 +740,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 34,
     "volume": 4,
+    "bg": "bg_story_04_volcano",
     "volumeName": "第四卷·焚炎觉醒",
     "realmName": "化海境",
     "tier": 3,
@@ -728,6 +762,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 35,
     "volume": 4,
+    "bg": "bg_story_04_volcano",
     "volumeName": "第四卷·焚炎觉醒",
     "realmName": "化海境",
     "tier": 3,
@@ -749,6 +784,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 36,
     "volume": 4,
+    "bg": "bg_story_04_volcano",
     "volumeName": "第四卷·焚炎觉醒",
     "realmName": "化海境",
     "tier": 3,
@@ -770,6 +806,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 37,
     "volume": 4,
+    "bg": "bg_story_04_volcano",
     "volumeName": "第四卷·焚炎觉醒",
     "realmName": "化海境",
     "tier": 3,
@@ -791,6 +828,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 38,
     "volume": 4,
+    "bg": "bg_story_04_volcano",
     "volumeName": "第四卷·焚炎觉醒",
     "realmName": "化海境",
     "tier": 3,
@@ -812,6 +850,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 39,
     "volume": 4,
+    "bg": "bg_story_04_volcano",
     "volumeName": "第四卷·焚炎觉醒",
     "realmName": "化海境",
     "tier": 3,
@@ -833,6 +872,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 40,
     "volume": 4,
+    "bg": "bg_story_04_volcano",
     "volumeName": "第四卷·焚炎觉醒",
     "realmName": "化海境",
     "tier": 3,
@@ -854,6 +894,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 41,
     "volume": 5,
+    "bg": "bg_story_05_nirvana_realm",
     "volumeName": "第五卷·涅槃重生",
     "realmName": "金丹境",
     "tier": 3,
@@ -875,6 +916,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 42,
     "volume": 5,
+    "bg": "bg_story_05_nirvana_realm",
     "volumeName": "第五卷·涅槃重生",
     "realmName": "金丹境",
     "tier": 3,
@@ -896,6 +938,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 43,
     "volume": 5,
+    "bg": "bg_story_05_nirvana_realm",
     "volumeName": "第五卷·涅槃重生",
     "realmName": "金丹境",
     "tier": 3,
@@ -917,6 +960,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 44,
     "volume": 5,
+    "bg": "bg_story_05_nirvana_realm",
     "volumeName": "第五卷·涅槃重生",
     "realmName": "金丹境",
     "tier": 3,
@@ -938,6 +982,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 45,
     "volume": 5,
+    "bg": "bg_story_05_nirvana_realm",
     "volumeName": "第五卷·涅槃重生",
     "realmName": "金丹境",
     "tier": 3,
@@ -959,6 +1004,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 46,
     "volume": 5,
+    "bg": "bg_story_05_nirvana_realm",
     "volumeName": "第五卷·涅槃重生",
     "realmName": "金丹境",
     "tier": 4,
@@ -980,6 +1026,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 47,
     "volume": 5,
+    "bg": "bg_story_05_nirvana_realm",
     "volumeName": "第五卷·涅槃重生",
     "realmName": "金丹境",
     "tier": 4,
@@ -1001,6 +1048,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 48,
     "volume": 5,
+    "bg": "bg_story_05_nirvana_realm",
     "volumeName": "第五卷·涅槃重生",
     "realmName": "金丹境",
     "tier": 4,
@@ -1022,6 +1070,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 49,
     "volume": 5,
+    "bg": "bg_story_05_nirvana_realm",
     "volumeName": "第五卷·涅槃重生",
     "realmName": "金丹境",
     "tier": 4,
@@ -1043,6 +1092,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 50,
     "volume": 5,
+    "bg": "bg_story_05_nirvana_realm",
     "volumeName": "第五卷·涅槃重生",
     "realmName": "金丹境",
     "tier": 4,
@@ -1064,6 +1114,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 51,
     "volume": 6,
+    "bg": "bg_story_06_sea_battle",
     "volumeName": "第六卷·纵横四海",
     "realmName": "元婴境",
     "tier": 4,
@@ -1085,6 +1136,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 52,
     "volume": 6,
+    "bg": "bg_story_06_sea_battle",
     "volumeName": "第六卷·纵横四海",
     "realmName": "元婴境",
     "tier": 4,
@@ -1106,6 +1158,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 53,
     "volume": 6,
+    "bg": "bg_story_06_sea_battle",
     "volumeName": "第六卷·纵横四海",
     "realmName": "元婴境",
     "tier": 4,
@@ -1127,6 +1180,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 54,
     "volume": 6,
+    "bg": "bg_story_06_sea_battle",
     "volumeName": "第六卷·纵横四海",
     "realmName": "元婴境",
     "tier": 4,
@@ -1148,6 +1202,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 55,
     "volume": 6,
+    "bg": "bg_story_06_sea_battle",
     "volumeName": "第六卷·纵横四海",
     "realmName": "元婴境",
     "tier": 4,
@@ -1169,6 +1224,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 56,
     "volume": 6,
+    "bg": "bg_story_06_sea_battle",
     "volumeName": "第六卷·纵横四海",
     "realmName": "元婴境",
     "tier": 4,
@@ -1190,6 +1246,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 57,
     "volume": 6,
+    "bg": "bg_story_06_sea_battle",
     "volumeName": "第六卷·纵横四海",
     "realmName": "元婴境",
     "tier": 4,
@@ -1211,6 +1268,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 58,
     "volume": 6,
+    "bg": "bg_story_06_sea_battle",
     "volumeName": "第六卷·纵横四海",
     "realmName": "元婴境",
     "tier": 4,
@@ -1232,6 +1290,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 59,
     "volume": 6,
+    "bg": "bg_story_06_sea_battle",
     "volumeName": "第六卷·纵横四海",
     "realmName": "元婴境",
     "tier": 4,
@@ -1253,6 +1312,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 60,
     "volume": 6,
+    "bg": "bg_story_06_sea_battle",
     "volumeName": "第六卷·纵横四海",
     "realmName": "元婴境",
     "tier": 4,
@@ -1274,6 +1334,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 61,
     "volume": 7,
+    "bg": "bg_story_07_illusion",
     "volumeName": "第七卷·虚实幻境",
     "realmName": "出窍境",
     "tier": 5,
@@ -1295,6 +1356,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 62,
     "volume": 7,
+    "bg": "bg_story_07_illusion",
     "volumeName": "第七卷·虚实幻境",
     "realmName": "出窍境",
     "tier": 5,
@@ -1316,6 +1378,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 63,
     "volume": 7,
+    "bg": "bg_story_07_illusion",
     "volumeName": "第七卷·虚实幻境",
     "realmName": "出窍境",
     "tier": 5,
@@ -1337,6 +1400,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 64,
     "volume": 7,
+    "bg": "bg_story_07_illusion",
     "volumeName": "第七卷·虚实幻境",
     "realmName": "出窍境",
     "tier": 5,
@@ -1358,6 +1422,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 65,
     "volume": 7,
+    "bg": "bg_story_07_illusion",
     "volumeName": "第七卷·虚实幻境",
     "realmName": "出窍境",
     "tier": 5,
@@ -1379,6 +1444,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 66,
     "volume": 7,
+    "bg": "bg_story_07_illusion",
     "volumeName": "第七卷·虚实幻境",
     "realmName": "出窍境",
     "tier": 5,
@@ -1400,6 +1466,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 67,
     "volume": 7,
+    "bg": "bg_story_07_illusion",
     "volumeName": "第七卷·虚实幻境",
     "realmName": "出窍境",
     "tier": 5,
@@ -1421,6 +1488,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 68,
     "volume": 7,
+    "bg": "bg_story_07_illusion",
     "volumeName": "第七卷·虚实幻境",
     "realmName": "出窍境",
     "tier": 5,
@@ -1442,6 +1510,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 69,
     "volume": 7,
+    "bg": "bg_story_07_illusion",
     "volumeName": "第七卷·虚实幻境",
     "realmName": "出窍境",
     "tier": 5,
@@ -1463,6 +1532,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 70,
     "volume": 7,
+    "bg": "bg_story_07_illusion",
     "volumeName": "第七卷·虚实幻境",
     "realmName": "出窍境",
     "tier": 5,
@@ -1484,6 +1554,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 71,
     "volume": 8,
+    "bg": "bg_story_08_chaos_war",
     "volumeName": "第八卷·道心不灭",
     "realmName": "破虚境",
     "tier": 5,
@@ -1505,6 +1576,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 72,
     "volume": 8,
+    "bg": "bg_story_08_chaos_war",
     "volumeName": "第八卷·道心不灭",
     "realmName": "破虚境",
     "tier": 5,
@@ -1526,6 +1598,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 73,
     "volume": 8,
+    "bg": "bg_story_08_chaos_war",
     "volumeName": "第八卷·道心不灭",
     "realmName": "破虚境",
     "tier": 5,
@@ -1547,6 +1620,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 74,
     "volume": 8,
+    "bg": "bg_story_08_chaos_war",
     "volumeName": "第八卷·道心不灭",
     "realmName": "破虚境",
     "tier": 5,
@@ -1568,6 +1642,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 75,
     "volume": 8,
+    "bg": "bg_story_08_chaos_war",
     "volumeName": "第八卷·道心不灭",
     "realmName": "破虚境",
     "tier": 5,
@@ -1589,6 +1664,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 76,
     "volume": 8,
+    "bg": "bg_story_08_chaos_war",
     "volumeName": "第八卷·道心不灭",
     "realmName": "破虚境",
     "tier": 6,
@@ -1610,6 +1686,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 77,
     "volume": 8,
+    "bg": "bg_story_08_chaos_war",
     "volumeName": "第八卷·道心不灭",
     "realmName": "破虚境",
     "tier": 6,
@@ -1631,6 +1708,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 78,
     "volume": 8,
+    "bg": "bg_story_08_chaos_war",
     "volumeName": "第八卷·道心不灭",
     "realmName": "破虚境",
     "tier": 6,
@@ -1652,6 +1730,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 79,
     "volume": 8,
+    "bg": "bg_story_08_chaos_war",
     "volumeName": "第八卷·道心不灭",
     "realmName": "破虚境",
     "tier": 6,
@@ -1673,6 +1752,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 80,
     "volume": 8,
+    "bg": "bg_story_08_chaos_war",
     "volumeName": "第八卷·道心不灭",
     "realmName": "破虚境",
     "tier": 6,
@@ -1694,6 +1774,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 81,
     "volume": 9,
+    "bg": "bg_story_09_godfall",
     "volumeName": "第九卷·诸神黄昏",
     "realmName": "渡劫→超脱",
     "tier": 6,
@@ -1715,6 +1796,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 82,
     "volume": 9,
+    "bg": "bg_story_09_godfall",
     "volumeName": "第九卷·诸神黄昏",
     "realmName": "渡劫→超脱",
     "tier": 6,
@@ -1736,6 +1818,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 83,
     "volume": 9,
+    "bg": "bg_story_09_godfall",
     "volumeName": "第九卷·诸神黄昏",
     "realmName": "渡劫→超脱",
     "tier": 6,
@@ -1757,6 +1840,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 84,
     "volume": 9,
+    "bg": "bg_story_09_godfall",
     "volumeName": "第九卷·诸神黄昏",
     "realmName": "渡劫→超脱",
     "tier": 6,
@@ -1778,6 +1862,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 85,
     "volume": 9,
+    "bg": "bg_story_09_godfall",
     "volumeName": "第九卷·诸神黄昏",
     "realmName": "渡劫→超脱",
     "tier": 6,
@@ -1799,6 +1884,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 86,
     "volume": 9,
+    "bg": "bg_story_09_godfall",
     "volumeName": "第九卷·诸神黄昏",
     "realmName": "渡劫→超脱",
     "tier": 6,
@@ -1820,6 +1906,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 87,
     "volume": 9,
+    "bg": "bg_story_09_godfall",
     "volumeName": "第九卷·诸神黄昏",
     "realmName": "渡劫→超脱",
     "tier": 6,
@@ -1841,6 +1928,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 88,
     "volume": 9,
+    "bg": "bg_story_09_godfall",
     "volumeName": "第九卷·诸神黄昏",
     "realmName": "渡劫→超脱",
     "tier": 6,
@@ -1862,6 +1950,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 89,
     "volume": 9,
+    "bg": "bg_story_09_godfall",
     "volumeName": "第九卷·诸神黄昏",
     "realmName": "渡劫→超脱",
     "tier": 7,
@@ -1883,6 +1972,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 90,
     "volume": 9,
+    "bg": "bg_story_09_godfall",
     "volumeName": "第九卷·诸神黄昏",
     "realmName": "渡劫→超脱",
     "tier": 7,
@@ -1904,6 +1994,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 91,
     "volume": 10,
+    "bg": "bg_story_10_celestial_gate",
     "volumeName": "第十卷·登临绝巅",
     "realmName": "超脱→仙帝",
     "tier": 7,
@@ -1925,6 +2016,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 92,
     "volume": 10,
+    "bg": "bg_story_10_celestial_gate",
     "volumeName": "第十卷·登临绝巅",
     "realmName": "超脱→仙帝",
     "tier": 7,
@@ -1946,6 +2038,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 93,
     "volume": 10,
+    "bg": "bg_story_10_celestial_gate",
     "volumeName": "第十卷·登临绝巅",
     "realmName": "超脱→仙帝",
     "tier": 7,
@@ -1967,6 +2060,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 94,
     "volume": 10,
+    "bg": "bg_story_10_celestial_gate",
     "volumeName": "第十卷·登临绝巅",
     "realmName": "超脱→仙帝",
     "tier": 7,
@@ -1988,6 +2082,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 95,
     "volume": 10,
+    "bg": "bg_story_10_celestial_gate",
     "volumeName": "第十卷·登临绝巅",
     "realmName": "超脱→仙帝",
     "tier": 7,
@@ -2009,6 +2104,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 96,
     "volume": 10,
+    "bg": "bg_story_10_celestial_gate",
     "volumeName": "第十卷·登临绝巅",
     "realmName": "超脱→仙帝",
     "tier": 7,
@@ -2030,6 +2126,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 97,
     "volume": 10,
+    "bg": "bg_story_10_celestial_gate",
     "volumeName": "第十卷·登临绝巅",
     "realmName": "超脱→仙帝",
     "tier": 7,
@@ -2051,6 +2148,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 98,
     "volume": 10,
+    "bg": "bg_story_10_celestial_gate",
     "volumeName": "第十卷·登临绝巅",
     "realmName": "超脱→仙帝",
     "tier": 7,
@@ -2072,6 +2170,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 99,
     "volume": 10,
+    "bg": "bg_story_10_celestial_gate",
     "volumeName": "第十卷·登临绝巅",
     "realmName": "超脱→仙帝",
     "tier": 7,
@@ -2093,6 +2192,7 @@ const STORY_CHAPTERS = [
 {
     "ch": 100,
     "volume": 10,
+    "bg": "bg_story_10_celestial_gate",
     "volumeName": "第十卷·登临绝巅",
     "realmName": "超脱→仙帝",
     "tier": 7,

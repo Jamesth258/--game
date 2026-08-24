@@ -15,11 +15,11 @@
  */
 // ====== 时段定义 ======
 const WB_SLOTS = [
-  { idx: 1, name: '幽冥魔尊', subtitle: '晨曦之噬', start: [10, 0], end: [12, 0], cut: 15 },
-  { idx: 2, name: '焚天炎帝', subtitle: '正午燎原', start: [13, 0], end: [15, 0], cut: 15 },
-  { idx: 3, name: '九幽冥皇', subtitle: '午后阴潮', start: [15, 0], end: [17, 0], cut: 15 },
-  { idx: 4, name: '血河神祖', subtitle: '暮色血战', start: [18, 0], end: [20, 0], cut: 15 },
-  { idx: 5, name: '太虚帝尊', subtitle: '长夜降临', start: [20, 0], end: [23, 0], cut: 15 },
+  { idx: 1, name: '幽冥魔尊', subtitle: '晨曦之噬', start: [10, 0], end: [12, 0], cut: 15, bg: 'bg_boss_01_ghostrealm' },
+  { idx: 2, name: '焚天炎帝', subtitle: '正午燎原', start: [13, 0], end: [15, 0], cut: 15, bg: 'bg_boss_02_magma' },
+  { idx: 3, name: '九幽冥皇', subtitle: '午后阴潮', start: [15, 0], end: [17, 0], cut: 15, bg: 'bg_boss_03_abyss' },
+  { idx: 4, name: '血河神祖', subtitle: '暮色血战', start: [18, 0], end: [20, 0], cut: 15, bg: 'bg_boss_04_bloodriver' },
+  { idx: 5, name: '太虚帝尊', subtitle: '长夜降临', start: [20, 0], end: [23, 0], cut: 15, bg: 'bg_boss_05_void' },
 ];
 const WB_MAX_ATTEMPTS = 6;     // 每时段最多挑战次数
 const WB_MAX_ROUNDS = 10;      // 单场最多回合数
