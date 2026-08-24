@@ -52,7 +52,7 @@ function buildSkillBar() {
   skills.forEach(s => {
     html += `<button data-act="skill" data-skill="${s.id}" data-cost="${s.cost}" title="${esc(s.desc)}">${esc(s.name)}<small style="opacity:.7"> ${s.cost}灵</small></button>`;
   });
-  html += '<button data-act="defend">防御</button><button data-act="item">道具</button>';
+  html += '<button data-act="item">道具</button>';
   cmdBar.innerHTML = html;
 }
 
@@ -245,7 +245,7 @@ function setButtons(on) {
       const c = +b.dataset.cost;
       if (player.mp < c) enabled = false; // 灵力不足置灰
     }
-    if (act === 'item' && player.potions <= 0) enabled = false;
+    if (act === 'item' && (player.items || []).reduce((s, x) => s + x.qty, 0) <= 0) enabled = false;
     b.disabled = !enabled;
     b.style.opacity = enabled ? '1' : '0.4';
   });
@@ -441,18 +441,39 @@ function applyAction(actor, target, act) {
     actor.mp -= sk.cost;
     const d = damage(actor, target, sk.mult, sk.type);
     battle.msg = actor.name + ' 施展「' + sk.name + '」，造成 ' + d + ' 伤害';
-  } else if (act === 'defend') {
-    actor.defending = true;
-    battle.msg = actor.name + ' 运功防御，下一击伤害减半';
   } else if (act === 'item') {
-    if (actor.potions > 0) {
-      actor.potions--;
-      const heal = 50;
-      actor.hp = Math.min(actor.maxHp, actor.hp + heal);
-      floats.push({ x: actor._x, y: actor._y, text: '+' + heal, color: '#3B6D11', ttl: 60 });
-      battle.msg = actor.name + ' 服用金疮药，恢复 ' + heal + ' 气血';
-    }
+    // 战斗中点击「道具」→ 弹出背包可用丹药选择面板（玩家专用）
+    if (!actor.isEnemy) openBattleItemPanel();
   }
+}
+
+// 战斗内「道具」面板：列出背包可用丹药，点选即使用；用完/取消回复指令栏
+function openBattleItemPanel() {
+  const inv = (player.items || []).filter(x => x.qty > 0);
+  if (inv.length === 0) { battle.msg = '背包中没有可用丹药'; return; }
+  let html = '<span style="font-size:12px;color:#fff;margin-right:6px">选择丹药：</span>';
+  inv.forEach(x => {
+    const it = ITEM_DB[x.tid];
+    const label = it.name + '·' + it.tierName + '（' + (it.kind === 'hp' ? '回血' : '回蓝') + it.pct * 100 + '%×' + x.qty + '）';
+    html += `<button data-act="useitem" data-tid="${x.tid}" title="${it.name}">${label}</button>`;
+  });
+  html += '<button data-act="cancelitem">取消</button>';
+  cmdBar.innerHTML = html;
+  setButtons(true);
+}
+
+// 使用指定丹药（战斗内）；使用后重建指令栏（不可再次行动，交给 nextTurn）
+function battleUseItem(tid) {
+  const res = useItem(tid);
+  if (!res) { openBattleItemPanel(); return; }
+  const it = ITEM_DB[tid];
+  const tag = res.kind === 'hp' ? '+ ' + res.amount + ' 气血' : '+ ' + res.amount + ' 灵力';
+  floats.push({ x: battle.player._x, y: battle.player._y, text: tag, color: res.kind === 'hp' ? '#3B6D11' : '#378ADD', ttl: 60 });
+  battle.msg = battle.player.name + ' 服用「' + it.name + '」' + tag;
+  saveGame();
+  awaitingInput = false;
+  setButtons(false);
+  nextTurn();
 }
 
 function enemyAct(enemy) {
@@ -590,7 +611,10 @@ function endWorldBossBattle(killed) {
 cmdBar.addEventListener('click', e => {
   const b = e.target.closest('button');
   if (!b || b.disabled) return;
-  playerAct(b.dataset.act, b.dataset.skill);
+  const act = b.dataset.act;
+  if (act === 'useitem') { battleUseItem(b.dataset.tid); return; }
+  if (act === 'cancelitem') { buildSkillBar(); setButtons(true); return; }
+  playerAct(act, b.dataset.skill);
 });
 
 canvas.addEventListener('click', e => {
@@ -681,7 +705,8 @@ function drawBattle() {
   ctx.fillStyle = '#2C2C2A';
   ctx.font = '13px sans-serif';
   ctx.textAlign = 'left';
-  ctx.fillText(battle.msg + '　(丹药:' + p.potions + ')', 12, H - 10);
+  const itemCount = (p.items || []).reduce((s, x) => s + x.qty, 0);
+  ctx.fillText(battle.msg + '　(丹药:' + itemCount + ')', 12, H - 10);
 }
 
 function drawOverlay(text) {

@@ -17,6 +17,53 @@ const DEFAULT_LEARNED = ['at001', 'at022', 're015', 'bu008', 're004', 'de009', '
 const DEFAULT_EQUIPPED = ['at001', 'at022', 're015', 'bu008', 're004', 'de009']; // 至多 6
 const MAX_EQUIPPED = 6;
 
+// ===== 丹药/消耗品系统 =====
+// 战斗「道具」按钮与商店「丹药专区」共用。kind: 'hp'=回血 / 'mp'=回蓝；pct 为按比例恢复（15/35/55/75%）。
+// 价格（灵石）严格按需求：初级500 / 中级2000 / 高级10000 / 神级20000（血蓝同档同价）。
+const ITEM_DB = {
+  pill_hp_1: { tid: 'pill_hp_ 1', name: '回春丹', kind: 'hp', pct: 0.15, price: 500,  tierName: '初级' },
+  pill_hp_2: { tid: 'pill_hp_2', name: '玄元丹', kind: 'hp', pct: 0.35, price: 2000, tierName: '中级' },
+  pill_hp_3: { tid: 'pill_hp_3', name: '九转丹', kind: 'hp', pct: 0.55, price: 10000, tierName: '高级' },
+  pill_hp_4: { tid: 'pill_hp_4', name: '大还丹', kind: 'hp', pct: 0.75, price: 20000, tierName: '神级' },
+  pill_mp_1: { tid: 'pill_mp_1', name: '凝神露', kind: 'mp', pct: 0.15, price: 500,  tierName: '初级' },
+  pill_mp_2: { tid: 'pill_mp_2', name: '聚灵液', kind: 'mp', pct: 0.35, price: 2000, tierName: '中级' },
+  pill_mp_3: { tid: 'pill_mp_3', name: '紫府液', kind: 'mp', pct: 0.55, price: 10000, tierName: '高级' },
+  pill_mp_4: { tid: 'pill_mp_4', name: '混沌露', kind: 'mp', pct: 0.75, price: 20000, tierName: '神级' },
+};
+// 商店「丹药专区」展示顺序
+const ITEM_SHOP_ORDER = ['pill_hp_1', 'pill_mp_1', 'pill_hp_2', 'pill_mp_2', 'pill_hp_3', 'pill_mp_3', 'pill_hp_4', 'pill_mp_4'];
+
+// 向背包增加道具（按 tid 堆叠）
+function addItem(tid, n) {
+  const it = ITEM_DB[tid];
+  if (!it) return;
+  const ex = player.items.find(x => x.tid === tid);
+  if (ex) ex.qty += n;
+  else player.items.push({ tid, qty: n });
+}
+
+// 使用道具（战斗内）：返回是否成功；amount 为实际恢复量
+function useItem(tid) {
+  const ex = player.items.find(x => x.tid === tid && x.qty > 0);
+  if (!ex) return null;
+  const it = ITEM_DB[tid];
+  ex.qty -= 1;
+  if (ex.qty <= 0) player.items = player.items.filter(x => x.tid !== tid);
+  let amount = 0;
+  if (it.kind === 'hp') { amount = Math.round(player.maxHp * it.pct); player.hp = Math.min(player.maxHp, player.hp + amount); }
+  else { amount = Math.round(player.maxMp * it.pct); player.mp = Math.min(player.maxMp, player.mp + amount); }
+  return { kind: it.kind, amount };
+}
+
+// 旧存档兼容：若仍持有旧版 potions 数字且无 items，迁移为回春丹
+function migrateItems() {
+  if (!Array.isArray(player.items)) player.items = [];
+  if (player.potions && typeof player.potions === 'number' && player.potions > 0 && player.items.length === 0) {
+    addItem('pill_hp_1', player.potions);
+  }
+  delete player.potions;
+}
+
 // ===== 挂机修炼 =====
 // 在线：停留在游戏画面（主页/地图/战斗）即按速率累加修为；离线：按离开时长结算（封顶 12 小时）
 const ONLINE_XP_PER_SEC = 2;     // 在线每秒修为
@@ -145,7 +192,7 @@ const player = {
   spiAtk: 0, spiDef: 0, eva: 0, init: 0, luck: 0,
   critRate: 0.15, critDmg: 1.5,                                // 常驻暴击率 / 暴伤倍率（属性面板展示用）
   hitRate: 0.25,                                              // 命中率（基础25%+等级*0.5%+悟性*0.2%+装备加成，上限100%）
-  potions: 3, defending: false, sect: '', score: 0, xp: 0,
+  items: [], defending: false, sect: '', score: 0, xp: 0,
   equipment: { weapon: null, armor: null, accessory: null, boots: null }, // 已穿戴装备（部位→item）
   bag: [], gold: 50, diamond: 0,                            // 背包 + 灵石（装备/商店货币） + 钻石（商城消费货币）
 };
@@ -254,3 +301,5 @@ function recalcStats(p) {
 
 recalcStats(player); // 初始化派生属性（xp=0 → 炼气境 第一重天）
 player.hp = player.maxHp; player.mp = player.maxMp;
+migrateItems();
+if (player.items.length === 0) addItem('pill_hp_1', 3); // 新手护身：3 颗回春丹（等价旧 potions=3）

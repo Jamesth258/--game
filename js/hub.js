@@ -479,15 +479,26 @@ function initHub() {
             </div>
           </div>`;
         }).join('')
-      : `<p style="color:rgba(241,239,232,0.4);font-size:12px;margin:6px 0">背包为空 — 击败江湖敌人可掉落宝箱，或去商店购买。</p>`;
+      : `<p style="color:rgba(241,239,232,0.4);font-size:12px;margin:6px 0">暂无背包装备 — 击败江湖敌人可掉落宝箱，或去商店购买。</p>`;
+    const pills = (player.items || []).filter(x => x.qty > 0);
+    const pillHtml = pills.length
+      ? pills.map(x => `<div class="bag-item">
+          <div class="bag-info">
+            <span class="bag-name" style="color:${ITEM_DB[x.tid].kind === 'hp' ? '#3B6D11' : '#378ADD'}">${ITEM_DB[x.tid].name}</span>
+            <span class="equip-bonus">${ITEM_DB[x.tid].tierName}·${ITEM_DB[x.tid].kind === 'hp' ? '回血' : '回蓝'}${ITEM_DB[x.tid].pct * 100}% × ${x.qty}</span>
+          </div>
+        </div>`).join('')
+      : `<p style="color:rgba(241,239,232,0.4);font-size:12px;margin:6px 0">暂无丹药 — 可在商店「丹药专区」购买。</p>`;
     const chestSection = chests.length
       ? `<div class="equip-sec-title">宝箱（${chests.length}）· 点击开启</div><div class="bag-list">${chestHtml}</div><hr>`
       : '';
     openModal(`
-      <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+      <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6V4a2 0 012-2h4a2 0 012 2v2"/></svg>
       <h3 style="margin:0">背包</h3></div>
-      <p style="margin:2px 0 10px;font-size:12px;color:rgba(241,239,232,0.6)">灵石 <b style="color:#D4A843">${gold}</b> · 装备 <b style="color:#fff">${equips.length}</b> · 宝箱 <b style="color:#D4A843">${chests.length}</b></p>
+      <p style="margin:2px 0 10px;font-size:12px;color:rgba(241,239,232,0.6)">灵石 <b style="color:#D4A843">${gold}</b> · 装备 <b style="color:#fff">${equips.length}</b> · 宝箱 <b style="color:#D4A843">${chests.length}</b> · 丹药 <b style="color:#fff">${pills.reduce((s, x) => s + x.qty, 0)}</b></p>
       ${chestSection}
+      <div class="equip-sec-title">丹药（${pills.reduce((s, x) => s + x.qty, 0)}）</div>
+      <div class="bag-list">${pillHtml}</div>
       <div class="equip-sec-title">背包装备（${equips.length}）</div>
       <div class="bag-list">${list}</div>
       <button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
@@ -558,6 +569,25 @@ function initHub() {
       </div>
       <div class="bag-list">${rows}</div>
       <hr>
+      <div class="equip-sec-title">丹药专区（灵石消费）</div>
+      <div class="bag-list">
+        ${ITEM_SHOP_ORDER.map(tid => {
+          const it = ITEM_DB[tid];
+          const can = gold >= it.price;
+          const kindCn = it.kind === 'hp' ? '回血' : '回蓝';
+          const btn = can
+            ? `<button class="equip-btn" onclick="buyItem('${tid}')">购买·${it.price}灵石</button>`
+            : `<button class="equip-btn" disabled style="background:  rgba(255,255,255,0.06);color:rgba(241,239,232,0.3);cursor:default">${it.price}灵石</button>`;
+          return `<div class="bag-item">
+            <div class="bag-info">
+              <span class="bag-name" style="color:${it.kind === 'hp' ? '#3B6D11' : '#378ADD'}">${it.name}</span>
+              <span class="equip-bonus">${it.tierName}·${kindCn}${it.pct * 100}%</span>
+            </div>
+            ${btn}
+          </div>`;
+        }).join('')}
+      </div>
+      <hr>
       <div class="equip-sec-title">钻石专区（钻石消费）</div>
       <div class="bag-list">
         <div class="bag-item"><div class="bag-info"><span class="bag-name">功法抽奖宝箱</span><span class="equip-bonus">随机习得未拥有功法</span></div>${diamondBuyBtn('skill', 200)}</div>
@@ -627,6 +657,19 @@ function initHub() {
   window.showShopModal = showShopModal;
   window.sellItem = sellItem;
   window.buyShopItem = buyShopItem;
+
+  // 商店「丹药专区」：用灵石购买消耗品，进背包
+  function buyItem(tid) {
+    const it = ITEM_DB[tid];
+    if (!it) return;
+    if ((player.gold || 0) < it.price) { showShopModal(); return; }
+    player.gold -= it.price;
+    addItem(tid, 1);
+    saveGame();
+    refreshHub();
+    showShopModal();
+  }
+  window.buyItem = buyItem;
 
   // 钻石专区：用钻石兑换抽奖宝箱（钻石为商城专属货币，由每日奖励产出）
   const DIAMOND_CHEST_PRICE = { skill: 200, equip: 200, stone: 50, exp: 50 };
