@@ -121,7 +121,7 @@ player.worldBoss = {
 
 - **语法校验**：全部 12 个 JS 文件 + `config.js` / `cultivation.js` 经 `node --check` 通过。
 - **无头冒烟测试**（单作用域 vm + DOM/canvas/localStorage 桩）**10 项断言全过**：创建进 hub、菜单含世界BOSS且江湖已删、BOSS=最高境界×100血、伤害累计、击杀记伤害、10 回合上限触发、每时段 6 次上限、第 1 名功法+装备、末名 5 灵石+5 经验、每日重置。
-- **部署**：本地 commit `82b85e3`，`git push origin master` 成功（Pages 从 master 自动重建，约 1–2 分钟后线上版主页出现「世界BOSS」按钮）。试玩地址：`https://jamesth258.github.io/--game/`。
+- **部署**：`python deploy_api.py --push`（GitHub Git Data API 直推，自动恢复 GH_PAT，无需手动设 token；详见 `design/游戏设计框架总览.md` §0）。Pages 从 master 自动重建，约 1–2 分钟后线上版主页出现「世界BOSS」按钮。试玩地址：`https://jamesth258.github.io/--game/`。
 
 ---
 

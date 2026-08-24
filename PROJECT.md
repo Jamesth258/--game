@@ -30,13 +30,15 @@
 
 ```
 /
-├── index.html          ← 骨架（~145 行）：<link css> + 10 个 <script src>，不含任何逻辑
+├── index.html          ← 骨架（~148 行）：<link css> + 17 个 <script src>，不含任何逻辑
 ├── css/
-│   └── style.css       ← 全部样式（原 index.html 7–249 行）
-├── config.js           ← CloudBase 环境配置（当前为空占位）★根目录、先于 js/ 加载
-├── cultivation.js      ← 境界体系（纯计算，无 DOM 依赖）★关键模块，根目录、先于 js/ 加载
+│   └── style.css       ← 全部样式
+├── config.js           ← CloudBase 环境配置（当前为空占位）★根目录、第 2 个 <script>
+├── cultivation.js      ← 境界体系（纯计算，无 DOM 依赖）★关键模块，根目录、第 3 个 <script>
 ├── online.js           ← 联网层（排行榜等，渐进增强）★根目录、最后加载
-├── deploy_api.py       ← 部署工具（GitHub Git Data API 直推，自动从 WorkBuddy 轨迹恢复 GH_PAT，见 §10）★根目录
+├── deploy_api.py       ← 部署工具（GitHub Git Data API 直推，自动恢复 GH_PAT，见 §10）★根目录
+├── game_standalone.html ← ⚠️ 废弃：旧单文件快照（248KB），数值与 js/ 冲突，仅供追溯，已加跳转提示
+├── index.html.bak      ← ⚠️ 废弃：历史备份，勿用作线上依据，已加跳转提示
 ├── assets/
 │   ├── vendor/tcb.js   ← CloudBase 前端 SDK 助手（index.html 第一个 <script>）
 │   ├── select/         ← 6 角色立绘 + 头像 + 登录背景
@@ -49,21 +51,32 @@
 │       └── char_m2_orig.mp4  ← 原始 7.1MB 备份（勿上线用）
 ├── js/
 │   ├── core.js         ← canvas 常量 / 素材加载 / openModal+closeModal / saveGame / window.onerror 红条兜底
-│   ├── player.js       ← ATTR_KEYS/NAMES、player 对象、recalcStats、saveGame/loadGame
-│   ├── battle.js       ← 回合制战斗状态机、Canvas 渲染（map 模式已删除，见 v1.3.0）
-│   ├── hub.js          ← HUB_MENU_ITEMS、calcCombatPower、syncRealmDOM、refreshHub、showAttrModal
+│   ├── equip_db.js     ← 装备库（94 种）+ 套装 + 特效；EQUIP_DB_MAP / resolvedEquipBonus / resolvedEquipEffects（旧存档回填）★须在 player.js 之前
+│   ├── player.js       ← ATTR_KEYS/NAMES、player、recalcStats、saveGame/loadGame、applyOfflineXp（结算回写 lastSeen）
+│   ├── skills-data.js  ← 功法库（130：68 被动 / 62 主动，零重复）；SKILLS_DB_MAP
+│   ├── story-data.js   ← 百章剧情/副本文本
+│   ├── battle.js       ← 回合制战斗状态机 + Canvas 渲染；computeEquipMods 含被动暴击/暴伤（B1 修复）
+│   ├── hub.js          ← HUB 顶/底栏、calcCombatPower、syncRealmDOM、refreshHub、商店（灵石/钻石专区 + 刷新）
 │   ├── create.js       ← CHARACTERS、角色创建流程、checkSavedCharacter
-│   └── main.js         ← 启动入口（创建流程 + 存档恢复 + 首帧渲染）
+│   ├── story.js        ← 副本/剧情推进
+│   ├── worldboss.js    ← 世界BOSS（参与奖 2 灵石宝箱 + 5 经验宝箱）
+│   ├── daily.js        ← 每日奖励 / 在线领奖 / ensureDaily（shopRefreshCount 跨天归零）
+│   ├── codex.js        ← 图鉴收集
+│   └── main.js         ← 启动入口（创建 + 存档恢复 + 首帧渲染）
 ├── design/             ← 设计文档
 │   ├── 游戏设计框架总览.md      ← 单一可信存档（最新设计/数值/已知问题/B1 暴击修复，2026-08-24）
 │   ├── 角色与选人设计.md
 │   ├── 角色动图与主体库.md      ← 即梦主体库 + 9:16 视频提示词
-│   └── 属性与加点系统设计.md    ← 属性框架 + 经验曲线定稿
+│   ├── 属性与加点系统设计.md    ← 属性框架 + 经验曲线定稿
+│   ├── 每日奖励系统设计.md
+│   ├── 世界BOSS系统设计.md
+│   ├── 功法系统GDD.md
+│   └── 游戏设计审查与优化清单.md
 └── .workbuddy/memory/  ← 开发日志（按日期）
 ```
 
 **加载顺序铁律**（非 module 脚本，按 index.html 中 `<script>` 出现顺序执行）：
-`tcb.js → config.js → cultivation.js → js/core.js → js/player.js → js/battle.js → js/hub.js → js/create.js → js/main.js → online.js`
+`tcb.js → config.js → cultivation.js → js/core.js → js/equip_db.js → js/player.js → js/skills-data.js → js/story-data.js → js/battle.js → js/hub.js → js/create.js → js/story.js → js/worldboss.js → js/daily.js → js/codex.js → js/main.js → online.js`
 - `cultivation.js` / `config.js` / `online.js` 在**根目录**，`js/*.js` 在子目录，顺序由 index.html 决定，与目录无关
 - 顶层 `const`/`let` 是脚本级绑定，**不挂 `window`**；跨文件引用靠「同全局词法作用域 + 加载顺序」而非 `window.X`（见坑点 8）
 

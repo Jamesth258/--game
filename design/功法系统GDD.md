@@ -52,6 +52,7 @@
 | `special` | 特殊·复合 | 吸血 / 穿透 / 真实伤害 / 眩晕 / 护盾吸收 / 暴击提升（按 `effect.kind` 细分） | 最高（+4） |
 
 > 分布：**每类 13 种，共 130 种**（数据文件实际条数）。
+> **2026-08-21 重设计**：130 种拆为 **68 被动 / 62 主动**，并强制「任意两功法效果不完全相同」（零重复）；被动效果走 `passive:{pasAtk/pasSpiAtk/pasDef/pasInit/pasHp/pasMp/pasHit/pasCrit/pasCritDmg}`，主动 11 类效果（dmg 含 pierce/lifesteal、debuff/buff 四维、heal_hp/heal_mp、stun/poison/shield/absorb/critup，其中 10 个带 `buffHitRate:0.2`）。每品阶配齐回血+回蓝且高阶比例大（帝阶均 50%）。
 
 ---
 
