@@ -737,6 +737,60 @@ function drawStatBar(x, y, w, ratio, color1, color2, label) {
   }
 }
 
+// 方案B：横向角色信息卡片（头像在左，名字+境界+血蓝条在右）
+function drawActorCard(x, y, w, h, actor, isPlayer) {
+  // 卡片背景
+  drawRoundedRect(x, y, w, h, 8);
+  ctx.fillStyle = 'rgba(26,26,30,0.82)';
+  ctx.fill();
+  ctx.strokeStyle = isPlayer ? 'rgba(212,168,67,0.45)' : 'rgba(232,123,123,0.45)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 头像 40x40（圆形裁剪）
+  const avatarSize = 40;
+  const ax = x + 6, ay = y + 5;
+  const img = isPlayer ? art.hero : art.enemy;
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(ax + avatarSize / 2, ay + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
+  ctx.clip();
+  if (ready(img)) {
+    ctx.drawImage(img, ax, ay, avatarSize, avatarSize);
+  } else {
+    ctx.fillStyle = '#D3D1C7';
+    ctx.fillRect(ax, ay, avatarSize, avatarSize);
+    ctx.fillStyle = '#5F5E5A';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(isPlayer ? '我' : '敌', ax + avatarSize / 2, ay + avatarSize / 2);
+  }
+  ctx.restore();
+  // 头像边框
+  ctx.strokeStyle = isPlayer ? 'rgba(212,168,67,0.7)' : 'rgba(232,123,123,0.7)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(ax + avatarSize / 2, ay + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // 文字区
+  const tx = x + 54;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.fillStyle = '#F1EFE8';
+  ctx.font = 'bold 12px sans-serif';
+  ctx.fillText(actor.name, tx, y + 6);
+  ctx.fillStyle = 'rgba(241,239,232,0.6)';
+  ctx.font = '10px sans-serif';
+  const sub = isPlayer ? CULTIVATION.realmFromXp(actor.xp).label : '敌方';
+  ctx.fillText(sub, tx, y + 21);
+  // 血蓝条
+  const barW = w - 62;
+  drawStatBar(tx, y + 34, barW, actor.hp / actor.maxHp, isPlayer ? '#7FBF4D' : '#D35A5A', isPlayer ? '#4A8A2A' : '#8A2323', actor.hp + '/' + actor.maxHp);
+  drawStatBar(tx, y + 46, barW, actor.mp / actor.maxMp, '#5A9BD3', '#2E5F8A', actor.mp + '/' + actor.maxMp);
+}
+
 function drawAvatarGlow(x, y, r, color) {
   ctx.save();
   ctx.shadowBlur = 18;
@@ -772,60 +826,36 @@ function drawBattle() {
   }
 
   const p = battle.player, e = battle.enemy;
-  p._x = W * 0.25; p._y = H - 110;
-  e._x = W * 0.75; e._y = H - 150;
+  // 人物全身立绘坐标（画面中央偏下，我方左、敌方右）
+  p._x = 170; p._y = H - 70;
+  e._x = 470; e._y = H - 90;
 
-  const portraitSize = 90;
+  // ---- 全身立绘（放大 + 投影）----
+  const psW = 110, psH = 154;
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.35)';
+  ctx.shadowBlur = 16;
+  if (ready(art.hero)) ctx.drawImage(art.hero, p._x - psW / 2, p._y - psH, psW, psH);
+  else drawPlaceholder(p._x - psW / 2, p._y - psH, psW, psH, '我方立绘', '#D3D1C7');
+  ctx.restore();
 
-  // ---- 我方角色区 ----
-  drawAvatarGlow(p._x, p._y, portraitSize / 2, '#639922');
-  drawBattlePortrait(p._x, p._y, portraitSize, art.hero, '我方立绘', '#D3D1C7');
-  // 我方信息卡片
-  const pw = 150, px = p._x - pw / 2, py = p._y - portraitSize / 2 - 70;
-  drawRoundedRect(px, py, pw, 64, 8);
-  ctx.fillStyle = 'rgba(26,26,30,0.78)';
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(212,168,67,0.35)';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-  ctx.fillStyle = '#F1EFE8';
-  ctx.font = 'bold 13px sans-serif';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'top';
-  ctx.fillText(p.name, px + 10, py + 8);
-  ctx.fillStyle = 'rgba(241,239,232,0.55)';
-  ctx.font = '10px sans-serif';
-  ctx.fillText(CULTIVATION.realmFromXp(p.xp).label, px + 10, py + 24);
-  drawStatBar(px + 8, py + 36, pw - 16, p.hp / p.maxHp, '#7FBF4D', '#4A8A2A', p.hp + '/' + p.maxHp);
-  drawStatBar(px + 8, py + 50, pw - 16, p.mp / p.maxMp, '#5A9BD3', '#2E5F8A', p.mp + '/' + p.maxMp);
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.35)';
+  ctx.shadowBlur = 16;
+  if (ready(art.enemy)) ctx.drawImage(art.enemy, e._x - psW / 2, e._y - psH, psW, psH);
+  else drawPlaceholder(e._x - psW / 2, e._y - psH, psW, psH, '敌方立绘', '#D3D1C7');
+  ctx.restore();
 
-  // ---- 敌方角色区 ----
-  drawAvatarGlow(e._x, e._y, portraitSize / 2, '#A32D2D');
-  drawBattlePortrait(e._x, e._y, portraitSize, art.enemy, '敌方立绘', '#D3D1C7');
-  // 敌方信息卡片
-  const ew = 150, ex = e._x - ew / 2, ey = e._y - portraitSize / 2 - 70;
-  drawRoundedRect(ex, ey, ew, 64, 8);
-  ctx.fillStyle = 'rgba(26,26,30,0.78)';
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(232,123,123,0.35)';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-  ctx.fillStyle = '#F1EFE8';
-  ctx.font = 'bold 13px sans-serif';
-  ctx.textAlign = 'right';
-  ctx.fillText(e.name, ex + ew - 10, ey + 8);
-  ctx.fillStyle = 'rgba(241,239,232,0.55)';
-  ctx.font = '10px sans-serif';
-  ctx.fillText('敌方', ex + ew - 10, ey + 24);
-  drawStatBar(ex + 8, ey + 36, ew - 16, e.hp / e.maxHp, '#D35A5A', '#8A2323', e.hp + '/' + e.maxHp);
-  drawStatBar(ex + 8, ey + 50, ew - 16, e.mp / e.maxMp, '#5A9BD3', '#2E5F8A', e.mp + '/' + e.maxMp);
+  // ---- 横向信息卡片（方案B：头像在左，名字+境界+血蓝条在右）----
+  drawActorCard(10, H - 60, 230, 50, p, true);     // 我方：左下
+  drawActorCard(W - 240, 10, 230, 50, e, false);  // 敌方：右上
 
   // VS 标识
   ctx.fillStyle = 'rgba(212,168,67,0.18)';
   ctx.font = 'bold 28px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('VS', W / 2, H / 2 - 30);
+  ctx.fillText('VS', W / 2, H / 2 - 40);
 
   // 飘字
   floats.forEach(f => {
@@ -847,11 +877,11 @@ function drawBattle() {
   const infoText = battle.msg + '　(丹药:' + itemCount + ')';
   ctx.font = '13px sans-serif';
   const textWidth = ctx.measureText(infoText).width;
-  const padX = 18, padY = 8;
-  const bx = (W - textWidth) / 2 - padX;
+  const padX = 18;
   const by = H - 34;
   const bw = textWidth + padX * 2;
   const bh = 26;
+  const bx = (W - bw) / 2;
   drawRoundedRect(bx, by, bw, bh, bh / 2);
   ctx.fillStyle = 'rgba(26,26,30,0.82)';
   ctx.fill();
