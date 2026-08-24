@@ -162,7 +162,7 @@ function recalcStats(p) {
   let spd    = p.spd;                                        // 速度（战斗速度=属性值）
   let init   = Math.round(10 + p.spd * 2 + idx * 2);        // 先攻值
   let eva    = 0.10 + idx * 0.001 + p.spd * 0.001 + p.des * 0.001; // 闪避率（基础）
-  let hitR   = 0.25 + idx * 0.005 + p.com * 0.002;               // 命中率：基础25%+等级*0.5%+悟性*0.2%
+  let hitR   = 0.80 + idx * 0.004 + p.com * 0.002;               // 命中率：基础80%+等级*0.4%+悟性*0.2%（前期~80-96%，避免"疯狂未命中"）
   let extraActions = 0;
 
   // 装备加成：叠加到派生属性；extraActions 注入战斗连动 hook（battle.js beginRound 读取）

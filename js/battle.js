@@ -253,7 +253,7 @@ function setButtons(on) {
 
 function damage(attacker, target, mult, type) {
   // 命中判定：实际命中率 = 攻击方命中率 − 目标闪避率
-  const attackerHR = attacker.hitRate || 0.25;
+  const attackerHR = attacker.hitRate || 0.80;
   const targetEva = target.eva || 0;
   // 装备命中率已永久并入 player.hitRate（recalcStats 处理）；此处仅叠加功法临时命中率buff
   const accBuff = (battle._tempHitRateBuff || 0); // 功法临时命中率buff（单次生效，攻击后消费）
@@ -345,8 +345,20 @@ function applySkill(actor, target, sk) {
         const atkStat = (e.type === 'spirit' ? actor.spiAtk : actor.atk) * buffMul(actor, e.type === 'spirit' ? 'spiAtk' : 'atk');
         const defStat = (e.type === 'spirit' ? target.spiDef : target.def) * 0.25;
         let base = atkStat * e.mult - defStat;
-        const crit = Math.random() < 0.15;
-        if (crit) base *= 1.5;
+        // 暴击：与普通攻击(damage)同源——基础15% + 等级/天命 + 装备/被动暴击率 + 积威 + 濒锋
+        let pBase = 0.15;
+        if (actor.level) pBase += actor.level * 0.002;
+        if (actor.des)   pBase += actor.des * 0.002;
+        const pMods = (!actor.isEnemy && battle && battle.mods) ? battle.mods : null;
+        let pCrit = pBase + Math.max(0, buffMul(actor, 'crit') - 1);
+        if (pMods) {
+          pCrit += pMods.critRate;
+          if (battle._stackCrit) pCrit += battle._stackCrit;
+          if (pMods.lowHpCrit && actor.hp / actor.maxHp < 0.3) pCrit += pMods.lowHpCrit;
+        }
+        const crit = Math.random() < Math.min(1.0, pCrit);
+        let pMul = 1.5 + (pMods ? pMods.critDmg : 0);
+        if (crit) base *= pMul;
         if (target.defending) base *= 0.5;
         d = Math.max(1, Math.round(base));
         target.hp = Math.max(0, target.hp - d);

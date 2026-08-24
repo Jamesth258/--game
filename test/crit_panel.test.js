@@ -134,6 +134,28 @@ code += `
     assert('被动心法 bu006 暴伤进入战斗 computeEquipMods (实际=' + mG2.critDmg + ')', Math.abs(mG2.critDmg - 0.30) < 1e-9);
     player.learned = [];
 
+    // H) 穿透功法暴击必须进入战斗判定（修复：battle.js pierce 支路曾硬编码 15%，无视暴击装/被动）
+    player.equipment = { weapon:null, armor:null, accessory:null, boots:null };
+    player.level = 1; player.des = 0;            // 基础暴击率 = 15%
+    player.learned = [];
+    recalcStats(player);
+    player._x = 490; player._y = 160;
+    const eH = { name:'木桩', isEnemy:true, atk:10, def:10, spiAtk:10, spiDef:10, maxHp:99999, hp:99999, level:1, des:0, _x:490, _y:160 };
+    const _rnd = Math.random;
+    const skH = { name:'穿透技', type:'phys', effect:{ kind:'dmg', type:'phys', mult:1.0, pierce:0.5 } };
+    // 不带暴击功法：Math.random=0.20 → 0.15 < 0.20 → 不暴击
+    battle = { mods: computeEquipMods(player), player, enemy: eH, _stackCrit:0, playerDmg:0 };
+    Math.random = () => 0.20;
+    floats.length = 0; applySkill(player, eH, skH);
+    const fNo = floats.find(x => x.text.startsWith('暴击') || x.text.startsWith('-'));
+    assert('穿透功法 无暴击装→Math.random0.20 不暴击 (实际=' + (fNo?fNo.text:'?') + ')', !!fNo && !fNo.text.startsWith('暴击'));
+    // 带 bu018 被动 +9%：critChance = 0.15+0.09=0.24 > 0.20 → 暴击
+    player.learned = ['bu018']; battle.mods = computeEquipMods(player);
+    floats.length = 0; applySkill(player, eH, skH);
+    const fYes = floats.find(x => x.text.startsWith('暴击') || x.text.startsWith('-'));
+    assert('穿透功法 带 bu018→Math.random0.20 暴击 (实际=' + (fYes?fYes.text:'?') + ')', !!fYes && fYes.text.startsWith('暴击'));
+    Math.random = _rnd; player.learned = [];
+
   } catch (err) {
     results.push('FAIL | 异常: ' + (err && err.stack ? err.stack : err));
   }
