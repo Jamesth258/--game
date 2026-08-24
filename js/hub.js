@@ -531,8 +531,8 @@ function initHub() {
       const can = gold >= it.price;
       const kindCn = it.kind === 'hp' ? '回血' : '回蓝';
       const btn = can
-        ? `<button class="equip-btn" onclick="buyItem('${tid}')">${it.price}灵</button>`
-        : `<button class="equip-btn" disabled style="background:rgba(255,255,255,0.06);color:rgba(241,239,232,0.3);cursor:default">${it.price}灵</button>`;
+        ? `<button class="equip-btn diamond-buy-btn" onclick="buyItem('${tid}')">${it.price}灵</button>`
+        : `<button class="equip-btn diamond-buy-btn" disabled style="background:rgba(255,255,255,0.06);color:rgba(241,239,232,0.3);cursor:default">${it.price}灵</button>`;
       return `<div class="bag-item">
         <div class="bag-info">
           <span class="bag-name" style="color:${it.kind === 'hp' ? '#3B6D11' : '#378ADD'}">${esc(it.name)}</span>
