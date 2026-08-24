@@ -525,6 +525,22 @@ function initHub() {
         ? `<button class="equip-btn diamond-buy-btn" onclick="buyDiamondChest('${type}')">${price}钻</button>`
         : `<button class="equip-btn diamond-buy-btn" disabled style="background:rgba(255,255,255,0.06);color:rgba(241,239,232,0.3);cursor:default">${price}钻</button>`;
     };
+    // 丹药商品（合并到灵石专区）
+    const pillRows = ITEM_SHOP_ORDER.map(tid => {
+      const it = ITEM_DB[tid];
+      const can = gold >= it.price;
+      const kindCn = it.kind === 'hp' ? '回血' : '回蓝';
+      const btn = can
+        ? `<button class="equip-btn" onclick="buyItem('${tid}')">${it.price}灵</button>`
+        : `<button class="equip-btn" disabled style="background:rgba(255,255,255,0.06);color:rgba(241,239,232,0.3);cursor:default">${it.price}灵</button>`;
+      return `<div class="bag-item">
+        <div class="bag-info">
+          <span class="bag-name" style="color:${it.kind === 'hp' ? '#3B6D11' : '#378ADD'}">${esc(it.name)}</span>
+          <span class="equip-bonus">${it.tierName}·${kindCn}${Math.round(it.pct * 100)}%</span>
+        </div>
+        ${btn}
+      </div>`;
+    }).join('');
     const rows = shopStock.map(it => {
       const price = SHOP_PRICE[it.rarity] || 500;
       const can = gold >= price;
@@ -567,26 +583,7 @@ function initHub() {
         <div class="equip-sec-title" style="margin:0">灵石专区（灵石消费）</div>
         ${refreshBtn}
       </div>
-      <div class="bag-list">${rows}</div>
-      <hr>
-      <div class="equip-sec-title">丹药专区（灵石消费）</div>
-      <div class="bag-list">
-        ${ITEM_SHOP_ORDER.map(tid => {
-          const it = ITEM_DB[tid];
-          const can = gold >= it.price;
-          const kindCn = it.kind === 'hp' ? '回血' : '回蓝';
-          const btn = can
-            ? `<button class="equip-btn" onclick="buyItem('${tid}')">购买·${it.price}灵石</button>`
-            : `<button class="equip-btn" disabled style="background:  rgba(255,255,255,0.06);color:rgba(241,239,232,0.3);cursor:default">${it.price}灵石</button>`;
-          return `<div class="bag-item">
-            <div class="bag-info">
-              <span class="bag-name" style="color:${it.kind === 'hp' ? '#3B6D11' : '#378ADD'}">${it.name}</span>
-              <span class="equip-bonus">${it.tierName}·${kindCn}${it.pct * 100}%</span>
-            </div>
-            ${btn}
-          </div>`;
-        }).join('')}
-      </div>
+      <div class="bag-list">${rows}${pillRows}</div>
       <hr>
       <div class="equip-sec-title">钻石专区（钻石消费）</div>
       <div class="bag-list">
