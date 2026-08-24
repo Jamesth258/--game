@@ -111,15 +111,19 @@ code += `
     const enemy = { name:'试炼傀儡', isEnemy:true, hp:2000, maxHp:2000, atk:30, def:5, spiAtk:0, spiDef:5, eva:0, mp:40, maxMp:40, _x:1, _y:1, buffs:[], debuffs:[], shield:null };
     battle = { player, enemy, node:{enemy:{name:'试炼傀儡'}}, mode:'map', mods: computeEquipMods(player), _stackCrit:0, _reviveUsed:false };
     floats = [];
+    const _r7 = Math.random; Math.random = () => 0.01; // 固定低随机值→damage 必命中，避免随机未命中导致吸血不触发（8/24 修）
     const hp0 = player.hp;
     damage(player, enemy, 1.0, 'phys');
+    Math.random = _r7;
     assert('吸血：玩家攻击后血量上升', player.hp > hp0);
 
     // 8) 战斗：反伤把伤害弹回敌方
     enemy.atk = 200; player.def = 10; player.hp = 500; enemy.hp = 1000;
     battle.mods = { reflect: 0.5 };
+    const _r8 = Math.random; Math.random = () => 0.01; // 固定低随机值→必命中，避免随机未命中导致反伤不触发（8/24 修）
     const eh0 = enemy.hp;
     damage(enemy, player, 1.0, 'phys');
+    Math.random = _r8;
     assert('反伤：敌方攻击后自身血量下降', enemy.hp < eh0);
 
     // 9) 战斗：涅槃复活
