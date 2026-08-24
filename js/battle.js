@@ -131,6 +131,18 @@ function computeEquipMods(p) {
     if (n >= 2 && def.two)   applySetMods(m, def.two);
     if (n >= 4 && def.four)  applySetMods(m, def.four);
   }
+  // 被动心法·暴击率/暴伤：必须与 recalcStats(player) 面板同源。
+  // 否则面板把 pasCrit 算进 100%，而战斗判定(aMods)只含装备+套装，
+  // 会导致「面板满暴击、实战却不出暴击」；暴伤 pasCritDmg 同理。
+  if (p.learned && typeof SKILLS_DB_MAP !== 'undefined') {
+    for (const id of p.learned) {
+      const sk = SKILLS_DB_MAP[id];
+      if (!sk || sk.kind !== 'passive' || !sk.passive) continue;
+      const pa = sk.passive;
+      if (pa.pasCrit)    m.critRate  += pa.pasCrit;
+      if (pa.pasCritDmg) m.critDmg   += pa.pasCritDmg;
+    }
+  }
   return m;
 }
 function applySetMods(m, eff) { if (!eff) return; for (const k in eff) m[k] = (m[k] || 0) + eff[k]; }

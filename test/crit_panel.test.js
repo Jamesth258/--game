@@ -123,6 +123,17 @@ code += `
     assert('属性面板含「暴击伤害」', html.indexOf('暴击伤害') !== -1);
     assert('面板渲染了暴击率数值(含%)', /暴击率<\\/td><td[^>]*>\\d+%/.test(html));
 
+    // G) 被动心法暴击率/暴伤必须进入战斗 computeEquipMods（修复：面板满暴击、实战却不暴击）
+    player.equipment = { weapon: null, armor: null, accessory: null, boots: null };
+    recalcStats(player);
+    player.learned = ['bu018']; // 碧落磐石术 被动暴击 +9%
+    const mG1 = computeEquipMods(player);
+    assert('被动心法 bu018 暴击率进入战斗 computeEquipMods (实际=' + mG1.critRate + ')', Math.abs(mG1.critRate - 0.09) < 1e-9);
+    player.learned = ['bu006']; // 孤鸿破军式 被动暴伤 +30%
+    const mG2 = computeEquipMods(player);
+    assert('被动心法 bu006 暴伤进入战斗 computeEquipMods (实际=' + mG2.critDmg + ')', Math.abs(mG2.critDmg - 0.30) < 1e-9);
+    player.learned = [];
+
   } catch (err) {
     results.push('FAIL | 异常: ' + (err && err.stack ? err.stack : err));
   }
