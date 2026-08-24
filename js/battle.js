@@ -781,8 +781,8 @@ function drawBattle() {
   drawAvatarGlow(p._x, p._y, portraitSize / 2, '#639922');
   drawBattlePortrait(p._x, p._y, portraitSize, art.hero, '我方立绘', '#D3D1C7');
   // 我方信息卡片
-  const pw = 150, px = p._x - pw / 2, py = p._y - portraitSize / 2 - 58;
-  drawRoundedRect(px, py, pw, 52, 8);
+  const pw = 150, px = p._x - pw / 2, py = p._y - portraitSize / 2 - 70;
+  drawRoundedRect(px, py, pw, 64, 8);
   ctx.fillStyle = 'rgba(26,26,30,0.78)';
   ctx.fill();
   ctx.strokeStyle = 'rgba(212,168,67,0.35)';
@@ -797,13 +797,14 @@ function drawBattle() {
   ctx.font = '10px sans-serif';
   ctx.fillText(CULTIVATION.realmFromXp(p.xp).label, px + 10, py + 24);
   drawStatBar(px + 8, py + 36, pw - 16, p.hp / p.maxHp, '#7FBF4D', '#4A8A2A', p.hp + '/' + p.maxHp);
+  drawStatBar(px + 8, py + 50, pw - 16, p.mp / p.maxMp, '#5A9BD3', '#2E5F8A', p.mp + '/' + p.maxMp);
 
   // ---- 敌方角色区 ----
   drawAvatarGlow(e._x, e._y, portraitSize / 2, '#A32D2D');
   drawBattlePortrait(e._x, e._y, portraitSize, art.enemy, '敌方立绘', '#D3D1C7');
   // 敌方信息卡片
-  const ew = 150, ex = e._x - ew / 2, ey = e._y - portraitSize / 2 - 58;
-  drawRoundedRect(ex, ey, ew, 52, 8);
+  const ew = 150, ex = e._x - ew / 2, ey = e._y - portraitSize / 2 - 70;
+  drawRoundedRect(ex, ey, ew, 64, 8);
   ctx.fillStyle = 'rgba(26,26,30,0.78)';
   ctx.fill();
   ctx.strokeStyle = 'rgba(232,123,123,0.35)';
@@ -817,6 +818,7 @@ function drawBattle() {
   ctx.font = '10px sans-serif';
   ctx.fillText('敌方', ex + ew - 10, ey + 24);
   drawStatBar(ex + 8, ey + 36, ew - 16, e.hp / e.maxHp, '#D35A5A', '#8A2323', e.hp + '/' + e.maxHp);
+  drawStatBar(ex + 8, ey + 50, ew - 16, e.mp / e.maxMp, '#5A9BD3', '#2E5F8A', e.mp + '/' + e.maxMp);
 
   // VS 标识
   ctx.fillStyle = 'rgba(212,168,67,0.18)';
