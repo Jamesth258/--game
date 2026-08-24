@@ -16,12 +16,34 @@
   }
   canvas { width: 100%; height: 100%; display: block; }
   .bar { display: flex; gap: 8px; margin-top: 12px; }
+  .bar:empty { display: none; }
   button {
     flex: 1; font-size: 13px; padding: 10px 0; cursor: pointer;
     background: #fff; border: 0.5px solid var(--line); border-radius: 8px; color: var(--ink);
   }
   button:hover:not(:disabled) { border-color: var(--blue); }
   button:disabled { opacity: 0.4; cursor: default; }
+
+  /* ===== 战斗指令按钮 ===== */
+  .bar.battle-cmd-bar { gap: 6px; margin-top: 10px; }
+  .battle-cmd {
+    flex: 1 1 0;
+    min-width: 54px; max-width: 120px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; padding: 8px 4px;
+    font-size: 13px; font-weight: 600; color: #2C2C2A;
+    background: linear-gradient(180deg, #fff, #f5f5f3);
+    border: 0.5px solid var(--line); border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+    transition: transform .08s, border-color .12s, box-shadow .12s;
+  }
+  .battle-cmd:hover:not(:disabled) { border-color: var(--blue); box-shadow: 0 3px 8px rgba(24,95,165,0.14); transform: translateY(-1px); }
+  .battle-cmd:disabled { opacity: 0.35; cursor: default; transform: none; box-shadow: none; }
+  .battle-cmd .cmd-cost { font-size: 10px; font-weight: 500; color: var(--blue); }
+  .battle-cmd.skill { background: linear-gradient(180deg, #fff, #f2f8ff); border-color: rgba(24,95,165,0.35); }
+  .battle-cmd.item { background: linear-gradient(180deg, #fff, #f5fbf0); border-color: rgba(99,157,34,0.35); }
+  .battle-cmd.back { background: linear-gradient(180deg, #fff, #f5f5f5); border-color: rgba(44,44,42,0.25); }
+  .battle-cmd.pill { background: linear-gradient(180deg, #fff, #f5fbf0); border-color: rgba(99,157,34,0.35); font-size: 11px; }
   .hint { font-size: 12px; color: var(--mut); margin-top: 12px; line-height: 1.6; }
   .hint b { color: var(--ink); font-weight: 500; }
   /* 在线层 UI */

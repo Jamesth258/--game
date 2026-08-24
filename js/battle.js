@@ -45,14 +45,14 @@ function makeEnemy(node) {
   };
 }
 
-// 构建战斗指令栏：普攻 + 已装备功法（≤6）+ 防御 + 道具
+// 构建战斗指令栏：普攻 + 已装备功法（≤6）+ 道具
 function buildSkillBar() {
   const skills = (player.equippedSkills || []).map(id => SKILLS_DB_MAP[id]).filter(s => s && s.kind !== 'passive');
-  let html = '<button data-act="attack">攻击</button>';
+  let html = '<button class="battle-cmd" data-act="attack">⚔️ 攻击</button>';
   skills.forEach(s => {
-    html += `<button data-act="skill" data-skill="${s.id}" data-cost="${s.cost}" title="${esc(s.desc)}">${esc(s.name)}<small style="opacity:.7"> ${s.cost}灵</small></button>`;
+    html += `<button class="battle-cmd skill" data-act="skill" data-skill="${s.id}" data-cost="${s.cost}" title="${esc(s.desc)}"><span class="cmd-name">${esc(s.name)}</span><span class="cmd-cost">${s.cost}灵</span></button>`;
   });
-  html += '<button data-act="item">道具</button>';
+  html += '<button class="battle-cmd item" data-act="item">🎒 道具</button>';
   cmdBar.innerHTML = html;
 }
 
@@ -451,13 +451,12 @@ function applyAction(actor, target, act) {
 function openBattleItemPanel() {
   const inv = (player.items || []).filter(x => x.qty > 0);
   if (inv.length === 0) { battle.msg = '背包中没有可用丹药'; return; }
-  let html = '<span style="font-size:12px;color:#fff;margin-right:6px">选择丹药：</span>';
+  let html = '<button class="battle-cmd back" data-act="cancelitem">↩ 返回</button>';
   inv.forEach(x => {
     const it = ITEM_DB[x.tid];
-    const label = it.name + '·' + it.tierName + '（' + (it.kind === 'hp' ? '回血' : '回蓝') + it.pct * 100 + '%×' + x.qty + '）';
-    html += `<button data-act="useitem" data-tid="${x.tid}" title="${it.name}">${label}</button>`;
+    const label = it.name + '·' + it.tierName + '（' + (it.kind === 'hp' ? '回血' : '回蓝') + Math.round(it.pct * 100) + '%×' + x.qty + '）';
+    html += `<button class="battle-cmd pill" data-act="useitem" data-tid="${x.tid}" title="${it.name}">${esc(label)}</button>`;
   });
-  html += '<button data-act="cancelitem">取消</button>';
   cmdBar.innerHTML = html;
   setButtons(true);
 }
@@ -656,37 +655,166 @@ function bar(x, y, w, ratio, color) {
 }
 
 
+function drawRoundedRect(x, y, w, h, r) {
+  const rr = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + rr, y);
+  ctx.arcTo(x + w, y, x + w, y + h, rr);
+  ctx.arcTo(x + w, y + h, x, y + h, rr);
+  ctx.arcTo(x, y + h, x, y, rr);
+  ctx.arcTo(x, y, x + w, y, rr);
+  ctx.closePath();
+}
+
+function drawBattlePortrait(x, y, size, img, label, tint) {
+  const r = size / 2;
+  // 外圈光环
+  ctx.beginPath();
+  ctx.arc(x, y, r + 4, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x, y, r + 2, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(212,168,67,0.5)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  // 头像裁剪区
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.clip();
+  if (ready(img)) {
+    ctx.drawImage(img, x - r, y - r, size, size);
+  } else {
+    ctx.fillStyle = tint || '#D3D1C7';
+    ctx.fillRect(x - r, y - r, size, size);
+    ctx.fillStyle = '#5F5E5A';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, x, y);
+  }
+  ctx.restore();
+}
+
+function drawStatBar(x, y, w, ratio, color1, color2, label) {
+  const h = 10;
+  ratio = Math.max(0, Math.min(1, ratio));
+  // 背景槽
+  drawRoundedRect(x, y, w, h, h / 2);
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  ctx.fill();
+  // 填充
+  if (ratio > 0) {
+    const grad = ctx.createLinearGradient(x, y, x + w, y);
+    grad.addColorStop(0, color1);
+    grad.addColorStop(1, color2);
+    ctx.fillStyle = grad;
+    drawRoundedRect(x, y, w * ratio, h, h / 2);
+    ctx.fill();
+  }
+  // 边框
+  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+  ctx.lineWidth = 1;
+  drawRoundedRect(x, y, w, h, h / 2);
+  ctx.stroke();
+  // 文字
+  if (label) {
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.font = 'bold 9px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, x + w / 2, y + h / 2 + 0.5);
+  }
+}
+
+function drawAvatarGlow(x, y, r, color) {
+  ctx.save();
+  ctx.shadowBlur = 18;
+  ctx.shadowColor = color;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.globalAlpha = 0.15;
+  ctx.fill();
+  ctx.restore();
+}
+
 function drawBattle() {
   // 背景
   if (ready(art.bg)) {
     ctx.drawImage(art.bg, 0, 0, W, H);
   } else {
-    ctx.fillStyle = '#E9E4D8';
+    // 默认战斗背景：上部天空、下部战场
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, '#E8E2D4');
+    grad.addColorStop(0.65, '#E8E2D4');
+    grad.addColorStop(1, '#D8D2C4');
+    ctx.fillStyle = grad;
     ctx.fillRect(0, 0, W, H);
+    // 地面/烟雾装饰
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.beginPath();
+    ctx.ellipse(W * 0.25, H - 40, 120, 24, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(W * 0.75, H - 36, 110, 22, 0, 0, Math.PI * 2);
+    ctx.fill();
   }
+
   const p = battle.player, e = battle.enemy;
-  p._x = 150; p._y = 200;
-  e._x = 490; e._y = 160;
+  p._x = W * 0.25; p._y = H - 110;
+  e._x = W * 0.75; e._y = H - 150;
 
-  // 敌方
-  if (ready(art.enemy)) ctx.drawImage(art.enemy, e._x - 50, e._y - 70, 100, 140);
-  else drawPlaceholder(e._x - 50, e._y - 70, 100, 140, '即梦·敌方立绘', '#D3D1C7');
-  // 我方
-  if (ready(art.hero)) ctx.drawImage(art.hero, p._x - 50, p._y - 70, 100, 140);
-  else drawPlaceholder(p._x - 50, p._y - 70, 100, 140, '即梦·我方立绘', '#D3D1C7');
+  const portraitSize = 90;
 
-  // 血条/内力条
+  // ---- 我方角色区 ----
+  drawAvatarGlow(p._x, p._y, portraitSize / 2, '#639922');
+  drawBattlePortrait(p._x, p._y, portraitSize, art.hero, '我方立绘', '#D3D1C7');
+  // 我方信息卡片
+  const pw = 150, px = p._x - pw / 2, py = p._y - portraitSize / 2 - 58;
+  drawRoundedRect(px, py, pw, 52, 8);
+  ctx.fillStyle = 'rgba(26,26,30,0.78)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(212,168,67,0.35)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.fillStyle = '#F1EFE8';
+  ctx.font = 'bold 13px sans-serif';
   ctx.textAlign = 'left';
-  ctx.fillStyle = '#2C2C2A'; ctx.font = '12px sans-serif';
-  ctx.fillText(p.name + '　' + CULTIVATION.realmFromXp(p.xp).label, p._x - 50, p._y - 80);
-  bar(p._x - 50, p._y - 74, 100, p.hp / p.maxHp, '#639922');
-  bar(p._x - 50, p._y - 64, 100, p.mp / p.maxMp, '#378ADD');
+  ctx.textBaseline = 'top';
+  ctx.fillText(p.name, px + 10, py + 8);
+  ctx.fillStyle = 'rgba(241,239,232,0.55)';
+  ctx.font = '10px sans-serif';
+  ctx.fillText(CULTIVATION.realmFromXp(p.xp).label, px + 10, py + 24);
+  drawStatBar(px + 8, py + 36, pw - 16, p.hp / p.maxHp, '#7FBF4D', '#4A8A2A', p.hp + '/' + p.maxHp);
 
+  // ---- 敌方角色区 ----
+  drawAvatarGlow(e._x, e._y, portraitSize / 2, '#A32D2D');
+  drawBattlePortrait(e._x, e._y, portraitSize, art.enemy, '敌方立绘', '#D3D1C7');
+  // 敌方信息卡片
+  const ew = 150, ex = e._x - ew / 2, ey = e._y - portraitSize / 2 - 58;
+  drawRoundedRect(ex, ey, ew, 52, 8);
+  ctx.fillStyle = 'rgba(26,26,30,0.78)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(232,123,123,0.35)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.fillStyle = '#F1EFE8';
+  ctx.font = 'bold 13px sans-serif';
   ctx.textAlign = 'right';
-  ctx.fillStyle = '#2C2C2A';
-  ctx.fillText(e.name, e._x + 50, e._y - 80);
-  bar(e._x - 50, e._y - 74, 100, e.hp / e.maxHp, '#A32D2D');
-  bar(e._x - 50, e._y - 64, 100, e.mp / e.maxMp, '#378ADD');
+  ctx.fillText(e.name, ex + ew - 10, ey + 8);
+  ctx.fillStyle = 'rgba(241,239,232,0.55)';
+  ctx.font = '10px sans-serif';
+  ctx.fillText('敌方', ex + ew - 10, ey + 24);
+  drawStatBar(ex + 8, ey + 36, ew - 16, e.hp / e.maxHp, '#D35A5A', '#8A2323', e.hp + '/' + e.maxHp);
+
+  // VS 标识
+  ctx.fillStyle = 'rgba(212,168,67,0.18)';
+  ctx.font = 'bold 28px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('VS', W / 2, H / 2 - 30);
 
   // 飘字
   floats.forEach(f => {
@@ -694,19 +822,36 @@ function drawBattle() {
     ctx.fillStyle = f.color;
     ctx.font = 'bold 16px sans-serif';
     ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.shadowBlur = 4;
     ctx.fillText(f.text, f.x, f.y - (60 - f.ttl) * 0.5);
+    ctx.shadowBlur = 0;
     ctx.globalAlpha = 1;
   });
   floats = floats.filter(f => --f.ttl > 0);
 
-  // 底部信息
-  ctx.fillStyle = 'rgba(241,239,232,0.92)';
-  ctx.fillRect(0, H - 30, W, 30);
-  ctx.fillStyle = '#2C2C2A';
-  ctx.font = '13px sans-serif';
-  ctx.textAlign = 'left';
+  // 底部行动信息栏
   const itemCount = (p.items || []).reduce((s, x) => s + x.qty, 0);
-  ctx.fillText(battle.msg + '　(丹药:' + itemCount + ')', 12, H - 10);
+  const infoText = battle.msg + '　(丹药:' + itemCount + ')';
+  ctx.font = '13px sans-serif';
+  const textWidth = ctx.measureText(infoText).width;
+  const padX = 18, padY = 8;
+  const bx = (W - textWidth) / 2 - padX;
+  const by = H - 34;
+  const bw = textWidth + padX * 2;
+  const bh = 26;
+  drawRoundedRect(bx, by, bw, bh, bh / 2);
+  ctx.fillStyle = 'rgba(26,26,30,0.82)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.fillStyle = '#F1EFE8';
+  ctx.font = '13px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(infoText, W / 2, by + bh / 2);
 }
 
 function drawOverlay(text) {
