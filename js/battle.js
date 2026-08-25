@@ -31,22 +31,24 @@ function hideBattleReturnBtn() {
   _battleReturnBtn = null;
 }
 
-// ===== 立绘映射（梦幻西游风格：Q版SD精灵 + 光圈底座）=====
+// ===== 立绘映射（写实古风抠像 + 光圈底座）=====
 // 主角按 avatarId 区分；副本敌人按所属「卷」(volume 1~10) 区分；世界BOSS 按 slot idx 区分。
-// Q版精灵（_q_后缀）为战斗专用，不覆盖 art.hero / art.enemy（主页/创建界面共享立绘）。
+// 写实风立绘已通过 PIL 抠像转为 RGBA 透明 PNG，战斗中只显示人物本体。
+// 这些立绘仅用于战斗画面，不覆盖 art.hero / art.enemy（主页/创建界面的共享立绘）。
+// Q版版本（hero_q_/enemy_q_/boss_q_）保留在 assets/battle/ 备用，当前未启用。
 const HERO_SPRITES = {
-  m1: 'assets/battle/hero_q_m1.png', m2: 'assets/battle/hero_q_m2.png', m3: 'assets/battle/hero_q_m3.png',
-  f1: 'assets/battle/hero_q_f1.png', f2: 'assets/battle/hero_q_f2.png', f3: 'assets/battle/hero_q_f3.png',
+  m1: 'assets/battle/hero_m1.png', m2: 'assets/battle/hero_m2.png', m3: 'assets/battle/hero_m3.png',
+  f1: 'assets/battle/hero_f1.png', f2: 'assets/battle/hero_f2.png', f3: 'assets/battle/hero_f3.png',
 };
 const ENEMY_SPRITES = {
-  1: 'assets/battle/enemy_q_v1.png', 2: 'assets/battle/enemy_q_v2.png', 3: 'assets/battle/enemy_q_v3.png',
-  4: 'assets/battle/enemy_q_v4.png', 5: 'assets/battle/enemy_q_v5.png', 6: 'assets/battle/enemy_q_v6.png',
-  7: 'assets/battle/enemy_q_v7.png', 8: 'assets/battle/enemy_q_v8.png', 9: 'assets/battle/enemy_q_v9.png',
-  10: 'assets/battle/enemy_q_v10.png',
+  1: 'assets/battle/enemy_v1.png', 2: 'assets/battle/enemy_v2.png', 3: 'assets/battle/enemy_v3.png',
+  4: 'assets/battle/enemy_v4.png', 5: 'assets/battle/enemy_v5.png', 6: 'assets/battle/enemy_v6.png',
+  7: 'assets/battle/enemy_v7.png', 8: 'assets/battle/enemy_v8.png', 9: 'assets/battle/enemy_v9.png',
+  10: 'assets/battle/enemy_v10.png',
 };
 const BOSS_SPRITES = {
-  1: 'assets/battle/boss_q_1.png', 2: 'assets/battle/boss_q_2.png', 3: 'assets/battle/boss_q_3.png',
-  4: 'assets/battle/boss_q_4.png', 5: 'assets/battle/boss_q_5.png',
+  1: 'assets/battle/boss_1.png', 2: 'assets/battle/boss_2.png', 3: 'assets/battle/boss_3.png',
+  4: 'assets/battle/boss_4.png', 5: 'assets/battle/boss_5.png',
 };
 
 function makeEnemy(node) {
@@ -875,17 +877,17 @@ function drawBattle() {
   ctx.stroke();
   ctx.restore();
 
-  // ---- 3. 精灵选择与尺寸（Q版SD小人，比写实立绘小约55%）----
+  // ---- 3. 精灵选择与尺寸（写实风抠像立绘，放大到画面主体级）----
   const heroImg = (battle.heroSprite && ready(battle.heroSprite)) ? battle.heroSprite
                 : (ready(art.hero) ? art.hero : null);
   const enemyImg = (battle.enemySprite && ready(battle.enemySprite)) ? battle.enemySprite
                   : (ready(art.enemy) ? art.enemy : null);
-  // Q版站姿精灵尺寸（类似梦幻西游的"棋子"大小）
-  const spW = 52, spH = 72;
+  // 写实风立绘尺寸（比 Q 版大 ~130%，占画面主要视觉焦点）
+  const spW = 120, spH = 168;
 
-  // 地面站位坐标（我方左前、敌方右前，在椭圆范围内）
-  const pBaseX = gCx - 110, pBaseY = gCy + 2;
-  const eBaseX = gCx + 110, eBaseY = gCy + 2;
+  // 地面站位坐标（我方左前、敌方右前，大尺寸精灵需拉开间距）
+  const pBaseX = gCx - 130, pBaseY = gCy + 8;
+  const eBaseX = gCx + 130, eBaseY = gCy + 8;
 
   // 呼吸浮动（相位错开，幅度 2px）
   const _bt = Date.now() / 580;
@@ -914,7 +916,7 @@ function drawBattle() {
     }
   }
 
-  // ---- 4. 绘制双方精灵（Q版 + 光圈底座）----
+  // ---- 4. 绘制双方精灵（写实风抠像 + 光圈底座）----
   function drawBattleSprite(img, cx, cy, lungX, bobY, isHero) {
     const sx = cx + lungX;
     const sy = cy + bobY;
@@ -984,7 +986,7 @@ function drawBattle() {
 
   // ---- 5. 头顶悬浮血条 ----
   function drawOverheadBar(x, topY, actor, isPlayer) {
-    const barW = 58, barH = 5, barX = x - barW / 2, barY = topY - 10;
+    const barW = 72, barH = 6, barX = x - barW / 2, barY = topY - 12;
     const ratio = Math.max(0, Math.min(1, actor.hp / actor.maxHp));
     // 背景
     ctx.fillStyle = 'rgba(0,0,0,0.55)';
