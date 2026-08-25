@@ -31,22 +31,22 @@ function hideBattleReturnBtn() {
   _battleReturnBtn = null;
 }
 
-// ===== 立绘映射（方案A：写实古风全身立绘，存放于 assets/battle/）=====
+// ===== 立绘映射（梦幻西游风格：Q版SD精灵 + 光圈底座）=====
 // 主角按 avatarId 区分；副本敌人按所属「卷」(volume 1~10) 区分；世界BOSS 按 slot idx 区分。
-// 这些立绘仅用于战斗画面，不覆盖 art.hero / art.enemy（后者是主页/创建界面的共享立绘）。
+// Q版精灵（_q_后缀）为战斗专用，不覆盖 art.hero / art.enemy（主页/创建界面共享立绘）。
 const HERO_SPRITES = {
-  m1: 'assets/battle/hero_m1.png', m2: 'assets/battle/hero_m2.png', m3: 'assets/battle/hero_m3.png',
-  f1: 'assets/battle/hero_f1.png', f2: 'assets/battle/hero_f2.png', f3: 'assets/battle/hero_f3.png',
+  m1: 'assets/battle/hero_q_m1.png', m2: 'assets/battle/hero_q_m2.png', m3: 'assets/battle/hero_q_m3.png',
+  f1: 'assets/battle/hero_q_f1.png', f2: 'assets/battle/hero_q_f2.png', f3: 'assets/battle/hero_q_f3.png',
 };
 const ENEMY_SPRITES = {
-  1: 'assets/battle/enemy_v1.png', 2: 'assets/battle/enemy_v2.png', 3: 'assets/battle/enemy_v3.png',
-  4: 'assets/battle/enemy_v4.png', 5: 'assets/battle/enemy_v5.png', 6: 'assets/battle/enemy_v6.png',
-  7: 'assets/battle/enemy_v7.png', 8: 'assets/battle/enemy_v8.png', 9: 'assets/battle/enemy_v9.png',
-  10: 'assets/battle/enemy_v10.png',
+  1: 'assets/battle/enemy_q_v1.png', 2: 'assets/battle/enemy_q_v2.png', 3: 'assets/battle/enemy_q_v3.png',
+  4: 'assets/battle/enemy_q_v4.png', 5: 'assets/battle/enemy_q_v5.png', 6: 'assets/battle/enemy_q_v6.png',
+  7: 'assets/battle/enemy_q_v7.png', 8: 'assets/battle/enemy_q_v8.png', 9: 'assets/battle/enemy_q_v9.png',
+  10: 'assets/battle/enemy_q_v10.png',
 };
 const BOSS_SPRITES = {
-  1: 'assets/battle/boss_1.png', 2: 'assets/battle/boss_2.png', 3: 'assets/battle/boss_3.png',
-  4: 'assets/battle/boss_4.png', 5: 'assets/battle/boss_5.png',
+  1: 'assets/battle/boss_q_1.png', 2: 'assets/battle/boss_q_2.png', 3: 'assets/battle/boss_q_3.png',
+  4: 'assets/battle/boss_q_4.png', 5: 'assets/battle/boss_q_5.png',
 };
 
 function makeEnemy(node) {
@@ -875,13 +875,13 @@ function drawBattle() {
   ctx.stroke();
   ctx.restore();
 
-  // ---- 3. 精灵选择与尺寸 ----
+  // ---- 3. 精灵选择与尺寸（Q版SD小人，比写实立绘小约55%）----
   const heroImg = (battle.heroSprite && ready(battle.heroSprite)) ? battle.heroSprite
                 : (ready(art.hero) ? art.hero : null);
   const enemyImg = (battle.enemySprite && ready(battle.enemySprite)) ? battle.enemySprite
                   : (ready(art.enemy) ? art.enemy : null);
-  // 站姿精灵尺寸（比旧立绘小 ~40%，营造"战场小人"感）
-  const spW = 68, spH = 96;
+  // Q版站姿精灵尺寸（类似梦幻西游的"棋子"大小）
+  const spW = 52, spH = 72;
 
   // 地面站位坐标（我方左前、敌方右前，在椭圆范围内）
   const pBaseX = gCx - 110, pBaseY = gCy + 2;
@@ -914,22 +914,53 @@ function drawBattle() {
     }
   }
 
-  // ---- 4. 绘制双方精灵 ----
+  // ---- 4. 绘制双方精灵（Q版 + 光圈底座）----
   function drawBattleSprite(img, cx, cy, lungX, bobY, isHero) {
     const sx = cx + lungX;
     const sy = cy + bobY;
-    // 地面阴影（脚底椭圆）
+    // ★ 光圈底座（梦幻西游标志性元素：脚下圆形发光平台）
+    const pedR = spW * 0.48; // 底座半径
+    const pedY = cy + 3;     // 底座中心 Y（略低于脚底）
     ctx.save();
-    ctx.fillStyle = 'rgba(0,0,0,0.32)';
+    // 外层光晕
+    const pedGlow = ctx.createRadialGradient(sx, pedY, 0, sx, pedY, pedR * 1.4);
+    if (isHero) {
+      pedGlow.addColorStop(0, 'rgba(212,200,80,0.35)');
+      pedGlow.addColorStop(0.5, 'rgba(212,180,50,0.18)');
+      pedGlow.addColorStop(1, 'rgba(212,168,67,0)');
+    } else {
+      pedGlow.addColorStop(0, 'rgba(220,60,60,0.30)');
+      pedGlow.addColorStop(0.5, 'rgba(180,40,40,0.15)');
+      pedGlow.addColorStop(1, 'rgba(160,30,30,0)');
+    }
+    ctx.fillStyle = pedGlow;
     ctx.beginPath();
-    ctx.ellipse(sx, cy + 4, spW * 0.34, 7, 0, 0, Math.PI * 2);
+    ctx.ellipse(sx, pedY, pedR * 1.4, pedR * 0.42, 0, 0, Math.PI * 2);
     ctx.fill();
+    // 底座本体（椭圆环）
+    ctx.beginPath();
+    ctx.ellipse(sx, pedY, pedR, pedR * 0.32, 0, 0, Math.PI * 2);
+    const pedBody = ctx.createLinearGradient(sx - pedR, pedY, sx + pedR, pedY);
+    if (isHero) {
+      pedBody.addColorStop(0, 'rgba(255,230,120,0.55)');
+      pedBody.addColorStop(0.5, 'rgba(212,188,67,0.45)');
+      pedBody.addColorStop(1, 'rgba(180,155,40,0.35)');
+    } else {
+      pedBody.addColorStop(0, 'rgba(255,100,100,0.45)');
+      pedBody.addColorStop(0.5, 'rgba(200,55,55,0.38)');
+      pedBody.addColorStop(1, 'rgba(160,35,35,0.28)');
+    }
+    ctx.fillStyle = pedBody;
+    ctx.fill();
+    ctx.strokeStyle = isHero ? 'rgba(255,240,150,0.5)' : 'rgba(255,120,120,0.4)';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
     ctx.restore();
-    // 精灵本体
+    // 精灵本体（画在底座之上）
     if (img) {
       ctx.save();
-      ctx.shadowColor = 'rgba(0,0,0,0.30)';
-      ctx.shadowBlur = 12;
+      ctx.shadowColor = 'rgba(0,0,0,0.25)';
+      ctx.shadowBlur = 8;
       ctx.drawImage(img, sx - spW / 2, sy - spH, spW, spH);
       ctx.restore();
     } else {
