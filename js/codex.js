@@ -2,6 +2,7 @@
  * 加载顺序：index.html 在 js/daily.js 之后加载（EQUIP_DB/SKILLS_DB/RARITY/EQUIP_SLOTS 等已就绪）。
  * 功法收集直接读 player.learned（SKILLS_DB id 数组，已习得即收集）；
  * 装备收集读 player.equipCollected（EQUIP_DB id 去重集合，由各「获得装备」入口经 recordEquipCollected 写入）。
+ * 人物立绘展示：写实古风抠像 PNG（assets/battle/ 下 hero_m / enemy_v / boss_ 系列），纯展示无收集机制。
  * 里程碑：每收集满 10 个功法 / 10 个装备，奖励 1000 钻石（可连发多档）。
  */
 
@@ -90,6 +91,51 @@ function openCodex() {
       if (!eff && e.set && EQUIP_SETS[e.set]) eff = EQUIP_SETS[e.set].name + '套装';
       return codexCard(got, e.name, (rar ? rar.name : '') + '·' + slotName, eff, rar ? rar.color : '#888');
     }).join('') + '</div>';
+
+  // 人物立绘区（写实古风，纯展示）
+  const CHAR_GALLERY = [
+    // 主角
+    { id: 'hero_m1', name: '铁骨武者', desc: '健壮男性武者，赤膊劲装', cat: '主角' },
+    { id: 'hero_m2', name: '少年侠客', desc: '英俊剑客，蓝白轻甲', cat: '主角' },
+    { id: 'hero_m3', name: '道骨仙风', desc: '白发长须老道', cat: '主角' },
+    { id: 'hero_f1', name: '灵气萝莉', desc: '双丸子头少女', cat: '主角' },
+    { id: 'hero_f2', name: '绝代佳人', desc: '紫衣华服佳人', cat: '主角' },
+    { id: 'hero_f3', name: '温婉御姐', desc: '蓝白古裙成熟女性', cat: '主角' },
+    // 副本敌人（按卷）
+    { id: 'enemy_v1',  name: '山贼',     desc: '卷1·粗壮土匪', cat: '副本敌人' },
+    { id: 'enemy_v2',  name: '怨灵',     desc: '卷2·飘浮鬼魂', cat: '副本敌人' },
+    { id: 'enemy_v3',  name: '血祭僵尸', desc: '卷3·暗红骷髅', cat: '副本敌人' },
+    { id: 'enemy_v4',  name: '炎魔',     desc: '卷4·火焰恶魔', cat: '副本敌人' },
+    { id: 'enemy_v5',  name: '金甲卫士', desc: '卷5·金色铠甲守卫', cat: '副本敌人' },
+    { id: 'enemy_v6',  name: '海怪',     desc: '卷6·深海怪物', cat: '副本敌人' },
+    { id: 'enemy_v7',  name: '纸傀',     desc: '卷7·诡异纸人偶', cat: '副本敌人' },
+    { id: 'enemy_v8',  name: '魔将',     desc: '卷8·魔界将军', cat: '副本敌人' },
+    { id: 'enemy_v9',  name: '堕神',     desc: '卷9·堕落天使', cat: '副本敌人' },
+    { id: 'enemy_v10', name: '天兵',     desc: '卷10·天界士兵', cat: '副本敌人' },
+    // 世界BOSS
+    { id: 'boss_1', name: '幽冥魔尊', desc: '冥界之主', cat: '世界BOSS' },
+    { id: 'boss_2', name: '焚天炎帝', desc: '火焰之主', cat: '世界BOSS' },
+    { id: 'boss_3', name: '九幽冥皇', desc: '九幽地狱之皇', cat: '世界BOSS' },
+    { id: 'boss_4', name: '血河神祖', desc: '血海之祖', cat: '世界BOSS' },
+    { id: 'boss_5', name: '太虚帝尊', desc: '太虚之主', cat: '世界BOSS' },
+  ];
+  html += '<div style="margin:18px 0 6px;display:flex;align-items:center;justify-content:space-between">' +
+      '<div class="equip-sec-title" style="margin:0;color:#9B59B6">📜 人物立绘</div>' +
+      '<div style="font-size:12px;color:rgba(241,239,232,0.5)">' + CHAR_GALLERY.length + ' 张 · 写实古风抠像</div>' +
+    '</div>';
+  // 按分类分组显示
+  let curCat = '';
+  CHAR_GALLERY.forEach(ch => {
+    if (ch.cat !== curCat) {
+      curCat = ch.cat;
+      html += '<div style="font-size:11px;color:rgba(241,239,232,0.45);margin:10px 0 4px;text-transform:uppercase;letter-spacing:1px">' + esc(curCat) + '</div>';
+    }
+    html += '<div style="display:inline-block;border:1px solid rgba(155,89,182,0.35);background:rgba(255,255,255,0.03);border-radius:10px;padding:6px;width:100px;text-align:center;vertical-align:top;margin:4px 4px 4px 0">' +
+      '<img src="assets/battle/' + ch.id + '.png" alt="' + esc(ch.name) + '" style="width:88px;height:124px;object-fit:contain;border-radius:6px;margin-bottom:4px" onerror="this.style.display=\'none\'"/>' +
+      '<div style="font-weight:600;font-size:11.5px;color:#E8D5F0">' + esc(ch.name) + '</div>' +
+      '<div style="font-size:10px;color:rgba(241,239,232,0.5);margin-top:1px;line-height:1.25">' + esc(ch.desc) + '</div>' +
+      '</div>';
+  });
 
   html += '<button class="btn-full" onclick="returnToHub()" style="margin-top:16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>';
   openModal(html);
