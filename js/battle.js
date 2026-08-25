@@ -115,9 +115,9 @@ function startBattle(node, mode) {
   toast = '';
   hideBattleReturnBtn(); // 新战斗开始 → 清掉残留的返回按钮
   buildSkillBar();
-  // 提前锁定飘字坐标（不再依赖 drawBattle 首帧渲染才赋值 _x/_y）
-  battle.player._x = 150; battle.player._y = 200;
-  battle.enemy._x = 490; battle.enemy._y = 160;
+  // 提前锁定飘字坐标（锚定到新战斗画面精灵头顶附近）
+  battle.player._x = 210; battle.player._y = 244;
+  battle.enemy._x = 430; battle.enemy._y = 244;
   beginRound();
 }
 
@@ -292,6 +292,10 @@ function setButtons(on) {
 }
 
 function damage(attacker, target, mult, type) {
+  // 启动攻击冲刺动画（纯视觉，不阻塞战斗逻辑）
+  const isP = !attacker.isEnemy;
+  battle._anim = { phase: 'lunge', progress: 0, attacker: isP ? 'player' : 'enemy', target: isP ? 'enemy' : 'player', dist: 52 };
+
   // 命中判定：实际命中率 = 攻击方命中率 − 目标闪避率
   const attackerHR = attacker.hitRate || 0.80;
   const targetEva = target.eva || 0;
@@ -836,107 +840,180 @@ function drawAvatarGlow(x, y, r, color) {
   ctx.restore();
 }
 
+// ===== 梦幻西游风格战斗画面 =====
+// 核心范式：小型站姿精灵站在透视地面上，头顶悬浮血条，脚下名字标签
+// 与旧方案差异：不再是大头立绘+角落卡片，而是"角色在战场中"
+
 function drawBattle() {
-  // 背景
+  // ---- 1. 背景层（全幅）----
   if (ready(art.bg)) {
     ctx.drawImage(art.bg, 0, 0, W, H);
   } else {
-    // 默认战斗背景：上部天空、下部战场
     const grad = ctx.createLinearGradient(0, 0, 0, H);
-    grad.addColorStop(0, '#E8E2D4');
-    grad.addColorStop(0.65, '#E8E2D4');
-    grad.addColorStop(1, '#D8D2C4');
+    grad.addColorStop(0, '#C8D4E0');
+    grad.addColorStop(0.6, '#D8C8B8');
+    grad.addColorStop(1, '#BFB8A8');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, W, H);
-    // 地面/烟雾装饰
-    ctx.fillStyle = 'rgba(255,255,255,0.25)';
-    ctx.beginPath();
-    ctx.ellipse(W * 0.25, H - 40, 120, 24, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(W * 0.75, H - 36, 110, 22, 0, 0, Math.PI * 2);
-    ctx.fill();
   }
 
   const p = battle.player, e = battle.enemy;
-  // 人物全身立绘坐标（画面中央偏下，我方左、敌方右）
-  const pBX = 170, pBY = H - 70, eBX = 470, eBY = H - 90;
-  p._x = pBX; p._y = pBY;
-  e._x = eBX; e._y = eBY;
 
-  // 立绘选择：优先用本场写实古风立绘，缺失时回退到共享 art.hero / art.enemy
+  // ---- 2. 透视地面（椭圆战场平台）----
+  const gCx = W / 2, gCy = H * 0.70, gRx = 236, gRy = 44;
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(gCx, gCy, gRx, gRy, 0, 0, Math.PI * 2);
+  const gGrad = ctx.createRadialGradient(gCx, gCy - 12, 0, gCx, gCy, gRx);
+  gGrad.addColorStop(0, 'rgba(20,18,15,0.22)');
+  gGrad.addColorStop(0.7, 'rgba(20,18,15,0.14)');
+  gGrad.addColorStop(1, 'rgba(20,18,15,0.06)');
+  ctx.fillStyle = gGrad;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.restore();
+
+  // ---- 3. 精灵选择与尺寸 ----
   const heroImg = (battle.heroSprite && ready(battle.heroSprite)) ? battle.heroSprite
                 : (ready(art.hero) ? art.hero : null);
   const enemyImg = (battle.enemySprite && ready(battle.enemySprite)) ? battle.enemySprite
-                : (ready(art.enemy) ? art.enemy : null);
+                  : (ready(art.enemy) ? art.enemy : null);
+  // 站姿精灵尺寸（比旧立绘小 ~40%，营造"战场小人"感）
+  const spW = 68, spH = 96;
 
-  // 站立呼吸浮动（相位错开；只影响绘制位置，不写回 _x/_y，飘字锚点保持稳定）
-  const _bt = Date.now() / 650;
-  const pBob = Math.sin(_bt) * 3;
-  const eBob = Math.sin(_bt + 1.3) * 3;
+  // 地面站位坐标（我方左前、敌方右前，在椭圆范围内）
+  const pBaseX = gCx - 110, pBaseY = gCy + 2;
+  const eBaseX = gCx + 110, eBaseY = gCy + 2;
 
-  const psW = 110, psH = 154;
+  // 呼吸浮动（相位错开，幅度 2px）
+  const _bt = Date.now() / 580;
+  const pBob = Math.sin(_bt) * 2;
+  const eBob = Math.sin(_bt + 1.5) * 2;
 
-  // 地面阴影（椭圆，独立于立绘，营造落地感）
-  function drawGroundShadow(cx, baseY) {
+  // 攻击冲刺动画偏移
+  let pLungeX = 0, eLungeX = 0;
+  let hitFlash = 0; // 0=无 1=目标闪白
+  if (battle._anim) {
+    const a = battle._anim;
+    if (a.phase === 'lunge') {
+      a.progress = Math.min(1, a.progress + 0.12); // ~8帧完成冲刺
+      if (a.attacker === 'player') pLungeX = a.dist * easeOutQuad(a.progress);
+      else eLungeX = -a.dist * easeOutQuad(a.progress);
+      if (a.progress >= 1) { a.phase = 'hit'; a.frame = 0; }
+    } else if (a.phase === 'hit') {
+      a.frame = (a.frame || 0) + 1;
+      hitFlash = 1;
+      if (a.frame > 4) { a.phase = 'return'; a.progress = 0; }
+    } else if (a.phase === 'return') {
+      a.progress = Math.min(1, a.progress + 0.15); // ~7帧返回
+      if (a.attacker === 'player') pLungeX = a.dist * (1 - easeOutQuad(a.progress));
+      else eLungeX = -a.dist * (1 - easeOutQuad(a.progress));
+      if (a.progress >= 1) { battle._anim = null; }
+    }
+  }
+
+  // ---- 4. 绘制双方精灵 ----
+  function drawBattleSprite(img, cx, cy, lungX, bobY, isHero) {
+    const sx = cx + lungX;
+    const sy = cy + bobY;
+    // 地面阴影（脚底椭圆）
     ctx.save();
-    ctx.fillStyle = 'rgba(0,0,0,0.30)';
+    ctx.fillStyle = 'rgba(0,0,0,0.32)';
     ctx.beginPath();
-    ctx.ellipse(cx, baseY + 6, psW * 0.40, 9, 0, 0, Math.PI * 2);
+    ctx.ellipse(sx, cy + 4, spW * 0.34, 7, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
+    // 精灵本体
+    if (img) {
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.30)';
+      ctx.shadowBlur = 12;
+      ctx.drawImage(img, sx - spW / 2, sy - spH, spW, spH);
+      ctx.restore();
+    } else {
+      drawPlaceholder(sx - spW / 2, sy - spH, spW, spH, isHero ? '我方' : '敌方', '#B8B4AA');
+    }
+    return { x: sx, y: sy, top: sy - spH, bottom: sy };
   }
-  drawGroundShadow(pBX, pBY);
-  drawGroundShadow(eBX, eBY);
 
-  // ---- 全身立绘（放大 + 投影 + 呼吸浮动）----
-  if (heroImg) {
+  const heroPos = drawBattleSprite(heroImg, pBaseX, pBaseY, pLungeX, pBob, true);
+  const enemyPos = drawBattleSprite(enemyImg, eBaseX, eBaseY, eLungeX, eBob, false);
+
+  // 受击闪白
+  if (hitFlash) {
+    const target = battle._anim && battle._anim.target === 'enemy' ? enemyPos : heroPos;
     ctx.save();
-    ctx.shadowColor = 'rgba(0,0,0,0.35)';
-    ctx.shadowBlur = 16;
-    ctx.drawImage(heroImg, pBX - psW / 2, pBY + pBob - psH, psW, psH);
+    ctx.globalAlpha = 0.45;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(target.x - spW / 2, target.top, spW, spH);
     ctx.restore();
-  } else {
-    drawPlaceholder(pBX - psW / 2, pBY - psH, psW, psH, '我方立绘', '#D3D1C7');
   }
 
-  if (enemyImg) {
-    ctx.save();
-    ctx.shadowColor = 'rgba(0,0,0,0.35)';
-    ctx.shadowBlur = 16;
-    ctx.drawImage(enemyImg, eBX - psW / 2, eBY + eBob - psH, psW, psH);
-    ctx.restore();
-  } else {
-    drawPlaceholder(eBX - psW / 2, eBY - psH, psW, psH, '敌方立绘', '#D3D1C7');
+  // ---- 5. 头顶悬浮血条 ----
+  function drawOverheadBar(x, topY, actor, isPlayer) {
+    const barW = 58, barH = 5, barX = x - barW / 2, barY = topY - 10;
+    const ratio = Math.max(0, Math.min(1, actor.hp / actor.maxHp));
+    // 背景
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    drawRoundedRect(barX, barY, barW, barH, 2);
+    ctx.fill();
+    // 填充（红渐变；低血量变橙色警示）
+    if (ratio > 0) {
+      const c1 = ratio < 0.25 ? '#E8603B' : (isPlayer ? '#D94E4E' : '#E04545');
+      const c2 = ratio < 0.25 ? '#C03A18' : (isPlayer ? '#A33030' : '#B82828');
+      const fg = ctx.createLinearGradient(barX, barY, barX + barW, barY);
+      fg.addColorStop(0, c1);
+      fg.addColorStop(1, c2);
+      ctx.fillStyle = fg;
+      drawRoundedRect(barX, barY, barW * ratio, barH, 2);
+      ctx.fill();
+    }
+    // 边框
+    ctx.strokeStyle = 'rgba(255,255,255,0.20)';
+    ctx.lineWidth = 0.5;
+    drawRoundedRect(barX, barY, barW, barH, 2);
+    ctx.stroke();
   }
+  drawOverheadBar(heroPos.x, heroPos.top, p, true);
+  drawOverheadBar(enemyPos.x, enemyPos.top, e, false);
 
-  // ---- 横向信息卡片（方案B：头像在左，名字+境界+血蓝条在右）----
-  drawActorCard(10, H - 60, 230, 50, p, true);     // 我方：左下
-  drawActorCard(W - 240, 10, 230, 50, e, false);  // 敌方：右上
+  // ---- 6. 脚下名字标签 ----
+  function drawNameLabel(x, bottomY, name, isPlayer) {
+    ctx.font = 'bold 11px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    // 文字描边（保证在任何背景上可读）
+    ctx.strokeStyle = isPlayer ? 'rgba(0,0,0,0.65)' : 'rgba(0,0,0,0.70)';
+    ctx.lineWidth = 3;
+    ctx.strokeText(name, x, bottomY + 4);
+    ctx.fillStyle = isPlayer ? '#7BF44E' : '#FF7B7B';
+    ctx.fillText(name, x, bottomY + 4);
+  }
+  drawNameLabel(heroPos.x, heroPos.bottom, p.name, true);
+  drawNameLabel(enemyPos.x, enemyPos.bottom, e.name, false);
 
-  // VS 标识
-  ctx.fillStyle = 'rgba(212,168,67,0.18)';
-  ctx.font = 'bold 28px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('VS', W / 2, H / 2 - 40);
+  // ---- 7. 顶部精简信息卡（名字+境界+详细血蓝条）----
+  drawActorCard(6, 5, 200, 44, p, true);
+  drawActorCard(W - 206, 5, 200, 44, e, false);
 
-  // 飘字
+  // ---- 8. 飘字 ----
   floats.forEach(f => {
     ctx.globalAlpha = Math.max(0, f.ttl / 60);
     ctx.fillStyle = f.color;
-    ctx.font = 'bold 16px sans-serif';
+    ctx.font = 'bold 15px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.shadowColor = 'rgba(0,0,0,0.55)';
     ctx.shadowBlur = 4;
-    ctx.fillText(f.text, f.x, f.y - (60 - f.ttl) * 0.5);
+    ctx.fillText(f.text, f.x, f.y - (60 - f.ttl) * 0.55);
     ctx.shadowBlur = 0;
     ctx.globalAlpha = 1;
   });
   floats = floats.filter(f => --f.ttl > 0);
 
-  // 底部行动信息栏
+  // ---- 9. 底部行动信息栏 ----
   const itemCount = (p.items || []).reduce((s, x) => s + x.qty, 0);
   const infoText = battle.msg + '　(丹药:' + itemCount + ')';
   ctx.font = '13px sans-serif';
@@ -947,7 +1024,7 @@ function drawBattle() {
   const bh = 26;
   const bx = (W - bw) / 2;
   drawRoundedRect(bx, by, bw, bh, bh / 2);
-  ctx.fillStyle = 'rgba(26,26,30,0.82)';
+  ctx.fillStyle = 'rgba(26,26,30,0.84)';
   ctx.fill();
   ctx.strokeStyle = 'rgba(255,255,255,0.12)';
   ctx.lineWidth = 1;
@@ -958,6 +1035,9 @@ function drawBattle() {
   ctx.textBaseline = 'middle';
   ctx.fillText(infoText, W / 2, by + bh / 2);
 }
+
+// 缓动函数：二次方缓出（冲刺/返回用）
+function easeOutQuad(t) { return t * (2 - t); }
 
 function drawOverlay(text) {
   ctx.fillStyle = 'rgba(44,44,42,0.55)';
