@@ -31,6 +31,24 @@ function hideBattleReturnBtn() {
   _battleReturnBtn = null;
 }
 
+// ===== 立绘映射（方案A：写实古风全身立绘，存放于 assets/battle/）=====
+// 主角按 avatarId 区分；副本敌人按所属「卷」(volume 1~10) 区分；世界BOSS 按 slot idx 区分。
+// 这些立绘仅用于战斗画面，不覆盖 art.hero / art.enemy（后者是主页/创建界面的共享立绘）。
+const HERO_SPRITES = {
+  m1: 'assets/battle/hero_m1.png', m2: 'assets/battle/hero_m2.png', m3: 'assets/battle/hero_m3.png',
+  f1: 'assets/battle/hero_f1.png', f2: 'assets/battle/hero_f2.png', f3: 'assets/battle/hero_f3.png',
+};
+const ENEMY_SPRITES = {
+  1: 'assets/battle/enemy_v1.png', 2: 'assets/battle/enemy_v2.png', 3: 'assets/battle/enemy_v3.png',
+  4: 'assets/battle/enemy_v4.png', 5: 'assets/battle/enemy_v5.png', 6: 'assets/battle/enemy_v6.png',
+  7: 'assets/battle/enemy_v7.png', 8: 'assets/battle/enemy_v8.png', 9: 'assets/battle/enemy_v9.png',
+  10: 'assets/battle/enemy_v10.png',
+};
+const BOSS_SPRITES = {
+  1: 'assets/battle/boss_1.png', 2: 'assets/battle/boss_2.png', 3: 'assets/battle/boss_3.png',
+  4: 'assets/battle/boss_4.png', 5: 'assets/battle/boss_5.png',
+};
+
 function makeEnemy(node) {
   const e = node.enemy;
   return {
@@ -80,6 +98,19 @@ function startBattle(node, mode) {
     _stackCrit: 0, _reviveUsed: false,
     msg: (isWB ? '世界BOSS · ' : '遭遇 ') + enemy.name + '！',
   };
+  // 立绘（方案A）：按 avatarId / 卷 / BOSS 动态加载写实古风立绘，挂到 battle 上（不污染 art.hero / art.enemy）
+  battle.heroSprite = loadImg(HERO_SPRITES[player.avatarId] || HERO_SPRITES.m1);
+  let _enemySrc;
+  if (isWB) {
+    const _slot = WB_SLOTS.find(s => s.idx === node._wb) || WB_SLOTS[0];
+    _enemySrc = BOSS_SPRITES[_slot.idx] || BOSS_SPRITES[1];
+  } else if (node && node._story && node._story.ch && typeof STORY_BY_CH !== 'undefined') {
+    const _vol = (STORY_BY_CH[node._story.ch] || {}).volume || 1;
+    _enemySrc = ENEMY_SPRITES[_vol] || ENEMY_SPRITES[1];
+  } else {
+    _enemySrc = ENEMY_SPRITES[1];
+  }
+  battle.enemySprite = loadImg(_enemySrc);
   state = 'battle';
   toast = '';
   hideBattleReturnBtn(); // 新战斗开始 → 清掉残留的返回按钮
@@ -750,7 +781,9 @@ function drawActorCard(x, y, w, h, actor, isPlayer) {
   // 头像 40x40（圆形裁剪）
   const avatarSize = 40;
   const ax = x + 6, ay = y + 5;
-  const img = isPlayer ? art.hero : art.enemy;
+  const img = isPlayer
+    ? ((battle && battle.heroSprite && ready(battle.heroSprite)) ? battle.heroSprite : art.hero)
+    : ((battle && battle.enemySprite && ready(battle.enemySprite)) ? battle.enemySprite : art.enemy);
   ctx.save();
   ctx.beginPath();
   ctx.arc(ax + avatarSize / 2, ay + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
@@ -827,24 +860,55 @@ function drawBattle() {
 
   const p = battle.player, e = battle.enemy;
   // 人物全身立绘坐标（画面中央偏下，我方左、敌方右）
-  p._x = 170; p._y = H - 70;
-  e._x = 470; e._y = H - 90;
+  const pBX = 170, pBY = H - 70, eBX = 470, eBY = H - 90;
+  p._x = pBX; p._y = pBY;
+  e._x = eBX; e._y = eBY;
 
-  // ---- 全身立绘（放大 + 投影）----
+  // 立绘选择：优先用本场写实古风立绘，缺失时回退到共享 art.hero / art.enemy
+  const heroImg = (battle.heroSprite && ready(battle.heroSprite)) ? battle.heroSprite
+                : (ready(art.hero) ? art.hero : null);
+  const enemyImg = (battle.enemySprite && ready(battle.enemySprite)) ? battle.enemySprite
+                : (ready(art.enemy) ? art.enemy : null);
+
+  // 站立呼吸浮动（相位错开；只影响绘制位置，不写回 _x/_y，飘字锚点保持稳定）
+  const _bt = Date.now() / 650;
+  const pBob = Math.sin(_bt) * 3;
+  const eBob = Math.sin(_bt + 1.3) * 3;
+
   const psW = 110, psH = 154;
-  ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.35)';
-  ctx.shadowBlur = 16;
-  if (ready(art.hero)) ctx.drawImage(art.hero, p._x - psW / 2, p._y - psH, psW, psH);
-  else drawPlaceholder(p._x - psW / 2, p._y - psH, psW, psH, '我方立绘', '#D3D1C7');
-  ctx.restore();
 
-  ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.35)';
-  ctx.shadowBlur = 16;
-  if (ready(art.enemy)) ctx.drawImage(art.enemy, e._x - psW / 2, e._y - psH, psW, psH);
-  else drawPlaceholder(e._x - psW / 2, e._y - psH, psW, psH, '敌方立绘', '#D3D1C7');
-  ctx.restore();
+  // 地面阴影（椭圆，独立于立绘，营造落地感）
+  function drawGroundShadow(cx, baseY) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.30)';
+    ctx.beginPath();
+    ctx.ellipse(cx, baseY + 6, psW * 0.40, 9, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+  drawGroundShadow(pBX, pBY);
+  drawGroundShadow(eBX, eBY);
+
+  // ---- 全身立绘（放大 + 投影 + 呼吸浮动）----
+  if (heroImg) {
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.35)';
+    ctx.shadowBlur = 16;
+    ctx.drawImage(heroImg, pBX - psW / 2, pBY + pBob - psH, psW, psH);
+    ctx.restore();
+  } else {
+    drawPlaceholder(pBX - psW / 2, pBY - psH, psW, psH, '我方立绘', '#D3D1C7');
+  }
+
+  if (enemyImg) {
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.35)';
+    ctx.shadowBlur = 16;
+    ctx.drawImage(enemyImg, eBX - psW / 2, eBY + eBob - psH, psW, psH);
+    ctx.restore();
+  } else {
+    drawPlaceholder(eBX - psW / 2, eBY - psH, psW, psH, '敌方立绘', '#D3D1C7');
+  }
 
   // ---- 横向信息卡片（方案B：头像在左，名字+境界+血蓝条在右）----
   drawActorCard(10, H - 60, 230, 50, p, true);     // 我方：左下
