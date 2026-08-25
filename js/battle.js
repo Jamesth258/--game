@@ -31,11 +31,11 @@ function hideBattleReturnBtn() {
   _battleReturnBtn = null;
 }
 
-// ===== 立绘映射（写实古风抠像 + 光圈底座）=====
-// 主角按 avatarId 区分；副本敌人按所属「卷」(volume 1~10) 区分；世界BOSS 按 slot idx 区分。
-// 写实风立绘已通过 PIL 抠像转为 RGBA 透明 PNG，战斗中只显示人物本体。
+// ===== 立绘映射（写实古风，图鉴与战斗共用同一批透明立绘）=====
+// 21 张写实古风立绘（hero_m*/hero_f*/enemy_v*/boss_*）已通过 PIL 抠像为 RGBA 透明 PNG，存放于 assets/battle/。
+//   图鉴(codex)直接展示原图；战斗画面复用同一批透明图——人物本体浮在战斗背景上，背景透出来。
+// 主键按 avatarId 区分；副本敌人按所属「卷」(volume 1~10) 区分；世界BOSS 按 slot idx 区分。
 // 这些立绘仅用于战斗画面，不覆盖 art.hero / art.enemy（主页/创建界面的共享立绘）。
-// Q版版本（hero_q_/enemy_q_/boss_q_）保留在 assets/battle/ 备用，当前未启用。
 const HERO_SPRITES = {
   m1: 'assets/battle/hero_m1.png', m2: 'assets/battle/hero_m2.png', m3: 'assets/battle/hero_m3.png',
   f1: 'assets/battle/hero_f1.png', f2: 'assets/battle/hero_f2.png', f3: 'assets/battle/hero_f3.png',
@@ -963,7 +963,11 @@ function drawBattle() {
       ctx.save();
       ctx.shadowColor = 'rgba(0,0,0,0.25)';
       ctx.shadowBlur = 8;
-      ctx.drawImage(img, sx - spW / 2, sy - spH, spW, spH);
+      // 等比 cover 裁剪：无论原图比例（3:4 / 2:3 等）都不变形，超出部分裁掉（透明边无害）
+      const iw = img.width, ih = img.height;
+      const sc = Math.max(spW / iw, spH / ih);
+      const dw = iw * sc, dh = ih * sc;
+      ctx.drawImage(img, sx - dw / 2, sy - dh, dw, dh);
       ctx.restore();
     } else {
       drawPlaceholder(sx - spW / 2, sy - spH, spW, spH, isHero ? '我方' : '敌方', '#B8B4AA');

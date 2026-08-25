@@ -2,7 +2,7 @@
  * 加载顺序：index.html 在 js/daily.js 之后加载（EQUIP_DB/SKILLS_DB/RARITY/EQUIP_SLOTS 等已就绪）。
  * 功法收集直接读 player.learned（SKILLS_DB id 数组，已习得即收集）；
  * 装备收集读 player.equipCollected（EQUIP_DB id 去重集合，由各「获得装备」入口经 recordEquipCollected 写入）。
- * 人物立绘展示：写实古风抠像 PNG（assets/battle/ 下 hero_m / enemy_v / boss_ 系列），纯展示无收集机制。
+ * 人物立绘展示：写实古风 RGBA 透明立绘（assets/battle/ 下 hero_m / enemy_v / boss_ 系列），纯展示无收集机制；与战斗画面共用同一批透明图。
  * 里程碑：每收集满 10 个功法 / 10 个装备，奖励 1000 钻石（可连发多档）。
  */
 
@@ -121,7 +121,7 @@ function openCodex() {
   ];
   html += '<div style="margin:18px 0 6px;display:flex;align-items:center;justify-content:space-between">' +
       '<div class="equip-sec-title" style="margin:0;color:#9B59B6">📜 人物立绘</div>' +
-      '<div style="font-size:12px;color:rgba(241,239,232,0.5)">' + CHAR_GALLERY.length + ' 张 · 写实古风抠像</div>' +
+      '<div style="font-size:12px;color:rgba(241,239,232,0.5)">' + CHAR_GALLERY.length + ' 张 · 写实古风原图</div>' +
     '</div>';
   // 按分类分组显示
   let curCat = '';
