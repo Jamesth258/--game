@@ -246,6 +246,7 @@
   }
   .hub-top-btn:hover { background: rgba(24,143,165,0.15); border-color: rgba(24,143,165,0.35); color: #fff; transform: translateY(-1px); }
   .hub-top-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .hub-top-btn .hub-ico { width: 20px; height: 20px; flex-shrink: 0; border-radius: 50%; object-fit: contain; }
   .hub-top-btn span { font-size: 9px; white-space: nowrap; line-height: 1.1; }
   .hub-top-btn .hub-badge { position:absolute;top:-2px;right:-2px;min-width:14px;height:14px;background:#E87B7B;color:#fff;font-size:9px;font-weight:700;border-radius:7px;display:flex;align-items:center;justify-content:center;padding:0 3px; }
 
@@ -293,6 +294,7 @@
   .hub-bottom-btn:hover { background: rgba(212,168,67,0.12); border-color: rgba(212,168,67,0.35); color: #fff; transform: translateY(-2px); }
   .hub-bottom-btn:active { transform: translateY(0); }
   .hub-bottom-btn svg { width: 26px; height: 26px; flex-shrink: 0; }
+  .hub-bottom-btn .hub-ico { width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%; object-fit: contain; }
   .hub-bottom-btn span { font-size: 11px; font-weight: 600; white-space: nowrap; line-height: 1.1; }
 
   /* 主页弹窗复用 modal 样式 */
