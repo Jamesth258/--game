@@ -238,16 +238,16 @@
     flex-shrink: 0;
   }
   .hub-top-btn {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 1px; padding: 5px 6px; min-width: 42px;
-    background: rgba(255,255,255,0.05); border: 0.5px solid rgba(255,255,255,0.08);
-    border-radius: 8px; cursor: pointer; transition: all 0.15s; color: rgba(241,239,232,0.75);
-    flex-shrink: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+    gap: 0; padding: 0; min-width: 42px;
+    background: transparent; border: none;
+    border-radius: 0; cursor: pointer; transition: all 0.15s; color: rgba(241,239,232,0.8);
+    flex-shrink: 0; position: relative;
   }
-  .hub-top-btn:hover { background: rgba(24,143,165,0.15); border-color: rgba(24,143,165,0.35); color: #fff; transform: translateY(-1px); }
+  .hub-top-btn:hover { color: #fff; transform: translateY(-1px); }
   .hub-top-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
-  .hub-top-btn .hub-ico { width: 20px; height: 20px; flex-shrink: 0; border-radius: 50%; object-fit: contain; }
-  .hub-top-btn span { font-size: 9px; white-space: nowrap; line-height: 1.1; }
+  .hub-top-btn .hub-ico { width: 46px; height: 46px; flex-shrink: 0; object-fit: contain; }
+  .hub-top-btn span { font-size: 10px; white-space: nowrap; line-height: 1.1; margin-top: -6px; text-shadow: 0 1px 3px rgba(0,0,0,0.85); z-index: 2; }
   .hub-top-btn .hub-badge { position:absolute;top:-2px;right:-2px;min-width:14px;height:14px;background:#E87B7B;color:#fff;font-size:9px;font-weight:700;border-radius:7px;display:flex;align-items:center;justify-content:center;padding:0 3px; }
 
   /* ── 中央人物立绘区（占满剩余空间） ── */
@@ -286,16 +286,17 @@
     gap: 4px;
   }
   .hub-bottom-btn {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 3px; padding: 8px 4px; flex: 1; max-width: 80px;
-    background: rgba(255,255,255,0.05); border: 0.5px solid rgba(255,255,255,0.1);
-    border-radius: 10px; cursor: pointer; transition: all 0.15s; color: rgba(241,239,232,0.85);
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+    gap: 0; padding: 0; flex: 1; max-width: 80px;
+    background: transparent; border: none;
+    border-radius: 0; cursor: pointer; transition: all 0.15s; color: rgba(241,239,232,0.85);
+    position: relative;
   }
-  .hub-bottom-btn:hover { background: rgba(212,168,67,0.12); border-color: rgba(212,168,67,0.35); color: #fff; transform: translateY(-2px); }
+  .hub-bottom-btn:hover { color: #fff; transform: translateY(-2px); }
   .hub-bottom-btn:active { transform: translateY(0); }
   .hub-bottom-btn svg { width: 26px; height: 26px; flex-shrink: 0; }
-  .hub-bottom-btn .hub-ico { width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%; object-fit: contain; }
-  .hub-bottom-btn span { font-size: 11px; font-weight: 600; white-space: nowrap; line-height: 1.1; }
+  .hub-bottom-btn .hub-ico { width: 56px; height: 56px; flex-shrink: 0; object-fit: contain; }
+  .hub-bottom-btn span { font-size: 12px; font-weight: 600; white-space: nowrap; line-height: 1.1; margin-top: -8px; text-shadow: 0 1px 4px rgba(0,0,0,0.9); z-index: 2; }
 
   /* 主页弹窗复用 modal 样式 */
   .hub-modal-title { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
