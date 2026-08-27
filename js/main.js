@@ -68,19 +68,91 @@ function checkSavedCharacter() {
   return false;
 }
 
-// 初始化：有存档直接进游戏，否则显示创建界面
-if (!checkSavedCharacter()) {
-  state = 'create'; // 新状态阻止 canvas 渲染游戏
-  createScreen.removeAttribute('hidden');
-  // Canvas 渲染一个暗色占位
-  function renderCreateBg() {
-    if (createScreen.hidden) return;
-    ctx.fillStyle = '#111';
-    ctx.fillRect(0, 0, W, H);
-    requestAnimationFrame(renderCreateBg);
+// 真实资源清单（驱动登录进度条）。onerror 也计数，缺失文件不会卡死进度。
+const LOADING_ASSETS = [
+  'assets/cover.png?v=10',
+  // 战斗立绘
+  'assets/battle/hero_m1.png','assets/battle/hero_m2.png','assets/battle/hero_m3.png',
+  'assets/battle/hero_f1.png','assets/battle/hero_f2.png','assets/battle/hero_f3.png',
+  'assets/battle/enemy_v1.png','assets/battle/enemy_v2.png','assets/battle/enemy_v3.png',
+  'assets/battle/enemy_v4.png','assets/battle/enemy_v5.png','assets/battle/enemy_v6.png',
+  'assets/battle/enemy_v7.png','assets/battle/enemy_v8.png','assets/battle/enemy_v9.png',
+  'assets/battle/enemy_v10.png','assets/battle/boss_1.png','assets/battle/boss_2.png',
+  'assets/battle/boss_3.png','assets/battle/boss_4.png','assets/battle/boss_5.png',
+  // 战斗背景
+  'assets/bg/bg_story_01_village_dawn.png','assets/bg/bg_story_02_forbidden_ruins.png',
+  'assets/bg/bg_story_03_blood_altar.png','assets/bg/bg_story_04_volcano.png',
+  'assets/bg/bg_story_05_nirvana_realm.png','assets/bg/bg_story_06_sea_battle.png',
+  'assets/bg/bg_story_07_illusion.png','assets/bg/bg_story_08_chaos_war.png',
+  'assets/bg/bg_story_09_godfall.png','assets/bg/bg_story_10_celestial_gate.png',
+  'assets/bg/bg_boss_01_ghostrealm.png','assets/bg/bg_boss_02_magma.png',
+  'assets/bg/bg_boss_03_abyss.png','assets/bg/bg_boss_04_bloodriver.png',
+  'assets/bg/bg_boss_05_void.png',
+  // 功能栏图标
+  'assets/icons/icon_attr.png','assets/icons/icon_equip.png','assets/icons/icon_bag.png',
+  'assets/icons/icon_skill.png','assets/icons/icon_story.png','assets/icons/icon_daily.png',
+  'assets/icons/icon_shop.png','assets/icons/icon_codex.png','assets/icons/icon_worldboss.png',
+  'assets/icons/icon_rank.png','assets/icons/icon_settings.png'
+];
+
+function startGame() {
+  // 初始化：有存档直接进游戏，否则显示创建界面
+  if (!checkSavedCharacter()) {
+    state = 'create'; // 新状态阻止 canvas 渲染游戏
+    createScreen.removeAttribute('hidden');
+    // Canvas 渲染一个暗色占位
+    function renderCreateBg() {
+      if (createScreen.hidden) return;
+      ctx.fillStyle = '#111';
+      ctx.fillRect(0, 0, W, H);
+      requestAnimationFrame(renderCreateBg);
+    }
+    renderCreateBg();
   }
-  renderCreateBg();
+  setButtons(false); // 地图阶段禁用战斗指令
+  render();
+  if (typeof initDaily === 'function') initDaily(); // 启动每日奖励的在线时长累计定时器
 }
-setButtons(false); // 地图阶段禁用战斗指令
-render();
-if (typeof initDaily === 'function') initDaily(); // 启动每日奖励的在线时长累计定时器
+
+// 登录等待画面：真实预加载资源驱动进度条，到 100% 后淡出进入游戏
+function bootGame() {
+  const overlay = document.getElementById('loading-screen');
+  const fill = document.getElementById('loading-fill');
+  const pct = document.getElementById('loading-pct');
+  const total = LOADING_ASSETS.length;
+  let loaded = 0;
+  const startT = Date.now();
+  const MIN_SHOW = 1100; // 最短展示时长，避免秒进
+
+  function update() {
+    const p = Math.min(100, Math.floor(loaded / total * 100));
+    if (fill) fill.style.width = p + '%';
+    if (pct) pct.textContent = p + '%';
+    if (loaded >= total) finish();
+  }
+  function finish() {
+    if (fill) fill.style.width = '100%';
+    if (pct) pct.textContent = '100%';
+    const wait = Math.max(0, MIN_SHOW - (Date.now() - startT));
+    setTimeout(() => {
+      if (overlay) overlay.classList.add('fade-out');
+      setTimeout(() => {
+        if (overlay) overlay.hidden = true;
+        startGame();
+      }, 620);
+    }, wait);
+  }
+  // 点击跳过（老玩家秒进）
+  if (overlay) {
+    overlay.addEventListener('click', () => { if (loaded < total) { loaded = total; update(); } });
+  }
+  LOADING_ASSETS.forEach(src => {
+    const img = new Image();
+    img.onload = img.onerror = () => { loaded++; update(); };
+    img.src = src;
+  });
+  // 兜底：若 6s 内仍有资源未回调（极端网络），强制结束
+  setTimeout(() => { if (loaded < total) { loaded = total; update(); } }, 6000);
+}
+
+bootGame();
