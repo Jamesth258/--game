@@ -119,40 +119,83 @@ function bootGame() {
   const overlay = document.getElementById('loading-screen');
   const fill = document.getElementById('loading-fill');
   const pct = document.getElementById('loading-pct');
+
+  // 防御：DOM 元素缺失时直接进游戏
+  if (!overlay || !fill || !pct) {
+    console.warn('[bootGame] loading-screen DOM missing, skipping to game');
+    startGame();
+    return;
+  }
+
   const total = LOADING_ASSETS.length;
   let loaded = 0;
   const startT = Date.now();
   const MIN_SHOW = 1100; // 最短展示时长，避免秒进
 
+  console.log(`[bootGame] Starting preload of ${total} assets...`);
+
   function update() {
     const p = Math.min(100, Math.floor(loaded / total * 100));
-    if (fill) fill.style.width = p + '%';
-    if (pct) pct.textContent = p + '%';
+    fill.style.width = p + '%';
+    pct.textContent = p + '%';
+    console.log(`[bootGame] Progress: ${loaded}/${total} = ${p}%`);
     if (loaded >= total) finish();
   }
   function finish() {
-    if (fill) fill.style.width = '100%';
-    if (pct) pct.textContent = '100%';
+    fill.style.width = '100%';
+    pct.textContent = '100%';
+    console.log('[bootGame] All assets loaded, finishing...');
     const wait = Math.max(0, MIN_SHOW - (Date.now() - startT));
     setTimeout(() => {
-      if (overlay) overlay.classList.add('fade-out');
+      overlay.classList.add('fade-out');
       setTimeout(() => {
-        if (overlay) overlay.hidden = true;
+        overlay.hidden = true;
         startGame();
       }, 620);
     }, wait);
   }
   // 点击跳过（老玩家秒进）
-  if (overlay) {
-    overlay.addEventListener('click', () => { if (loaded < total) { loaded = total; update(); } });
-  }
-  LOADING_ASSETS.forEach(src => {
+  overlay.addEventListener('click', () => { if (loaded < total) { loaded = total; update(); } });
+
+  // 逐个预加载
+  LOADING_ASSETS.forEach((src, i) => {
     const img = new Image();
-    img.onload = img.onerror = () => { loaded++; update(); };
+    img.onload = () => {
+      loaded++;
+      console.log(`[bootGame] ✓ [${i+1}/${total}] ${src.split('/').pop()}`);
+      update();
+    };
+    img.onerror = () => {
+      loaded++;
+      console.warn("[bootGame] ✗ [" + (i+1) + "/" + total + "] " + src + " (404/failed)");
+      update();
+    };
     img.src = src;
   });
+
   // 兜底：若 6s 内仍有资源未回调（极端网络），强制结束
-  setTimeout(() => { if (loaded < total) { loaded = total; update(); } }, 6000);
+  setTimeout(() => {
+    if (loaded < total) {
+      console.warn('[bootGame] Timeout! Only ' + loaded + '/' + total + ' loaded, forcing finish');
+      loaded = total;
+      update();
+    }
+  }, 6000);
+
+  // 保底：若 2s 后进度仍为 0%（可能全部 onerror 静默失败），强制推进
+  setTimeout(() => {
+    if (loaded === 0) {
+      console.error('[bootGame] Zero progress after 2s! Forcing simulation');
+      // 模拟进度到 100%
+      let sim = 0;
+      const simInterval = setInterval(() => {
+        sim += Math.ceil(total / 15);
+        if (sim >= total) { sim = total; clearInterval(simInterval); }
+        loaded = sim;
+        update();
+      }, 80);
+    }
+  }, 2000);
 }
 
 bootGame();
