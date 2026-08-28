@@ -114,6 +114,7 @@ function startBattle(node, mode) {
   }
   battle.enemySprite = loadImg(_enemySrc);
   state = 'battle';
+  document.body.classList.add('battle-mode');
   toast = '';
   hideBattleReturnBtn(); // 新战斗开始 → 清掉残留的返回按钮
   buildSkillBar();
@@ -575,6 +576,7 @@ function checkEnd() {
 }
 
 function endBattle(win) {
+  document.body.classList.remove('battle-mode');
   awaitingInput = false;
   setButtons(false);
   if (win) {

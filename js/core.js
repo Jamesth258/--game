@@ -44,6 +44,7 @@ _modal.addEventListener('click', e => { if (e.target === _modal) closeModal(); }
 // 解决世界BOSS「开打前 HUB.hide()，结算后只 closeModal 不恢复主页」导致的卡死
 function returnToHub() {
   closeModal();
+  document.body.classList.remove('battle-mode');
   if (typeof battle !== 'undefined' && battle) battle = null; // 世界BOSS 从战斗弹窗返回时 battle 仍指向旧场
   state = 'hub';
   if (window.HUB) { window.HUB.refresh(); window.HUB.show(); }

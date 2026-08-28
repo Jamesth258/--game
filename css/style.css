@@ -5,8 +5,66 @@
     margin: 0; padding: 24px;
     font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
     background: #F1EFE8; color: var(--ink);
+    transition: padding .25s, background .25s;
   }
-  .wrap { max-width: 680px; margin: 0 auto; }
+  /* 战斗模式：画布铺满整个可视区域，去掉米色边距 */
+  body.battle-mode {
+    padding: 0;
+    background: #0a0a0c;
+  }
+  body.battle-mode .wrap {
+    max-width: none;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  body.battle-mode h1,
+  body.battle-mode .sub { display: none; }          /* 标题/副标题战斗中隐藏 */
+  body.battle-mode .stage {
+    width: 100vw;
+    max-height: 100vh;
+    aspect-ratio: auto;
+    border: none;
+    border-radius: 0;
+    background: #000;
+  }
+  /* 战斗指令栏在底部紧贴画布 */
+  body.battle-mode .bar.battle-cmd-bar {
+    position: fixed;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    width: min(92vw, 800px);
+    margin-top: 0;
+    padding: 6px 14px;
+    background: rgba(18,18,22,0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+  }
+  body.battle-mode .bar.battle-cmd-bar .battle-cmd {
+    background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
+    border-color: rgba(255,255,255,0.15);
+    color: #F1EFE8;
+    box-shadow: none;
+  }
+  body.battle-mode .bar.battle-cmd-bar .battle-cmd:hover:not(:disabled) {
+    border-color: rgba(240,199,90,0.6);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(240,199,90,0.15);
+  }
+  body.battle-mode .bar.battle-cmd-bar .battle-cmd:disabled {
+    opacity: 0.3;
+  }
+  body.battle-mode .bar.battle-cmd-bar .cmd-cost {
+    color: #f0c75a;
+  }
+  .wrap { max-width: 680px; margin: 0 auto; transition: max-width .25s; }
   h1 { font-size: 18px; font-weight: 500; margin: 0 0 4px; }
   .sub { font-size: 13px; color: var(--mut); margin: 0 0 16px; }
   .stage {
