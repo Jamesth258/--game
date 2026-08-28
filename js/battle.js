@@ -1087,10 +1087,29 @@ function drawOverlay(text) {
   ctx.fillText(text, W / 2, H / 2);
 }
 
+// 高分屏/大屏清晰化：逻辑坐标恒为 640×360（所有绘制代码不用改），
+// 只把 canvas 的像素缓冲按「实际 CSS 宽度 × DPR」放大，再用 setTransform 等比映射回去。
+// 战斗画布放大到 1180px 后，若缓冲仍是 640×360，文字会被拉伸发虚。
+function syncCanvasResolution() {
+  if (!canvas || typeof canvas.width !== 'number' || typeof ctx.setTransform !== 'function') return 1;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const rect = typeof canvas.getBoundingClientRect === 'function' ? canvas.getBoundingClientRect() : null;
+  const cssW = (rect && rect.width) || W;
+  const wantW = Math.max(W, Math.round(cssW * dpr));
+  const wantH = Math.round(wantW * H / W);
+  if (Math.abs(canvas.width - wantW) > 1 || Math.abs(canvas.height - wantH) > 1) {
+    canvas.width = wantW;
+    canvas.height = wantH;
+  }
+  return canvas.width / W;
+}
+
 let _lastRenderState;
 function render() {
   // 主页/创建界面是 DOM 层，不需要画布持续重绘；跳过 60fps 空转，把算力让给视频解码
   if (state === 'hub' || state === 'create') { requestAnimationFrame(render); return; }
+  const _s = syncCanvasResolution();
+  ctx.setTransform(_s, 0, 0, _s, 0, 0);
   ctx.clearRect(0, 0, W, H);
   if (state === 'create') {
     ctx.fillStyle = '#111'; ctx.fillRect(0, 0, W, H);

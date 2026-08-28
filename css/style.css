@@ -7,39 +7,40 @@
     background: #F1EFE8; color: var(--ink);
     transition: padding .25s, background .25s;
   }
-  /* 战斗模式：画布铺满整个可视区域，去掉米色边距 */
+  /* 战斗模式：画布放大到「大银幕」观感，但不铺满整个网页。
+     宽度 = min(视口宽, 1180px, 74vh×16/9)，严格 16:9 不变形，
+     四周保留深色边距，指令栏紧跟画布下方。
+     —— 曾一度做成 100vw×100vh 全屏，用户反馈「太大」，故回退为封顶尺寸。 */
   body.battle-mode {
-    padding: 0;
-    background: #0a0a0c;
+    padding: 14px;
+    background: #0d0d10;
   }
   body.battle-mode .wrap {
-    max-width: none;
-    width: 100vw;
+    max-width: min(100%, 1180px, calc(74vh * 16 / 9));
+    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
+    min-height: calc(100vh - 28px);
   }
   body.battle-mode h1,
   body.battle-mode .sub { display: none; }          /* 标题/副标题战斗中隐藏 */
   body.battle-mode .stage {
-    width: 100vw;
-    max-height: 100vh;
-    aspect-ratio: auto;
-    border: none;
-    border-radius: 0;
+    width: 100%;
+    aspect-ratio: 16 / 9;      /* canvas 内部 640×360 也是 16:9，等比放大不变形 */
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
     background: #000;
+    box-shadow: 0 14px 50px rgba(0,0,0,0.65);
   }
-  /* 战斗指令栏在底部紧贴画布 */
+  /* 战斗指令栏紧跟画布下方，与画布同宽 */
   body.battle-mode .bar.battle-cmd-bar {
-    position: fixed;
-    bottom: 12px;
-    left: 50%;
-    transform: translateX(-50%);
+    position: static;
+    transform: none;
     z-index: 10;
-    width: min(92vw, 800px);
-    margin-top: 0;
+    width: 100%;
+    margin-top: 12px;
     padding: 6px 14px;
     background: rgba(18,18,22,0.85);
     backdrop-filter: blur(10px);
