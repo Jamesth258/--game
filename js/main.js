@@ -95,32 +95,59 @@ const LOADING_ASSETS = [
   'assets/icons/icon_rank.png','assets/icons/icon_settings.png'
 ];
 
-function startGame() {
-  // 初始化：有存档直接进游戏，否则显示创建界面
-  if (!checkSavedCharacter()) {
+// ===== 初始化拆成两步 =====
+// 首屏真正的耗时点是「读档解析 + 属性重算」和「首帧渲染」。
+// 登录加载画面必须让这两步在遮罩仍然可见时执行 —— 否则玩家看到的
+// 就是"遮罩撤掉之后"的裸奔卡顿，进度条形同虚设。
+let _bootHasSave = false;
+
+// 第一步：读档 + 属性重算（首屏最耗时的一步）
+function initSave() {
+  _bootHasSave = checkSavedCharacter();
+}
+
+// 第二步：界面挂载 + 首帧渲染
+function initWorld() {
+  if (!_bootHasSave) {
     state = 'create'; // 新状态阻止 canvas 渲染游戏
     createScreen.removeAttribute('hidden');
     // Canvas 渲染一个暗色占位
-    function renderCreateBg() {
+    (function renderCreateBg() {
       if (createScreen.hidden) return;
       ctx.fillStyle = '#111';
       ctx.fillRect(0, 0, W, H);
       requestAnimationFrame(renderCreateBg);
-    }
-    renderCreateBg();
+    })();
   }
   setButtons(false); // 地图阶段禁用战斗指令
   render();
+}
+
+// 同步入口：无加载画面 / DOM 缺失时走完整初始化（保持向后兼容）
+function startGame() {
+  initSave();
+  initWorld();
   if (typeof initDaily === 'function') initDaily(); // 启动每日奖励的在线时长累计定时器
 }
 
-// 登录等待画面：真实预加载资源驱动进度条，到 100% 后淡出进入游戏
+// ===== 登录等待画面：三段式加载 =====
+// 阶段配额：美术资源 0→70%、读档 70→88%、世界初始化 88→100%。
+// 每段都有最短展示时长，保证缓存命中时也有稳定节奏（合计约 5s）；
+// 但绝不在真实工作完成前提前报 100% —— 进度条必须是可信的。
+const BOOT_PHASE = {
+  assets: { from: 0,  to: 70,  minMs: 3000, tip: '正在加载美术资源' },
+  save:   { from: 70, to: 88,  minMs: 600,  tip: '正在读取角色存档' },
+  world:  { from: 88, to: 100, minMs: 600,  tip: '正在初始化世界'   },
+};
+
 function bootGame() {
   const overlay = document.getElementById('loading-screen');
-  const fill = document.getElementById('loading-fill');
-  const pct = document.getElementById('loading-pct');
+  const fill    = document.getElementById('loading-fill');
+  const pct     = document.getElementById('loading-pct');
+  const tipEl   = document.getElementById('loading-tip');
+  const hintEl  = document.getElementById('loading-hint');
 
-  // 防御：DOM 元素缺失时直接进游戏
+  // 防御：DOM 元素缺失时直接进游戏（旧版 HTML / 测试桩）
   if (!overlay || !fill || !pct) {
     console.warn('[bootGame] loading-screen DOM missing, skipping to game');
     startGame();
@@ -129,73 +156,152 @@ function bootGame() {
 
   const total = LOADING_ASSETS.length;
   let loaded = 0;
-  const startT = Date.now();
-  const MIN_SHOW = 1100; // 最短展示时长，避免秒进
+  let skipped = false;   // 点击只加速"等待节奏"，不会跳过真实工作
+  let shown = 0;
 
-  console.log(`[bootGame] Starting preload of ${total} assets...`);
-
-  function update() {
-    const p = Math.min(100, Math.floor(loaded / total * 100));
-    fill.style.width = p + '%';
-    pct.textContent = p + '%';
-    console.log(`[bootGame] Progress: ${loaded}/${total} = ${p}%`);
-    if (loaded >= total) finish();
+  function paint(p) {
+    if (!(p > shown)) p = shown;   // 进度只增不减，顺带挡住 NaN
+    shown = Math.min(100, p);
+    fill.style.width = shown.toFixed(1) + '%';
+    pct.textContent = Math.floor(shown) + '%';
   }
-  function finish() {
-    fill.style.width = '100%';
-    pct.textContent = '100%';
-    console.log('[bootGame] All assets loaded, finishing...');
-    const wait = Math.max(0, MIN_SHOW - (Date.now() - startT));
-    setTimeout(() => {
-      overlay.classList.add('fade-out');
-      setTimeout(() => {
-        overlay.hidden = true;
-        startGame();
-      }, 620);
-    }, wait);
-  }
-  // 点击跳过（老玩家秒进）
-  overlay.addEventListener('click', () => { if (loaded < total) { loaded = total; update(); } });
+  function setTip(t) { if (tipEl) tipEl.textContent = t; }
+  function setBusy(on) { fill.classList.toggle('busy', !!on); }
 
-  // 逐个预加载
-  LOADING_ASSETS.forEach((src, i) => {
-    const img = new Image();
-    img.onload = () => {
-      loaded++;
-      console.log(`[bootGame] ✓ [${i+1}/${total}] ${src.split('/').pop()}`);
-      update();
-    };
-    img.onerror = () => {
-      loaded++;
-      console.warn("[bootGame] ✗ [" + (i+1) + "/" + total + "] " + src + " (404/failed)");
-      update();
-    };
-    img.src = src;
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const phaseMs = k => (skipped ? 0 : BOOT_PHASE[k].minMs);
+
+  // 等一帧。rAF 在后台标签页会被节流甚至暂停，必须配定时器兜底，
+  // 否则玩家切走标签页再切回来，加载画面会永久卡住不进游戏。
+  function raf() {
+    return new Promise(resolve => {
+      let fired = false, fallback = 0;
+      const fire = () => {
+        if (fired) return;
+        fired = true;
+        clearTimeout(fallback);   // 清掉兜底定时器，避免上百次循环后堆积
+        resolve();
+      };
+      requestAnimationFrame(fire);
+      fallback = setTimeout(fire, 60);
+    });
+  }
+
+  // 阶段1：美术资源预加载。
+  // 取「真实加载比例」与「时间保底节奏」的较小者：
+  // 既不会没加载完就假装 100%，也不会因缓存命中而一闪而过。
+  // 进度按墙钟时间计算，因此帧率高低只影响顺滑度，不影响阶段总时长。
+  async function phaseAssets() {
+    const t0 = Date.now();
+    const p = BOOT_PHASE.assets;
+
+    // 逐个预加载美术资源（这才是加载画面存在的意义：进游戏前把图都拉进缓存）
+    LOADING_ASSETS.forEach(src => {
+      const img = new Image();
+      img.onload  = () => { loaded++; };
+      img.onerror = () => { loaded++; console.warn('[bootGame] 资源失败: ' + src); };
+      img.src = src;
+    });
+
+    // 硬兜底：极端网络下 6s 仍未回调则强制放行
+    const hard = setTimeout(() => { if (loaded < total) loaded = total; }, 6000);
+
+    for (;;) {
+      const el    = Date.now() - t0;
+      const ms    = phaseMs('assets');
+      const real  = total ? loaded / total : 1;
+      const paced = ms > 0 ? Math.min(1, el / ms) : 1;
+      // 超出保底窗口后若真实加载仍卡住，1.5s 内缓慢补齐，避免进度条假死
+      const creep = ms > 0 ? Math.max(0, Math.min(1, (el - ms) / 1500)) : Math.min(1, el / 800);
+      const eff   = paced < 1 ? Math.min(real, paced) : Math.max(real, creep);
+
+      paint(p.from + eff * (p.to - p.from));
+      if (eff >= 1) { paint(p.to); break; }
+      await raf();
+    }
+    clearTimeout(hard);
+  }
+
+  async function animate(from, to, ms) {
+    const t0 = Date.now();
+    for (;;) {
+      const r = ms <= 0 ? 1 : Math.min(1, (Date.now() - t0) / ms);
+      paint(from + (to - from) * r);
+      if (r >= 1) { paint(to); return; }
+      await raf();
+    }
+  }
+
+  // 阶段2/3：真实的初始化工作（同步阻塞）。
+  // 这正是原先"遮罩撤掉后裸奔卡顿"的元凶，现在全程盖在封面下进行。
+  async function phaseWork(key, work) {
+    const p = BOOT_PHASE[key];
+    setTip(p.tip + '…');
+    await raf(); await raf();   // 双帧：确保阶段文案已上屏，再进入阻塞工作
+    setBusy(true);
+
+    const t0 = Date.now();
+    try { work(); } catch (e) { console.error('[bootGame] phase "' + key + '" failed:', e); }
+    setBusy(false);
+
+    // 补足最短展示时长，并把进度条平滑推到该阶段终点
+    await animate(p.from, p.to, Math.max(phaseMs(key) - (Date.now() - t0), 260));
+  }
+
+  // 100% 之后：等玩家点击或短暂停留，再淡出
+  function waitClick(el) {
+    return new Promise(resolve => {
+      const h = () => { el.removeEventListener('click', h); resolve(); };
+      el.addEventListener('click', h);
+    });
+  }
+
+  let bootDone = false;
+  function enterGameNow() {
+    if (bootDone) return;
+    bootDone = true;
+    try { initSave(); initWorld(); } catch (e) { console.error('[bootGame] forced init failed:', e); }
+    overlay.hidden = true;
+    if (typeof initDaily === 'function') initDaily();
+  }
+
+  async function run() {
+    setTip(BOOT_PHASE.assets.tip + '…');
+    await phaseAssets();
+
+    await phaseWork('save', initSave);    // 解析存档 + 属性重算
+    await phaseWork('world', initWorld);  // 界面挂载 + 首帧渲染
+
+    // 真实工作已全部完成，此时才允许报 100% 并淡出
+    paint(100);
+    setTip('即将进入江湖');
+    if (hintEl) hintEl.hidden = false;
+
+    await Promise.race([sleep(420), waitClick(overlay)]);
+
+    overlay.classList.add('fade-out');
+    await sleep(620);
+    bootDone = true;
+    overlay.hidden = true;
+
+    // 每日计时器：等真正进入游戏后再启动，加载期间不跑
+    if (typeof initDaily === 'function') initDaily();
+  }
+
+  // 总看门狗：任何环节卡死（含 rAF 被节流）也能保证进得去游戏
+  setTimeout(() => {
+    if (!bootDone) {
+      console.warn('[bootGame] Watchdog fired after 12s — forcing entry');
+      enterGameNow();
+    }
+  }, 12000);
+
+  // 点击：进度过半后可跳过等待节奏（真实工作不会跳过，否则又会看到卡顿）
+  overlay.addEventListener('click', () => {
+    if (!skipped && shown >= 50) skipped = true;
   });
 
-  // 兜底：若 6s 内仍有资源未回调（极端网络），强制结束
-  setTimeout(() => {
-    if (loaded < total) {
-      console.warn('[bootGame] Timeout! Only ' + loaded + '/' + total + ' loaded, forcing finish');
-      loaded = total;
-      update();
-    }
-  }, 6000);
-
-  // 保底：若 2s 后进度仍为 0%（可能全部 onerror 静默失败），强制推进
-  setTimeout(() => {
-    if (loaded === 0) {
-      console.error('[bootGame] Zero progress after 2s! Forcing simulation');
-      // 模拟进度到 100%
-      let sim = 0;
-      const simInterval = setInterval(() => {
-        sim += Math.ceil(total / 15);
-        if (sim >= total) { sim = total; clearInterval(simInterval); }
-        loaded = sim;
-        update();
-      }, 80);
-    }
-  }, 2000);
+  run();
 }
 
 bootGame();
