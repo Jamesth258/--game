@@ -322,4 +322,18 @@ function bootGame() {
   run();
 }
 
+// 主页打坐视频预加载（铁律：bootGame 在 initSave 前就消费 LOADING_ASSETS，
+// 而 avatarId 要等 initSave 读档才有，故此处先 peek localStorage 把当前角色 med 资源推入清单，
+// 让登录进度条真实等待该大图/视频下载，避免进主页后空白卡顿）
+(function peekHubMed() {
+  try {
+    const _s = JSON.parse(localStorage.getItem('wuxia_save'));
+    const _aid = _s && _s.avatarId;
+    if (_aid && /^(m[1-3]|f[1-3])$/.test(_aid)) {
+      LOADING_ASSETS.push('assets/select/' + _aid + '_med_h.mp4?v=22');
+      LOADING_ASSETS.push('assets/select/' + _aid + '_med_h.png?v=22');
+    }
+  } catch (e) {}
+})();
+
 bootGame();
