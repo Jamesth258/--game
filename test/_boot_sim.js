@@ -83,7 +83,7 @@ function runScenario(name, assetLatencyMs, expectMin, expectMax, opts) {
         setAttribute(k, v) { this._attrs[k] = v; if (k === 'hidden') this.hidden = true; },
         removeAttribute(k) { delete this._attrs[k]; if (k === 'hidden') this.hidden = false; },
         getAttribute(k) { return this._attrs[k]; },
-        addEventListener() {}, removeEventListener() {}, appendChild() {},
+        addEventListener() {}, removeEventListener() {}, appendChild() {}, remove() {},
         querySelectorAll() { return []; }, querySelector() { return null; },
         load() {}, play() { return Promise.resolve(); },
         getContext() { return ctxStub; },
@@ -114,7 +114,19 @@ function runScenario(name, assetLatencyMs, expectMin, expectMax, opts) {
       },
       document: {
         getElementById: (id) => elements[id] || (elements[id] = makeEl(id)),
-        createElement: (tag) => makeEl(tag),
+        createElement: (tag) => {
+          const el = makeEl(tag);
+          if (tag === 'video') {
+            // 视频桩：设 src 后按 assetLatencyMs 延迟触发 onloadeddata（模拟首帧就绪）
+            let _vsrc = '';
+            Object.defineProperty(el, 'src', {
+              configurable: true,
+              get() { return _vsrc; },
+              set(v) { _vsrc = v; imgSrcSet.add(v); setTimeout(() => { if (typeof el.onloadeddata === 'function') el.onloadeddata(); }, assetLatencyMs); },
+            });
+          }
+          return el;
+        },
         querySelector: () => null,
         querySelectorAll: () => [],
         addEventListener() {}, removeEventListener() {},
@@ -252,7 +264,14 @@ let INFL = 1;   // 由校准得出（Node 定时器相对浏览器 rAF 的膨胀
   const jc = judge(c);
   printScenario(c, jc);
 
-  const allFails = [...ja.fails, ...jb.fails, ...jc.fails];
+  // 场景 D：大资源慢网（每资源 4000ms 才回调，模拟 8MB 主页立绘在慢网下真实下载慢）。
+  // 关键验证：真实加载(≈4000ms)慢于保底节奏(3000ms)时，进度条必须等真实加载完成，
+  // 不能靠 3s 保底就跳 100%（这正是修复 creep 假完成的靶子）。期望总时长 > 保底的 5.2s。
+  const d = await runScenario('D 大资源慢网 4000ms', 4000, 5500, 12000);
+  const jd = judge(d);
+  printScenario(d, jd);
+
+  const allFails = [...ja.fails, ...jb.fails, ...jc.fails, ...jd.fails];
   console.log('\n===== 汇总 =====');
   if (allFails.length === 0) {
     console.log('全部通过：进度条 100% 收尾，且真实初始化全程在遮罩下完成。');

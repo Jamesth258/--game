@@ -93,6 +93,12 @@ const LOADING_ASSETS = [
   'assets/icons/icon_skill.png','assets/icons/icon_story.png','assets/icons/icon_daily.png',
   'assets/icons/icon_shop.png','assets/icons/icon_codex.png','assets/icons/icon_worldboss.png',
   'assets/icons/icon_rank.png','assets/icons/icon_settings.png'
+  // 主页角色立绘（首屏中央大图，每张 1~1.5MB，必须预加载，否则进主页后长时间空白才浮现）
+  ,'assets/select/m1_warrior.png?v=11','assets/select/m2_young.png?v=11'
+  ,'assets/select/m3_daoist.png?v=11','assets/select/f1_loli.png?v=11'
+  ,'assets/select/f2_hot.png?v=11','assets/select/f3_mature.png?v=11'
+  // 主角动态视频（m2 角色主页用视频，预加载避免进主页后缓冲卡顿）
+  ,'assets/char/char_m2.mp4?v=11'
 ];
 
 // ===== 初始化拆成两步 =====
@@ -195,31 +201,45 @@ function bootGame() {
     const t0 = Date.now();
     const p = BOOT_PHASE.assets;
 
-    // 逐个预加载美术资源（这才是加载画面存在的意义：进游戏前把图都拉进缓存）
+    // 逐个预加载美术资源（这才是加载画面存在的意义：进游戏前把主页/战斗所需图都拉进缓存）。
+    // 图片用 Image；视频（主页 m2 动态视频）用隐藏的 <video preload=auto>，监听 loadeddata 计数。
     LOADING_ASSETS.forEach(src => {
-      const img = new Image();
-      img.onload  = () => { loaded++; };
-      img.onerror = () => { loaded++; console.warn('[bootGame] 资源失败: ' + src); };
-      img.src = src;
+      const isVideo = /\.(mp4|webm|ogg)(\?|$)/i.test(src);
+      if (isVideo) {
+        const v = document.createElement('video');
+        v.preload = 'auto'; v.muted = true; v.playsInline = true;
+        v.style.position = 'absolute'; v.style.opacity = '0'; v.style.pointerEvents = 'none';
+        v.onloadeddata = v.onerror = () => { loaded++; };
+        (document.body || document.documentElement).appendChild(v);
+        v.src = src;
+        // 首帧就绪后移出 DOM（HTTP 缓存已建，主页 video 标签设同 src 会命中缓存）
+        v.addEventListener('loadeddata', () => setTimeout(() => v.remove(), 0), { once: true });
+      } else {
+        const img = new Image();
+        img.onload  = () => { loaded++; };
+        img.onerror = () => { loaded++; console.warn('[bootGame] 资源失败: ' + src); };
+        img.src = src;
+      }
     });
 
-    // 硬兜底：极端网络下 6s 仍未回调则强制放行
-    const hard = setTimeout(() => { if (loaded < total) loaded = total; }, 6000);
+    // 总超时兜底：极端慢网/资源永久挂起时，最多等 11s 也要放行（与 run() 看门狗 12s 协调）。
+    // 注意：不再用「6s 强制 loaded=total」的激进放行 —— 那会让真实没下完的资源被假报 100%，
+    // 进度条失去意义、卡顿暴露。改为只按真实加载比例推进，超时才放行。
+    const HARD_TIMEOUT = 11000;
 
     for (;;) {
       const el    = Date.now() - t0;
       const ms    = phaseMs('assets');
-      const real  = total ? loaded / total : 1;
-      const paced = ms > 0 ? Math.min(1, el / ms) : 1;
-      // 超出保底窗口后若真实加载仍卡住，1.5s 内缓慢补齐，避免进度条假死
-      const creep = ms > 0 ? Math.max(0, Math.min(1, (el - ms) / 1500)) : Math.min(1, el / 800);
-      const eff   = paced < 1 ? Math.min(real, paced) : Math.max(real, creep);
+      const real  = total ? loaded / total : 1;       // 真实加载完成比例
+      const paced = ms > 0 ? Math.min(1, el / ms) : 1; // 时间保底节奏（缓存命中时撑住 3s）
+      // 关键：取较小者 —— 真实资源没加载完就绝不提前报 100%，进度条可信，真正盖住卡顿
+      const eff   = Math.min(real, paced);
 
       paint(p.from + eff * (p.to - p.from));
       if (eff >= 1) { paint(p.to); break; }
+      if (el >= HARD_TIMEOUT) { paint(p.to); break; }   // 超时强制放行（已最大限度盖住下载）
       await raf();
     }
-    clearTimeout(hard);
   }
 
   async function animate(from, to, ms) {
