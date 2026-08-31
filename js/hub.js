@@ -60,18 +60,7 @@ function initHub() {
   const avatarEl = document.getElementById('hub-avatar');
   const nameEl = document.getElementById('hub-name');
   const powerEl = document.getElementById('hub-power-num');
-  const charVideo = document.getElementById('hub-char-video');
   const charStatic = document.getElementById('hub-char-static');
-
-  // 视频加载失败 → 回退静态立绘（只绑一次）
-  if (!charVideo._errBound) {
-    charVideo.addEventListener('error', () => {
-      charVideo.setAttribute('hidden', '');
-      charStatic.removeAttribute('hidden');
-      charStatic.src = art.hero.src || '';
-    });
-    charVideo._errBound = true;
-  }
 
   // 渲染顶部图标按钮
   topIconContainer.innerHTML = HUB_TOP_ITEMS.map(item =>
@@ -173,26 +162,9 @@ function initHub() {
     powerEl.textContent = formatNum(calcCombatPower(player));
     avatarEl.src = 'assets/select/avatar_head.png?v=1';
     syncRealmDOM();
-    // 角色展示：优先用该角色的视频，没有则用静态立绘
-    const _all = CHARACTERS.male.concat(CHARACTERS.female);
-    const _cur = _all.find(c => c.id === player.avatarId);
-    const videoSrc = _cur && _cur.video ? _cur.video : '';
-    if (videoSrc) {
-      charStatic.setAttribute('hidden', '');
-      charVideo.removeAttribute('hidden');
-      // 仅在 src 变化时才重新 load+play，避免每次 refreshHub 都 play() 导致视频被 seek 回开头而“闪一下”
-      if (charVideo.getAttribute('src') !== videoSrc) {
-        charVideo.setAttribute('src', videoSrc);
-        charVideo.load();
-        charVideo.play().catch(() => {});
-      } else if (charVideo.paused) {
-        charVideo.play().catch(() => {});
-      }
-    } else {
-      charVideo.setAttribute('hidden', '');
-      charStatic.removeAttribute('hidden');
-      charStatic.src = art.hero.src || '';
-    }
+    // 角色展示：统一使用静态立绘（m2 主页视频已废弃，立绘以 select/*.png 为准）
+    charStatic.removeAttribute('hidden');
+    charStatic.src = art.hero.src || '';
   }
 
   // 挂机：在线停留即自动累加修为（主页/地图/战斗画面）

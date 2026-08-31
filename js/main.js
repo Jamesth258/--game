@@ -97,8 +97,6 @@ const LOADING_ASSETS = [
   ,'assets/select/m1_warrior.png?v=11','assets/select/m2_young.png?v=11'
   ,'assets/select/m3_daoist.png?v=11','assets/select/f1_loli.png?v=11'
   ,'assets/select/f2_hot.png?v=11','assets/select/f3_mature.png?v=11'
-  // 主角动态视频（m2 角色主页用视频，预加载避免进主页后缓冲卡顿）
-  ,'assets/char/char_m2.mp4?v=11'
 ];
 
 // ===== 初始化拆成两步 =====
@@ -202,7 +200,7 @@ function bootGame() {
     const p = BOOT_PHASE.assets;
 
     // 逐个预加载美术资源（这才是加载画面存在的意义：进游戏前把主页/战斗所需图都拉进缓存）。
-    // 图片用 Image；视频（主页 m2 动态视频）用隐藏的 <video preload=auto>，监听 loadeddata 计数。
+    // 图片用 Image；若将来某角色带视频立绘，按后缀用隐藏 <video preload=auto> 监听 loadeddata 计数。
     LOADING_ASSETS.forEach(src => {
       const isVideo = /\.(mp4|webm|ogg)(\?|$)/i.test(src);
       if (isVideo) {

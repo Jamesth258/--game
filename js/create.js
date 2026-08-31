@@ -6,7 +6,7 @@
 const CHARACTERS = {
   male: [
     { id: 'm1', name: '铁骨武者',   img: 'assets/select/m1_warrior.png?v=11', desc: '强壮刚毅，体修入道' },
-    { id: 'm2', name: '少年侠客',   img: 'assets/select/m2_young.png?v=11',  desc: '年轻俊朗，天赋异禀', video: 'assets/char/char_m2.mp4?v=11' },
+    { id: 'm2', name: '少年侠客',   img: 'assets/select/m2_young.png?v=11',  desc: '年轻俊朗，天赋异禀' },
     { id: 'm3', name: '道骨仙风',   img: 'assets/select/m3_daoist.png?v=11', desc: '中年大叔，道法深厚' },
   ],
   female: [
