@@ -5,14 +5,14 @@
 // ===== 角色创建系统 =====
 const CHARACTERS = {
   male: [
-    { id: 'm1', name: '铁骨武者',   img: 'assets/select/m1_warrior.png?v=11', desc: '强壮刚毅，体修入道' },
-    { id: 'm2', name: '少年侠客',   img: 'assets/select/m2_young.png?v=11',  desc: '年轻俊朗，天赋异禀' },
-    { id: 'm3', name: '道骨仙风',   img: 'assets/select/m3_daoist.png?v=11', desc: '中年大叔，道法深厚' },
+    { id: 'm1', name: '铁骨武者',   img: 'assets/select/m1_warrior.png?v=12', desc: '强壮刚毅，体修入道' },
+    { id: 'm2', name: '少年侠客',   img: 'assets/select/m2_young.png?v=12',  desc: '年轻俊朗，天赋异禀' },
+    { id: 'm3', name: '道骨仙风',   img: 'assets/select/m3_daoist.png?v=12', desc: '中年大叔，道法深厚' },
   ],
   female: [
-    { id: 'f1', name: '灵气萝莉',   img: 'assets/select/f1_loli.png?v=11',   desc: '可爱灵动，根骨奇佳' },
-    { id: 'f2', name: '绝代佳人',   img: 'assets/select/f2_hot.png?v=11',    desc: '性感热辣，魅惑众生' },
-    { id: 'f3', name: '温婉御姐',   img: 'assets/select/f3_mature.png?v=11', desc: '成熟丰满，气质出众' },
+    { id: 'f1', name: '灵气萝莉',   img: 'assets/select/f1_loli.png?v=12',   desc: '可爱灵动，根骨奇佳' },
+    { id: 'f2', name: '绝代佳人',   img: 'assets/select/f2_hot.png?v=12',    desc: '性感热辣，魅惑众生' },
+    { id: 'f3', name: '温婉御姐',   img: 'assets/select/f3_mature.png?v=12', desc: '成熟丰满，气质出众' },
   ],
 };
 

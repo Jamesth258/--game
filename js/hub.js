@@ -164,8 +164,8 @@ function initHub() {
     syncRealmDOM();
     // 角色展示：B+C 融合 —— 当前所选角色「打坐修炼」横版动画（视频，失败自动回退静图 poster）
     const _aid = player.avatarId || 'm2';
-    const _vid = 'assets/select/' + _aid + '_med_h.mp4?v=22';
-    const _png = 'assets/select/' + _aid + '_med_h.png?v=22';
+    const _vid = 'assets/select/' + _aid + '_med_h.mp4?v=23';
+    const _png = 'assets/select/' + _aid + '_med_h.png?v=23';
     if (charVideo.dataset.src !== _vid) {
       charVideo.dataset.src = _vid;
       charVideo.poster = _png;

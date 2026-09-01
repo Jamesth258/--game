@@ -37,18 +37,18 @@ function hideBattleReturnBtn() {
 // 主键按 avatarId 区分；副本敌人按所属「卷」(volume 1~10) 区分；世界BOSS 按 slot idx 区分。
 // 这些立绘仅用于战斗画面，不覆盖 art.hero / art.enemy（主页/创建界面的共享立绘）。
 const HERO_SPRITES = {
-  m1: 'assets/battle/hero_m1.png', m2: 'assets/battle/hero_m2.png', m3: 'assets/battle/hero_m3.png',
-  f1: 'assets/battle/hero_f1.png', f2: 'assets/battle/hero_f2.png', f3: 'assets/battle/hero_f3.png',
+  m1: 'assets/battle/hero_m1.png?v=1', m2: 'assets/battle/hero_m2.png?v=1', m3: 'assets/battle/hero_m3.png?v=1',
+  f1: 'assets/battle/hero_f1.png?v=1', f2: 'assets/battle/hero_f2.png?v=1', f3: 'assets/battle/hero_f3.png?v=1',
 };
 const ENEMY_SPRITES = {
-  1: 'assets/battle/enemy_v1.png', 2: 'assets/battle/enemy_v2.png', 3: 'assets/battle/enemy_v3.png',
-  4: 'assets/battle/enemy_v4.png', 5: 'assets/battle/enemy_v5.png', 6: 'assets/battle/enemy_v6.png',
-  7: 'assets/battle/enemy_v7.png', 8: 'assets/battle/enemy_v8.png', 9: 'assets/battle/enemy_v9.png',
-  10: 'assets/battle/enemy_v10.png',
+  1: 'assets/battle/enemy_v1.png?v=1', 2: 'assets/battle/enemy_v2.png?v=1', 3: 'assets/battle/enemy_v3.png?v=1',
+  4: 'assets/battle/enemy_v4.png?v=1', 5: 'assets/battle/enemy_v5.png?v=1', 6: 'assets/battle/enemy_v6.png?v=1',
+  7: 'assets/battle/enemy_v7.png?v=1', 8: 'assets/battle/enemy_v8.png?v=1', 9: 'assets/battle/enemy_v9.png?v=1',
+  10: 'assets/battle/enemy_v10.png?v=1',
 };
 const BOSS_SPRITES = {
-  1: 'assets/battle/boss_1.png', 2: 'assets/battle/boss_2.png', 3: 'assets/battle/boss_3.png',
-  4: 'assets/battle/boss_4.png', 5: 'assets/battle/boss_5.png',
+  1: 'assets/battle/boss_1.png?v=1', 2: 'assets/battle/boss_2.png?v=1', 3: 'assets/battle/boss_3.png?v=1',
+  4: 'assets/battle/boss_4.png?v=1', 5: 'assets/battle/boss_5.png?v=1',
 };
 
 function makeEnemy(node) {

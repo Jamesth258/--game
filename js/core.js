@@ -25,7 +25,7 @@ function ready(img) { return img.complete && !img.failed && img.naturalWidth > 0
 
 // 切换战斗背景：剧情/世界BOSS 按场景名加载 assets/bg/<name>.png
 function loadBattleBg(name) {
-  const src = name ? 'assets/bg/' + name + '.png' : 'assets/bg_battle.png';
+  const src = name ? 'assets/bg/' + name + '.png?v=1' : 'assets/bg_battle.png';
   // 若已有同名缓存且加载成功则复用，否则新建 Image（必须新建，否则旧图 still ready 会残留）
   if (art.bg && art.bg._bgName === name && ready(art.bg)) return;
   art.bg = loadImg(src);

@@ -70,33 +70,33 @@ function checkSavedCharacter() {
 
 // 真实资源清单（驱动登录进度条）。onerror 也计数，缺失文件不会卡死进度。
 const LOADING_ASSETS = [
-  'assets/cover.png?v=10',
+  'assets/cover.png?v=21',
   // 战斗立绘
-  'assets/battle/hero_m1.png','assets/battle/hero_m2.png','assets/battle/hero_m3.png',
-  'assets/battle/hero_f1.png','assets/battle/hero_f2.png','assets/battle/hero_f3.png',
-  'assets/battle/enemy_v1.png','assets/battle/enemy_v2.png','assets/battle/enemy_v3.png',
-  'assets/battle/enemy_v4.png','assets/battle/enemy_v5.png','assets/battle/enemy_v6.png',
-  'assets/battle/enemy_v7.png','assets/battle/enemy_v8.png','assets/battle/enemy_v9.png',
-  'assets/battle/enemy_v10.png','assets/battle/boss_1.png','assets/battle/boss_2.png',
-  'assets/battle/boss_3.png','assets/battle/boss_4.png','assets/battle/boss_5.png',
+  'assets/battle/hero_m1.png?v=1','assets/battle/hero_m2.png?v=1','assets/battle/hero_m3.png?v=1',
+  'assets/battle/hero_f1.png?v=1','assets/battle/hero_f2.png?v=1','assets/battle/hero_f3.png?v=1',
+  'assets/battle/enemy_v1.png?v=1','assets/battle/enemy_v2.png?v=1','assets/battle/enemy_v3.png?v=1',
+  'assets/battle/enemy_v4.png?v=1','assets/battle/enemy_v5.png?v=1','assets/battle/enemy_v6.png?v=1',
+  'assets/battle/enemy_v7.png?v=1','assets/battle/enemy_v8.png?v=1','assets/battle/enemy_v9.png?v=1',
+  'assets/battle/enemy_v10.png?v=1','assets/battle/boss_1.png?v=1','assets/battle/boss_2.png?v=1',
+  'assets/battle/boss_3.png?v=1','assets/battle/boss_4.png?v=1','assets/battle/boss_5.png?v=1',
   // 战斗背景
-  'assets/bg/bg_story_01_village_dawn.png','assets/bg/bg_story_02_forbidden_ruins.png',
-  'assets/bg/bg_story_03_blood_altar.png','assets/bg/bg_story_04_volcano.png',
-  'assets/bg/bg_story_05_nirvana_realm.png','assets/bg/bg_story_06_sea_battle.png',
-  'assets/bg/bg_story_07_illusion.png','assets/bg/bg_story_08_chaos_war.png',
-  'assets/bg/bg_story_09_godfall.png','assets/bg/bg_story_10_celestial_gate.png',
-  'assets/bg/bg_boss_01_ghostrealm.png','assets/bg/bg_boss_02_magma.png',
-  'assets/bg/bg_boss_03_abyss.png','assets/bg/bg_boss_04_bloodriver.png',
-  'assets/bg/bg_boss_05_void.png',
+  'assets/bg/bg_story_01_village_dawn.png?v=1','assets/bg/bg_story_02_forbidden_ruins.png?v=1',
+  'assets/bg/bg_story_03_blood_altar.png?v=1','assets/bg/bg_story_04_volcano.png?v=1',
+  'assets/bg/bg_story_05_nirvana_realm.png?v=1','assets/bg/bg_story_06_sea_battle.png?v=1',
+  'assets/bg/bg_story_07_illusion.png?v=1','assets/bg/bg_story_08_chaos_war.png?v=1',
+  'assets/bg/bg_story_09_godfall.png?v=1','assets/bg/bg_story_10_celestial_gate.png?v=1',
+  'assets/bg/bg_boss_01_ghostrealm.png?v=1','assets/bg/bg_boss_02_magma.png?v=1',
+  'assets/bg/bg_boss_03_abyss.png?v=1','assets/bg/bg_boss_04_bloodriver.png?v=1',
+  'assets/bg/bg_boss_05_void.png?v=1',
   // 功能栏图标
   'assets/icons/icon_attr.png','assets/icons/icon_equip.png','assets/icons/icon_bag.png',
   'assets/icons/icon_skill.png','assets/icons/icon_story.png','assets/icons/icon_daily.png',
   'assets/icons/icon_shop.png','assets/icons/icon_codex.png','assets/icons/icon_worldboss.png',
   'assets/icons/icon_rank.png','assets/icons/icon_settings.png'
   // 主页角色立绘（首屏中央大图，每张 1~1.5MB，必须预加载，否则进主页后长时间空白才浮现）
-  ,'assets/select/m1_warrior.png?v=11','assets/select/m2_young.png?v=11'
-  ,'assets/select/m3_daoist.png?v=11','assets/select/f1_loli.png?v=11'
-  ,'assets/select/f2_hot.png?v=11','assets/select/f3_mature.png?v=11'
+  ,'assets/select/m1_warrior.png?v=12','assets/select/m2_young.png?v=12'
+  ,'assets/select/m3_daoist.png?v=12','assets/select/f1_loli.png?v=12'
+  ,'assets/select/f2_hot.png?v=12','assets/select/f3_mature.png?v=12'
 ];
 
 // ===== 初始化拆成两步 =====
@@ -330,8 +330,8 @@ function bootGame() {
     const _s = JSON.parse(localStorage.getItem('wuxia_save'));
     const _aid = _s && _s.avatarId;
     if (_aid && /^(m[1-3]|f[1-3])$/.test(_aid)) {
-      LOADING_ASSETS.push('assets/select/' + _aid + '_med_h.mp4?v=22');
-      LOADING_ASSETS.push('assets/select/' + _aid + '_med_h.png?v=22');
+      LOADING_ASSETS.push('assets/select/' + _aid + '_med_h.mp4?v=23');
+      LOADING_ASSETS.push('assets/select/' + _aid + '_med_h.png?v=23');
     }
   } catch (e) {}
 })();

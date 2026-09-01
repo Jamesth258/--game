@@ -131,7 +131,7 @@ function openCodex() {
       html += '<div style="font-size:11px;color:rgba(241,239,232,0.45);margin:10px 0 4px;text-transform:uppercase;letter-spacing:1px">' + esc(curCat) + '</div>';
     }
     html += '<div style="display:inline-block;border:1px solid rgba(155,89,182,0.35);background:rgba(255,255,255,0.03);border-radius:10px;padding:6px;width:100px;text-align:center;vertical-align:top;margin:4px 4px 4px 0">' +
-      '<img src="assets/battle/' + ch.id + '.png" alt="' + esc(ch.name) + '" style="width:88px;height:124px;object-fit:contain;border-radius:6px;margin-bottom:4px" onerror="this.style.display=\'none\'"/>' +
+      '<img src="assets/battle/' + ch.id + '.png?v=1" alt="' + esc(ch.name) + '" style="width:88px;height:124px;object-fit:contain;border-radius:6px;margin-bottom:4px" onerror="this.style.display=\'none\'"/>' +
       '<div style="font-weight:600;font-size:11.5px;color:#E8D5F0">' + esc(ch.name) + '</div>' +
       '<div style="font-size:10px;color:rgba(241,239,232,0.5);margin-top:1px;line-height:1.25">' + esc(ch.desc) + '</div>' +
       '</div>';
