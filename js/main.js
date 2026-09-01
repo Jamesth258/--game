@@ -71,32 +71,18 @@ function checkSavedCharacter() {
 // 真实资源清单（驱动登录进度条）。onerror 也计数，缺失文件不会卡死进度。
 const LOADING_ASSETS = [
   'assets/cover.png?v=21',
-  // 战斗立绘
-  'assets/battle/hero_m1.png?v=1','assets/battle/hero_m2.png?v=1','assets/battle/hero_m3.png?v=1',
-  'assets/battle/hero_f1.png?v=1','assets/battle/hero_f2.png?v=1','assets/battle/hero_f3.png?v=1',
-  'assets/battle/enemy_v1.png?v=1','assets/battle/enemy_v2.png?v=1','assets/battle/enemy_v3.png?v=1',
-  'assets/battle/enemy_v4.png?v=1','assets/battle/enemy_v5.png?v=1','assets/battle/enemy_v6.png?v=1',
-  'assets/battle/enemy_v7.png?v=1','assets/battle/enemy_v8.png?v=1','assets/battle/enemy_v9.png?v=1',
-  'assets/battle/enemy_v10.png?v=1','assets/battle/boss_1.png?v=1','assets/battle/boss_2.png?v=1',
-  'assets/battle/boss_3.png?v=1','assets/battle/boss_4.png?v=1','assets/battle/boss_5.png?v=1',
-  // 战斗背景
-  'assets/bg/bg_story_01_village_dawn.png?v=1','assets/bg/bg_story_02_forbidden_ruins.png?v=1',
-  'assets/bg/bg_story_03_blood_altar.png?v=1','assets/bg/bg_story_04_volcano.png?v=1',
-  'assets/bg/bg_story_05_nirvana_realm.png?v=1','assets/bg/bg_story_06_sea_battle.png?v=1',
-  'assets/bg/bg_story_07_illusion.png?v=1','assets/bg/bg_story_08_chaos_war.png?v=1',
-  'assets/bg/bg_story_09_godfall.png?v=1','assets/bg/bg_story_10_celestial_gate.png?v=1',
-  'assets/bg/bg_boss_01_ghostrealm.png?v=1','assets/bg/bg_boss_02_magma.png?v=1',
-  'assets/bg/bg_boss_03_abyss.png?v=1','assets/bg/bg_boss_04_bloodriver.png?v=1',
-  'assets/bg/bg_boss_05_void.png?v=1',
-  // 功能栏图标
+  // 功能栏图标（11 个，主页与各界面通用，体积小必须预载）
   'assets/icons/icon_attr.png','assets/icons/icon_equip.png','assets/icons/icon_bag.png',
   'assets/icons/icon_skill.png','assets/icons/icon_story.png','assets/icons/icon_daily.png',
   'assets/icons/icon_shop.png','assets/icons/icon_codex.png','assets/icons/icon_worldboss.png',
-  'assets/icons/icon_rank.png','assets/icons/icon_settings.png'
-  // 主页角色立绘（首屏中央大图，每张 1~1.5MB，必须预加载，否则进主页后长时间空白才浮现）
+  'assets/icons/icon_rank.png','assets/icons/icon_settings.png',
+  // 主页角色立绘（首屏中央大图，进主页后立即显示，避免空白）
   ,'assets/select/m1_warrior.png?v=12','assets/select/m2_young.png?v=12'
   ,'assets/select/m3_daoist.png?v=12','assets/select/f1_loli.png?v=12'
   ,'assets/select/f2_hot.png?v=12','assets/select/f3_mature.png?v=12'
+  // 注：战斗立绘(21)+战斗背景(15)共约 45MB，主页用不到，已移出首屏预加载。
+  // 改由 prefetchBattleAssets() 在玩家进入游戏后空闲预载（requestIdleCallback），
+  // 进战斗时 loadImg 动态加载、ready() 未就绪自动回退占位图，不阻塞首屏、不空白。
 ];
 
 // ===== 初始化拆成两步 =====
@@ -158,9 +144,7 @@ function bootGame() {
     return;
   }
 
-  const total = LOADING_ASSETS.length;
-  let loaded = 0;
-  let skipped = false;   // 点击只加速"等待节奏"，不会跳过真实工作
+  let skipped = false;   // 进度计数 total/loaded 现由 phaseAssets() 内按图片计（视频不阻塞首屏）
   let shown = 0;
 
   function paint(p) {
@@ -199,36 +183,40 @@ function bootGame() {
     const t0 = Date.now();
     const p = BOOT_PHASE.assets;
 
-    // 逐个预加载美术资源（这才是加载画面存在的意义：进游戏前把主页/战斗所需图都拉进缓存）。
-    // 图片用 Image；若将来某角色带视频立绘，按后缀用隐藏 <video preload=auto> 监听 loadeddata 计数。
-    LOADING_ASSETS.forEach(src => {
-      const isVideo = /\.(mp4|webm|ogg)(\?|$)/i.test(src);
-      if (isVideo) {
-        const v = document.createElement('video');
-        v.preload = 'auto'; v.muted = true; v.playsInline = true;
-        v.style.position = 'absolute'; v.style.opacity = '0'; v.style.pointerEvents = 'none';
-        v.onloadeddata = v.onerror = () => { loaded++; };
-        (document.body || document.documentElement).appendChild(v);
-        v.src = src;
-        // 首帧就绪后移出 DOM（HTTP 缓存已建，主页 video 标签设同 src 会命中缓存）
-        v.addEventListener('loadeddata', () => setTimeout(() => v.remove(), 0), { once: true });
-      } else {
-        const img = new Image();
-        img.onload  = () => { loaded++; };
-        img.onerror = () => { loaded++; console.warn('[bootGame] 资源失败: ' + src); };
-        img.src = src;
-      }
+    // 拆分：图片计入进度（必须首屏就绪）；视频(med 打坐)后台预载，不阻塞首屏进度。
+    const imgSrcs = LOADING_ASSETS.filter(s => !/\.(mp4|webm|ogg)(\?|$)/i.test(s));
+    const vidSrcs = LOADING_ASSETS.filter(s => /\.(mp4|webm|ogg)(\?|$)/i.test(s));
+    const total = imgSrcs.length;   // 进度只按图片计
+    let loaded = 0;
+
+    // 图片：计入加载进度，且须进主页前就绪（封面/图标/立绘）
+    imgSrcs.forEach(src => {
+      const img = new Image();
+      img.onload  = () => { loaded++; };
+      img.onerror = () => { loaded++; console.warn('[bootGame] 资源失败: ' + src); };
+      img.src = src;
+    });
+
+    // 视频(med 打坐)：后台预下载到缓存，不计入 loaded，不阻塞首屏进度。
+    // 主页 <video> 设同 src 命中缓存、边下边播；即使未下完首屏也不被卡。
+    vidSrcs.forEach(src => {
+      const v = document.createElement('video');
+      v.preload = 'auto'; v.muted = true; v.playsInline = true;
+      v.style.position = 'absolute'; v.style.opacity = '0'; v.style.pointerEvents = 'none';
+      v.onloadeddata = v.onerror = () => {};   // 不计入 loaded，避免拖住进度
+      (document.body || document.documentElement).appendChild(v);
+      v.src = src;
+      // 首帧就绪后移出 DOM（HTTP 缓存已建，主页 video 标签设同 src 会命中缓存）
+      v.addEventListener('loadeddata', () => setTimeout(() => v.remove(), 0), { once: true });
     });
 
     // 总超时兜底：极端慢网/资源永久挂起时，最多等 11s 也要放行（与 run() 看门狗 12s 协调）。
-    // 注意：不再用「6s 强制 loaded=total」的激进放行 —— 那会让真实没下完的资源被假报 100%，
-    // 进度条失去意义、卡顿暴露。改为只按真实加载比例推进，超时才放行。
     const HARD_TIMEOUT = 11000;
 
     for (;;) {
       const el    = Date.now() - t0;
       const ms    = phaseMs('assets');
-      const real  = total ? loaded / total : 1;       // 真实加载完成比例
+      const real  = total ? loaded / total : 1;       // 真实加载完成比例（仅图片）
       const paced = ms > 0 ? Math.min(1, el / ms) : 1; // 时间保底节奏（缓存命中时撑住 3s）
       // 关键：取较小者 —— 真实资源没加载完就绝不提前报 100%，进度条可信，真正盖住卡顿
       const eff   = Math.min(real, paced);
@@ -280,6 +268,7 @@ function bootGame() {
     bootDone = true;
     try { initSave(); initWorld(); } catch (e) { console.error('[bootGame] forced init failed:', e); }
     overlay.hidden = true;
+    prefetchBattleAssets();   // 看门狗兜底路径同样空闲预载战斗图
     if (typeof initDaily === 'function') initDaily();
   }
 
@@ -301,6 +290,7 @@ function bootGame() {
     await sleep(620);
     bootDone = true;
     overlay.hidden = true;
+    prefetchBattleAssets();   // 进入游戏后空闲预载战斗图（不阻塞首屏）
 
     // 每日计时器：等真正进入游戏后再启动，加载期间不跑
     if (typeof initDaily === 'function') initDaily();
@@ -320,6 +310,47 @@ function bootGame() {
   });
 
   run();
+}
+
+// 进入游戏后「空闲预载」战斗图（不阻塞首屏）。
+// 列表 URL 与 battle.js（HERO_SPRITES / ENEMY_SPRITES / BOSS / loadBattleBg）完全一致；
+// 进战斗时 loadImg 动态加载、ready() 未就绪自动回退占位图，因此此处预载失败也毫无影响。
+// 玩家逛主页的空闲时间就把这 ~45MB 悄悄缓存好，进战斗时几乎秒显，不再首屏硬等。
+const BATTLE_PREFETCH = [
+  // 战斗立绘（hero/enemy/boss，21 张）
+  'assets/battle/hero_m1.png?v=1','assets/battle/hero_m2.png?v=1','assets/battle/hero_m3.png?v=1',
+  'assets/battle/hero_f1.png?v=1','assets/battle/hero_f2.png?v=1','assets/battle/hero_f3.png?v=1',
+  'assets/battle/enemy_v1.png?v=1','assets/battle/enemy_v2.png?v=1','assets/battle/enemy_v3.png?v=1',
+  'assets/battle/enemy_v4.png?v=1','assets/battle/enemy_v5.png?v=1','assets/battle/enemy_v6.png?v=1',
+  'assets/battle/enemy_v7.png?v=1','assets/battle/enemy_v8.png?v=1','assets/battle/enemy_v9.png?v=1',
+  'assets/battle/enemy_v10.png?v=1','assets/battle/boss_1.png?v=1','assets/battle/boss_2.png?v=1',
+  'assets/battle/boss_3.png?v=1','assets/battle/boss_4.png?v=1','assets/battle/boss_5.png?v=1',
+  // 战斗背景（bg_story / bg_boss，15 张）
+  'assets/bg/bg_story_01_village_dawn.png?v=1','assets/bg/bg_story_02_forbidden_ruins.png?v=1',
+  'assets/bg/bg_story_03_blood_altar.png?v=1','assets/bg/bg_story_04_volcano.png?v=1',
+  'assets/bg/bg_story_05_nirvana_realm.png?v=1','assets/bg/bg_story_06_sea_battle.png?v=1',
+  'assets/bg/bg_story_07_illusion.png?v=1','assets/bg/bg_story_08_chaos_war.png?v=1',
+  'assets/bg/bg_story_09_godfall.png?v=1','assets/bg/bg_story_10_celestial_gate.png?v=1',
+  'assets/bg/bg_boss_01_ghostrealm.png?v=1','assets/bg/bg_boss_02_magma.png?v=1',
+  'assets/bg/bg_boss_03_abyss.png?v=1','assets/bg/bg_boss_04_bloodriver.png?v=1',
+  'assets/bg/bg_boss_05_void.png?v=1',
+];
+let _battlePrefetchStarted = false;
+function prefetchBattleAssets() {
+  if (_battlePrefetchStarted) return;
+  _battlePrefetchStarted = true;
+  const idle = window.requestIdleCallback
+    ? (cb) => requestIdleCallback(cb, { timeout: 2500 })
+    : (cb) => setTimeout(cb, 250);   // 降级：不支持 Idle 时退化为低优先级 setTimeout
+  let i = 0;
+  const step = () => {
+    if (i >= BATTLE_PREFETCH.length) return;
+    const img = new Image();
+    const next = () => idle(step);   // 失败也继续，不影响游戏
+    img.onload = next; img.onerror = next;
+    img.src = BATTLE_PREFETCH[i++];
+  };
+  idle(step);
 }
 
 // 主页打坐视频预加载（铁律：bootGame 在 initSave 前就消费 LOADING_ASSETS，
