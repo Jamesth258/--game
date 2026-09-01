@@ -219,7 +219,7 @@
   .step-dot.active { background: #185FA5; box-shadow: 0 0 8px rgba(24,143,165,0.5); }
   .step-dot.done { background: #639922; }
 
-  /* ===== 游戏主页（人物居中 + 顶栏 + 底栏） ===== */
+  /* ===== 游戏主页（全屏打坐背景 + 顶栏信息 + 悬浮菜单） ===== */
   #hub-screen {
     position: fixed; inset: 0; z-index: 90;
     display: flex; flex-direction: column;
@@ -228,28 +228,28 @@
   }
   #hub-screen[hidden] { display: none; }
 
-  /* ── 顶部信息栏 ── */
+  /* ── 顶部信息栏（仅头像+战力+境界，紧凑单行） ── */
   .hub-topbar {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 8px 12px 6px;
-    background: linear-gradient(180deg, rgba(16,14,20,0.97), rgba(16,14,20,0.88));
-    border-bottom: 0.5px solid rgba(212,168,67,0.18);
+    display: flex; align-items: center;
+    padding: 6px 14px 4px;
+    background: linear-gradient(180deg, rgba(10,8,14,0.95), rgba(10,8,14,0.75));
+    border-bottom: 0.5px solid rgba(212,168,67,0.12);
     flex-shrink: 0;
-    min-height: 56px;
+    min-height: 48px;
     gap: 8px;
   }
-  /* 左：头像 + 战力/境界/经验 */
+  /* 左：头像 + 战力/境界/经验（紧凑） */
   .hub-top-left {
-    display: flex; align-items: center; gap: 8px;
+    display: flex; align-items: center; gap: 6px;
     min-width: 0;
   }
   .hub-info-group {
-    display: flex; flex-direction: column; gap: 1px;
+    display: flex; flex-direction: column; gap: 0px;
     min-width: 0;
   }
-  /* 头像区 */
+  /* 头像区（稍小） */
   .hub-avatar-wrap {
-    position: relative; width: 44px; height: 44px; flex-shrink: 0;
+    position: relative; width: 38px; height: 38px; flex-shrink: 0;
   }
   .hub-avatar-frame {
     position: absolute; inset: -3px;
@@ -264,98 +264,84 @@
     object-fit: cover;
     border: 1.5px solid rgba(212,168,67,0.5);
   }
-  /* 战力 */
+  /* 战力（紧凑） */
   .hub-power {
     display: flex; align-items: baseline; gap: 2px;
-    font-size: 11px; color: rgba(241,239,232,0.55);
+    font-size: 10px; color: rgba(241,239,232,0.5);
   }
   .hub-power-num {
-    font-size: 15px; font-weight: 700; color: #E87B7B;
-    text-shadow: 0 0 8px rgba(232,123,123,0.3);
+    font-size: 13px; font-weight: 700; color: #E87B7B;
+    text-shadow: 0 0 6px rgba(232,123,123,0.3);
   }
   /* 境界 */
   .hub-realm {
-    font-size: 11px; font-weight: 600; color: #9B6BCC;
+    font-size: 10px; font-weight: 600; color: #9B6BCC;
     white-space: nowrap; letter-spacing: 0.5px;
-    padding: 1px 6px;
+    padding: 1px 5px;
     background: rgba(155,107,204,0.1);
-    border-radius: 4px;
+    border-radius: 3px;
     border: 0.5px solid rgba(155,107,204,0.25);
     display: inline-block;
   }
   /* 经验条（紧凑内联） */
-  .hub-info-group .xp-bar-wrap { margin: 2px 0 0; max-width: 160px; }
-  .hub-info-group .xp-bar-track { height: 5px; border-radius: 3px; }
-  .hub-info-group .xp-bar-fill { height: 100%; border-radius: 3px; }
+  .hub-info-group .xp-bar-wrap { margin: 1px 0 0; max-width: 140px; }
+  .hub-info-group .xp-bar-track { height: 4px; border-radius: 2px; }
+  .hub-info-group .xp-bar-fill { height: 100%; border-radius: 2px; }
   .hub-info-group .xp-bar-info { margin-top: 0; }
-  .hub-info-group .cur-realm { font-size: 9px; }
-  .hub-info-group .xp-nums { font-size: 8px; }
+  .hub-info-group .cur-realm { font-size: 8px; }
+  .hub-info-group .xp-nums { font-size: 7px; }
 
-  /* 右：顶部图标按钮行 */
-  .hub-top-right {
-    display: flex; gap: 4px;
-    flex-shrink: 0;
-  }
-  .hub-top-btn {
-    display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
-    gap: 0; padding: 0; min-width: 42px;
-    background: transparent; border: none;
-    border-radius: 0; cursor: pointer; transition: all 0.15s; color: rgba(241,239,232,0.8);
-    flex-shrink: 0; position: relative;
-  }
-  .hub-top-btn:hover { color: #fff; transform: translateY(-1px); }
-  .hub-top-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
-  .hub-top-btn .hub-ico { width: 46px; height: 46px; flex-shrink: 0; object-fit: contain; }
-  .hub-top-btn span { font-size: 10px; white-space: nowrap; line-height: 1.1; margin-top: -6px; text-shadow: 0 1px 3px rgba(0,0,0,0.85); z-index: 2; }
-  .hub-top-btn .hub-badge { position:absolute;top:-2px;right:-2px;min-width:14px;height:14px;background:#E87B7B;color:#fff;font-size:9px;font-weight:700;border-radius:7px;display:flex;align-items:center;justify-content:center;padding:0 3px; }
-
-  /* ── 中央人物立绘区（占满剩余空间） ── */
+  /* ── 中央打坐画面区（视频填满 + 悬浮菜单叠加） ── */
   .hub-char-area {
     flex: 1; display: flex; align-items: center; justify-content: center;
     position: relative; overflow: hidden;
-    background: radial-gradient(ellipse at 50% 55%, rgba(30,25,40,0.85) 0%, rgba(10,10,12,1) 70%);
+    background: #0a0a0c;
   }
+  /* 视频填满整个区域，object-fit:contain 保证不裁切 */
   .hub-char-video {
-    max-height: 90%; max-width: 92%;
+    width: 100%; height: 100%;
     object-fit: contain;
-    filter: drop-shadow(0 0 45px rgba(212,168,67,0.10));
+    filter: drop-shadow(0 0 40px rgba(212,168,67,0.08));
   }
-  .hub-char-static {
-    max-height: 88%; max-width: 72%;
-    object-fit: contain;
-    filter: drop-shadow(0 0 35px rgba(212,168,67,0.07));
-  }
-  /* 人物名称浮层（叠加在立绘上） */
+  /* 人物名称浮层（叠加在视频上） */
   .hub-char-name {
-    position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
-    font-size: 16px; font-weight: 700; color: #F1EFE8;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.5);
+    position: absolute; bottom: 72px; left: 50%; transform: translateX(-50%);
+    font-size: 15px; font-weight: 700; color: #F1EFE8;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.9), 0 0 24px rgba(0,0,0,0.6);
     letter-spacing: 3px; white-space: nowrap;
     pointer-events: none;
+    z-index: 2;
   }
 
-  /* ── 底部主功能栏（5个大按钮） ── */
-  .hub-bottombar {
-    display: flex; justify-content: space-around; align-items: center;
-    padding: 8px 8px 10px;
-    background: linear-gradient(0deg, rgba(16,14,20,0.97), rgba(16,14,20,0.90));
-    border-top: 0.5px solid rgba(212,168,67,0.18);
-    flex-shrink: 0;
-    min-height: 64px;
+  /* ── 统一悬浮菜单栏（11个图标合并一行，玻璃效果覆盖视频底部云雾区） ── */
+  .hub-float-bar {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    display: flex; justify-content: center; align-items: flex-end;
     gap: 4px;
+    padding: 10px 12px 12px;
+    background: linear-gradient(to top, rgba(6,4,12,0.75) 0%, rgba(6,4,12,0.45) 70%, transparent 100%);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 5;
+    flex-shrink: 0;
   }
-  .hub-bottom-btn {
+  .hub-float-btn {
     display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
-    gap: 0; padding: 0; flex: 1; max-width: 80px;
+    gap: 0; padding: 0; min-width: 40px; max-width: 64px;
     background: transparent; border: none;
-    border-radius: 0; cursor: pointer; transition: all 0.15s; color: rgba(241,239,232,0.85);
+    border-radius: 8px; cursor: pointer; transition: all 0.15s; color: rgba(241,239,232,0.85);
     position: relative;
+    padding: 4px 4px 2px;
   }
-  .hub-bottom-btn:hover { color: #fff; transform: translateY(-2px); }
-  .hub-bottom-btn:active { transform: translateY(0); }
-  .hub-bottom-btn svg { width: 26px; height: 26px; flex-shrink: 0; }
-  .hub-bottom-btn .hub-ico { width: 56px; height: 56px; flex-shrink: 0; object-fit: contain; }
-  .hub-bottom-btn span { font-size: 12px; font-weight: 600; white-space: nowrap; line-height: 1.1; margin-top: -8px; text-shadow: 0 1px 4px rgba(0,0,0,0.9); z-index: 2; }
+  .hub-float-btn:hover {
+    color: #fff; transform: translateY(-2px);
+    background: rgba(255,255,255,0.08);
+  }
+  .hub-float-btn:active { transform: translateY(0); }
+  .hub-float-btn svg { width: 22px; height: 22px; flex-shrink: 0; }
+  .hub-float-btn .hub-ico { width: 44px; height: 44px; flex-shrink: 0; object-fit: contain; }
+  .hub-float-btn span { font-size: 10px; font-weight: 600; white-space: nowrap; line-height: 1.1; margin-top: -6px; text-shadow: 0 1px 4px rgba(0,0,0,0.95); z-index: 2; }
+  .hub-float-btn .hub-badge { position:absolute;top:0;right:-2px;min-width:13px;height:13px;background:#E87B7B;color:#fff;font-size:8px;font-weight:700;border-radius:7px;display:flex;align-items:center;justify-content:center;padding:0 2px; }
 
   /* 主页弹窗复用 modal 样式 */
   .hub-modal-title { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
@@ -412,10 +398,12 @@
 
 /* ---- 响应式：窄屏适配（移动端基础断点） ---- */
 @media screen and (max-width: 400px) {
-  .hub-topbar { flex-direction: column; padding: 6px 8px; gap: 4px; }
-  .hub-top-right { justify-content: center; }
-  .hub-bottombar { flex-wrap: wrap; gap: 6px; }
-  .hub-bottom-btn { flex: 1 1 calc(33% - 6px); min-width: 80px; font-size: 12px; }
+  .hub-topbar { flex-direction: column; padding: 4px 8px; gap: 2px; }
+  .hub-float-bar { flex-wrap: wrap; gap: 2px; padding: 8px 6px 10px; justify-content: space-around; }
+  .hub-float-btn { flex: 1 1 calc(20% - 4px); min-width: 52px; max-width: 72px; }
+  .hub-float-btn .hub-ico { width: 36px; height: 36px; }
+  .hub-float-btn span { font-size: 9px; }
+  .hub-char-name { bottom: 64px; font-size: 13px; }
   canvas { width: 100% !important; height: auto !important; }
 }
 

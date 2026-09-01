@@ -55,34 +55,28 @@ const SHOP_REFRESH_PAID_COST = 500;  // 每次灵石付费刷新消耗的灵石
 
 function initHub() {
   const hub = document.getElementById('hub-screen');
-  const topIconContainer = document.getElementById('hub-top-icons');
-  const bottomIconContainer = document.getElementById('hub-bottom-icons');
+  const floatIconContainer = document.getElementById('hub-float-icons');
   const avatarEl = document.getElementById('hub-avatar');
   const nameEl = document.getElementById('hub-name');
   const powerEl = document.getElementById('hub-power-num');
   const charVideo = document.getElementById('hub-char-video');
 
-  // 渲染顶部图标按钮
-  topIconContainer.innerHTML = HUB_TOP_ITEMS.map(item =>
-    `<button class="hub-top-btn" data-hub="${item.id}" title="${item.label}">${item.icon}<span>${item.label}</span></button>`
+  // 统一悬浮菜单栏：底栏主功能(5) + 顶栏功能(6) = 11个图标一行
+  // 排列顺序：属性/装备/背包/功法/副本 | 每日奖励/商店/图鉴/世界BOSS/排行榜/设置
+  const ALL_HUB_ITEMS = [...HUB_BOTTOM_ITEMS, ...HUB_TOP_ITEMS];
+
+  floatIconContainer.innerHTML = ALL_HUB_ITEMS.map(item =>
+    `<button class="hub-float-btn" data-hub="${item.id}" title="${item.label}">${item.icon}<span>${item.label}</span></button>`
   ).join('');
 
-  // 渲染底部主功能按钮
-  bottomIconContainer.innerHTML = HUB_BOTTOM_ITEMS.map(item =>
-    `<button class="hub-bottom-btn" data-hub="${item.id}" title="${item.label}">${item.icon}<span>${item.label}</span></button>`
-  ).join('');
-
-  // 统一事件绑定（顶栏 + 底栏）
-  const allItems = [...HUB_TOP_ITEMS, ...HUB_BOTTOM_ITEMS];
-  [topIconContainer, bottomIconContainer].forEach(container => {
-    container.querySelectorAll('[data-hub]').forEach(btn => {
+  // 统一事件绑定（全部 11 个图标在悬浮栏内）
+  floatIconContainer.querySelectorAll('[data-hub]').forEach(btn => {
       btn.addEventListener('click', () => {
-        const item = allItems.find(i => i.id === btn.dataset.hub);
+        const item = ALL_HUB_ITEMS.find(i => i.id === btn.dataset.hub);
         if (!item) return;
         handleHubAction(item);
       });
     });
-  });
 
   // 统一动作分发
   function handleHubAction(item) {
