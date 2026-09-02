@@ -57,7 +57,6 @@ function initHub() {
   const hub = document.getElementById('hub-screen');
   const floatIconContainer = document.getElementById('hub-float-icons');
   const avatarEl = document.getElementById('hub-avatar');
-  const nameEl = document.getElementById('hub-name');
   const powerEl = document.getElementById('hub-power-num');
   const charVideo = document.getElementById('hub-char-video');
 
@@ -152,7 +151,7 @@ function initHub() {
 
   // 更新主页数据
   function refreshHub() {
-    nameEl.textContent = player.name || '逍遥仙';
+    // 玩家名字已隐藏（用户要求不显示）
     powerEl.textContent = formatNum(calcCombatPower(player));
     avatarEl.src = 'assets/select/avatar_head.png?v=1';
     syncRealmDOM();

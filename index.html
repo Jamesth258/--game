@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>逍遥仙 · 修仙武侠</title>
-<link rel="stylesheet" href="css/style.css?v=25">
+<link rel="stylesheet" href="css/style.css?v=26">
 </head>
 <body>
 <!-- ===== 登录等待画面（游戏封面 + 进度条） ===== -->
@@ -92,33 +92,26 @@
 
 <!-- ===== 游戏主页（全屏打坐背景 + 顶栏信息 + 悬浮菜单） ===== -->
 <div id="hub-screen" hidden>
-  <!-- 顶部信息栏（仅头像+战力+境界，不含图标按钮） -->
-  <div class="hub-topbar">
-    <div class="hub-top-left">
+  <!-- 中央打坐画面区（视频填满 + 顶部悬浮信息 + 底部悬浮菜单叠加） -->
+  <div class="hub-char-area" id="hub-char-area">
+    <video id="hub-char-video" class="hub-char-video" autoplay loop muted playsinline preload="auto"></video>
+    <!-- 顶部悬浮信息栏（头像+战力+境界+经验条，浮在视频右上方） -->
+    <div class="hub-top-float" id="hub-top-float">
       <div class="hub-avatar-wrap">
         <div class="hub-avatar-frame"></div>
         <img class="hub-avatar-img" id="hub-avatar" src="" alt="">
       </div>
-      <div class="hub-info-group">
-        <div class="hub-power">战力<span class="hub-power-num" id="hub-power-num">1,234</span></div>
-        <div class="hub-realm" id="hub-realm"></div>
-        <div class="xp-bar-wrap" id="hub-xp-bar">
-          <div class="xp-bar-track"><div class="xp-bar-fill" id="hub-xp-fill" style="width:0%"></div></div>
-          <div class="xp-bar-info">
-            <span class="cur-realm" id="hub-xp-realm"></span>
-            <span class="xp-nums" id="hub-xp-nums"></span>
-          </div>
+      <div class="hub-power">战力<span class="hub-power-num" id="hub-power-num">1,234</span></div>
+      <div class="hub-realm" id="hub-realm"></div>
+      <div class="xp-bar-wrap" id="hub-xp-bar">
+        <div class="xp-bar-track"><div class="xp-bar-fill" id="hub-xp-fill" style="width:0%"></div></div>
+        <div class="xp-bar-info">
+          <span class="cur-realm" id="hub-xp-realm"></span>
+          <span class="xp-nums" id="hub-xp-nums"></span>
         </div>
       </div>
     </div>
-  </div>
-
-  <!-- 中央打坐画面区（视频填满 + 底部悬浮菜单叠加） -->
-  <div class="hub-char-area" id="hub-char-area">
-    <video id="hub-char-video" class="hub-char-video" autoplay loop muted playsinline preload="auto"></video>
-    <!-- 人物名称浮层 -->
-    <div class="hub-char-name" id="hub-name">逍遥仙</div>
-    <!-- 统一悬浮菜单栏（11个图标合并一行，半透明玻璃效果覆盖在视频底部云雾区） -->
+    <!-- 底部悬浮菜单栏（11个图标） -->
     <div class="hub-float-bar" id="hub-float-icons"></div>
   </div>
 </div>
