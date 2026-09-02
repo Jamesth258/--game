@@ -333,9 +333,9 @@
     filter: drop-shadow(0 0 10px rgba(212,168,67,0.55));
   }
   .hub-float-btn:active { transform: translateY(0); }
-  .hub-float-btn svg { width: 26px; height: 26px; flex-shrink: 0; }
-  .hub-float-btn .hub-ico { width: 62px; height: 62px; flex-shrink: 0; object-fit: contain; }
-  .hub-float-btn span { font-size: 12px; font-weight: 600; white-space: nowrap; line-height: 1.1; margin-top: -4px; text-shadow: 0 1px 4px rgba(0,0,0,0.95); z-index: 2; }
+  .hub-float-btn svg { width: 28px; height: 28px; flex-shrink: 0; }
+  .hub-float-btn .hub-ico { width: 72px; height: 72px; flex-shrink: 0; object-fit: contain; }
+  .hub-float-btn span { font-size: 13px; font-weight: 600; white-space: nowrap; line-height: 1.1; margin-top: -4px; text-shadow: 0 1px 4px rgba(0,0,0,0.95); z-index: 2; }
   .hub-float-btn .hub-badge { position:absolute;top:0;right:-2px;min-width:13px;height:13px;background:#E87B7B;color:#fff;font-size:8px;font-weight:700;border-radius:7px;display:flex;align-items:center;justify-content:center;padding:0 2px; }
 
   /* 主页弹窗复用 modal 样式 */
@@ -395,7 +395,7 @@
 @media screen and (max-width: 400px) {
   .hub-topbar { flex-direction: column; padding: 4px 8px; gap: 2px; }
   .hub-float-bar { flex-wrap: wrap; gap: 3px; padding: 8px 8px 10px; justify-content: space-around; }
-  .hub-float-btn .hub-ico { width: 48px; height: 48px; }
+  .hub-float-btn .hub-ico { width: 56px; height: 56px; }
   .hub-float-btn { min-width: 46px; max-width: 64px; }
   .hub-float-btn span { font-size: 10px; }
   canvas { width: 100% !important; height: auto !important; }
