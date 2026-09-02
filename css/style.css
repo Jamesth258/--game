@@ -303,39 +303,34 @@
     object-fit: contain;
     filter: drop-shadow(0 0 40px rgba(212,168,67,0.08));
   }
-  /* 人物名称浮层（叠加在视频上） */
+  /* 人物名称浮层（已隐藏，不再显示） */
   .hub-char-name {
-    position: absolute; bottom: 72px; left: 50%; transform: translateX(-50%);
-    font-size: 15px; font-weight: 700; color: #F1EFE8;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.9), 0 0 24px rgba(0,0,0,0.6);
-    letter-spacing: 3px; white-space: nowrap;
-    pointer-events: none;
-    z-index: 2;
+    display: none;
   }
 
-  /* ── 统一悬浮菜单栏（11个图标合并一行，玻璃效果覆盖视频底部云雾区） ── */
+  /* ── 悬浮菜单栏（图标直接浮在视频上，无遮挡背景） ── */
   .hub-float-bar {
     position: absolute; bottom: 0; left: 0; right: 0;
     display: flex; justify-content: center; align-items: flex-end;
-    gap: 4px;
-    padding: 10px 12px 12px;
-    background: linear-gradient(to top, rgba(6,4,12,0.75) 0%, rgba(6,4,12,0.45) 70%, transparent 100%);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    gap: 6px;
+    padding: 8px 12px 10px;
+    background: transparent;
     z-index: 5;
     flex-shrink: 0;
+    pointer-events: none; /* 让点击穿透到下层 */
   }
   .hub-float-btn {
     display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
     gap: 0; padding: 0; min-width: 40px; max-width: 64px;
     background: transparent; border: none;
-    border-radius: 8px; cursor: pointer; transition: all 0.15s; color: rgba(241,239,232,0.85);
+    border-radius: 8px; cursor: pointer; transition: all 0.15s; color: rgba(241,239,232,0.9);
     position: relative;
     padding: 4px 4px 2px;
+    pointer-events: auto; /* 按钮本身可点击 */
   }
   .hub-float-btn:hover {
-    color: #fff; transform: translateY(-2px);
-    background: rgba(255,255,255,0.08);
+    color: #fff; transform: translateY(-2px) scale(1.08);
+    filter: drop-shadow(0 0 8px rgba(212,168,67,0.5));
   }
   .hub-float-btn:active { transform: translateY(0); }
   .hub-float-btn svg { width: 22px; height: 22px; flex-shrink: 0; }
@@ -400,10 +395,6 @@
 @media screen and (max-width: 400px) {
   .hub-topbar { flex-direction: column; padding: 4px 8px; gap: 2px; }
   .hub-float-bar { flex-wrap: wrap; gap: 2px; padding: 8px 6px 10px; justify-content: space-around; }
-  .hub-float-btn { flex: 1 1 calc(20% - 4px); min-width: 52px; max-width: 72px; }
-  .hub-float-btn .hub-ico { width: 36px; height: 36px; }
-  .hub-float-btn span { font-size: 9px; }
-  .hub-char-name { bottom: 64px; font-size: 13px; }
   canvas { width: 100% !important; height: auto !important; }
 }
 
