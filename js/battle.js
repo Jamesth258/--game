@@ -122,6 +122,8 @@ function startBattle(node, mode) {
   battle.player._x = 210; battle.player._y = 244;
   battle.enemy._x = 430; battle.enemy._y = 244;
   beginRound();
+  // 重启渲染循环（hub/create 时已停止空转）
+  requestAnimationFrame(render);
 }
 
 // 状态乘区：buff 加成（amt 为比例，1 即 +0%）、debuff 削减（下限 0）
@@ -1106,8 +1108,8 @@ function syncCanvasResolution() {
 
 let _lastRenderState;
 function render() {
-  // 主页/创建界面是 DOM 层，不需要画布持续重绘；跳过 60fps 空转，把算力让给视频解码
-  if (state === 'hub' || state === 'create') { requestAnimationFrame(render); return; }
+  // 主页/创建界面是 DOM 层，不需要画布持续重绘；停止 rAF，把算力让给视频解码
+  if (state === 'hub' || state === 'create') { return; }
   const _s = syncCanvasResolution();
   ctx.setTransform(_s, 0, 0, _s, 0, 0);
   ctx.clearRect(0, 0, W, H);

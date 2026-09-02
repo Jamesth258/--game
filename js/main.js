@@ -76,11 +76,9 @@ const LOADING_ASSETS = [
   'assets/icons/icon_skill.png','assets/icons/icon_story.png','assets/icons/icon_daily.png',
   'assets/icons/icon_shop.png','assets/icons/icon_codex.png','assets/icons/icon_worldboss.png',
   'assets/icons/icon_rank.png','assets/icons/icon_settings.png',
-  // 主页角色立绘（首屏中央大图，进主页后立即显示，避免空白）
-  ,'assets/select/m1_warrior.png?v=12','assets/select/m2_young.png?v=12'
-  ,'assets/select/m3_daoist.png?v=12','assets/select/f1_loli.png?v=12'
-  ,'assets/select/f2_hot.png?v=12','assets/select/f3_mature.png?v=12'
-  // 注：战斗立绘(21)+战斗背景(15)共约 45MB，主页用不到，已移出首屏预加载。
+  // 注：角色选择立绘(6) 仅 create.js 创建/选人界面使用，已移出首屏预载
+  // （创建界面按需加载，回档玩家直进主页不浪费这 7MB）。
+  // 战斗立绘(21)+战斗背景(15)共约 45MB，主页用不到，也已移出。
   // 改由 prefetchBattleAssets() 在玩家进入游戏后空闲预载（requestIdleCallback），
   // 进战斗时 loadImg 动态加载、ready() 未就绪自动回退占位图，不阻塞首屏、不空白。
 ];
@@ -353,15 +351,16 @@ function prefetchBattleAssets() {
   idle(step);
 }
 
-// 主页打坐视频预加载（铁律：bootGame 在 initSave 前就消费 LOADING_ASSETS，
-// 而 avatarId 要等 initSave 读档才有，故此处先 peek localStorage 把当前角色 med 资源推入清单，
-// 让登录进度条真实等待该大图/视频下载，避免进主页后空白卡顿）
+// 主页打坐资源预加载（铁律：bootGame 在 initSave 前就消费 LOADING_ASSETS，
+// 而 avatarId 要等 initSave 读档才有，故此处先 peek localStorage 把当前角色 med 资源推入清单）
+// 仅推海报图（~1MB）进首屏，视频(~3MB)移至进主页后按需加载（hub.js 设 video.src 时浏览器自动请求），
+// 首屏从 ~16MB 降至 ~4MB，加载条不再卡死。
 (function peekHubMed() {
   try {
     const _s = JSON.parse(localStorage.getItem('wuxia_save'));
     const _aid = _s && _s.avatarId;
     if (_aid && /^(m[1-3]|f[1-3])$/.test(_aid)) {
-      LOADING_ASSETS.push('assets/select/' + _aid + '_med_h.mp4?v=23');
+      // 仅预载静态海报图（小），视频延迟到主页后加载
       LOADING_ASSETS.push('assets/select/' + _aid + '_med_h.png?v=23');
     }
   } catch (e) {}

@@ -312,8 +312,9 @@
   .hub-float-bar {
     position: absolute; bottom: 0; left: 0; right: 0;
     display: flex; justify-content: center; align-items: flex-end;
-    gap: 8px;
-    padding: 10px 16px 12px;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px 20px 14px;
     background: transparent;
     z-index: 5;
     flex-shrink: 0;
@@ -321,21 +322,27 @@
   }
   .hub-float-btn {
     display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
-    gap: 0; padding: 0; min-width: 56px; max-width: 82px;
+    gap: 0; padding: 0; min-width: 64px; max-width: 110px;
     background: transparent; border: none;
-    border-radius: 8px; cursor: pointer; transition: all 0.15s; color: rgba(241,239,232,0.9);
+    border-radius: 8px; cursor: pointer; transition: all 0.15s; color: #E8C77A;
     position: relative;
     padding: 4px 6px 3px;
     pointer-events: auto; /* 按钮本身可点击 */
   }
   .hub-float-btn:hover {
-    color: #fff; transform: translateY(-2px) scale(1.06);
-    filter: drop-shadow(0 0 10px rgba(212,168,67,0.55));
+    color: #FFE4A0; transform: translateY(-2px) scale(1.04);
+    filter: drop-shadow(0 0 12px rgba(212,168,67,0.65));
   }
   .hub-float-btn:active { transform: translateY(0); }
-  .hub-float-btn svg { width: 28px; height: 28px; flex-shrink: 0; }
-  .hub-float-btn .hub-ico { width: 72px; height: 72px; flex-shrink: 0; object-fit: contain; }
-  .hub-float-btn span { font-size: 13px; font-weight: 600; white-space: nowrap; line-height: 1.1; margin-top: -4px; text-shadow: 0 1px 4px rgba(0,0,0,0.95); z-index: 2; }
+  .hub-float-btn svg { width: 32px; height: 32px; flex-shrink: 0; }
+  .hub-float-btn .hub-ico { width: 144px; height: 144px; flex-shrink: 0; object-fit: contain; }
+  .hub-float-btn span {
+    font-family: "KaiTi","STKaiti","楷体","SimKai",serif;
+    font-size: 15px; font-weight: 600; white-space: nowrap; line-height: 1.2;
+    margin-top: -4px;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.92), 0 0 10px rgba(212,168,67,0.35);
+    z-index: 2;
+  }
   .hub-float-btn .hub-badge { position:absolute;top:0;right:-2px;min-width:13px;height:13px;background:#E87B7B;color:#fff;font-size:8px;font-weight:700;border-radius:7px;display:flex;align-items:center;justify-content:center;padding:0 2px; }
 
   /* 主页弹窗复用 modal 样式 */
@@ -394,9 +401,10 @@
 /* ---- 响应式：窄屏适配（移动端基础断点） ---- */
 @media screen and (max-width: 400px) {
   .hub-topbar { flex-direction: column; padding: 4px 8px; gap: 2px; }
-  .hub-float-bar { flex-wrap: wrap; gap: 3px; padding: 8px 8px 10px; justify-content: space-around; }
-  .hub-float-btn .hub-ico { width: 56px; height: 56px; }
-  .hub-float-btn { min-width: 46px; max-width: 64px; }
+  .hub-float-bar { flex-wrap: wrap; gap: 4px; padding: 8px 10px 12px; justify-content: space-around; }
+  .hub-float-btn { min-width: 46px; max-width: 80px; }
+  .hub-float-btn .hub-ico { width: 64px; height: 64px; }
+  .hub-float-btn span { font-size: 11px; }
   .hub-float-btn span { font-size: 10px; }
   canvas { width: 100% !important; height: auto !important; }
 }
