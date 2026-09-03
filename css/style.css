@@ -309,7 +309,7 @@
     position: absolute; inset: 0;
     width: 100%; height: 100%;
     object-fit: cover;
-    object-position: center center;
+    object-position: center 22%;
     filter: drop-shadow(0 0 40px rgba(212,168,67,0.08));
   }
   /* 人物名称浮层（已隐藏，不再显示） */
