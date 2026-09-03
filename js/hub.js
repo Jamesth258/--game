@@ -57,7 +57,7 @@ function initHub() {
   const hub = document.getElementById('hub-screen');
   const floatIconContainer = document.getElementById('hub-float-icons');
   // 初始化头像系统（兼容旧存档）
-  if (typeof initAvatarSystem === 'function') initAvatar();
+  if (typeof initAvatarSystem === 'function') initAvatarSystem();
 
   // 头像点击 → 打开头像选择弹窗
   const avatarWrap = document.querySelector('.hub-avatar-wrap');
