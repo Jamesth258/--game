@@ -6,7 +6,8 @@
 function checkSavedCharacter() {
   try {
     const saved = JSON.parse(localStorage.getItem('wuxia_save'));
-    if (saved && saved.name && saved.avatarImg) {
+    // [v33] 放宽守卫：仅判 name 即可（向后兼容头像系统上线前的旧存档）
+    if (saved && saved.name) {
       player.name = saved.name;
       player.sect = saved.sect || '';
       player.avatarId = saved.avatarId || '';
@@ -44,8 +45,9 @@ function checkSavedCharacter() {
       player.selectedAvatar = saved.selectedAvatar || player.avatarId || '';
       player.unlockedAvatars = Array.isArray(saved.unlockedAvatars) ? saved.unlockedAvatars : [player.avatarId || 'm2'];
       const _all = CHARACTERS.male.concat(CHARACTERS.female);
-      const _ch = _all.find(c => c.id === saved.avatarId);
-      art.hero.src = _ch ? _ch.img : saved.avatarImg;
+      const _ch = _all.find(c => c.id === (saved.avatarId || player.avatarId));
+      // 兜底链：角色表立绘 → 存档头像路径 → 默认 m2 立绘（防裂图）
+      art.hero.src = (_ch && _ch.img) || saved.avatarImg || (_all.find(c => c.id === 'm2') || {}).img;
       art.hero.failed = false;
       recalcStats(player);
       // 图鉴奖励档位对齐：旧档已收集的部分不补发钻石，仅把「已发档位」预置为 floor(已收集数/10)
