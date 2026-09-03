@@ -79,9 +79,10 @@ window.addEventListener('error', e => {
 });
 
 // 统一存档（含 6 属性与已分配点数）
+// [v33] 防静默丢档：每次写入前自动将旧存档备份到 wuxia_save_prev（仅当内容不同时）
 function saveGame() {
   try {
-    localStorage.setItem('wuxia_save', JSON.stringify({
+    const newData = {
       name: player.name, sect: player.sect, avatarId: player.avatarId,
       avatarImg: art.hero.src, xp: player.xp, score: player.score,
       con: player.con, str: player.str, sou: player.sou, spd: player.spd,
@@ -99,6 +100,17 @@ function saveGame() {
       skillPity: player.skillPity,
       selectedAvatar: player.selectedAvatar,
       unlockedAvatars: player.unlockedAvatars,
-    }));
+    };
+    const json = JSON.stringify(newData);
+
+    // 自动备份：旧存档 ≠ 新存档 时才备份（避免空转）
+    try {
+      const old = localStorage.getItem('wuxia_save');
+      if (old && old !== json) {
+        localStorage.setItem('wuxia_save_prev', old);
+      }
+    } catch (_) {}
+
+    localStorage.setItem('wuxia_save', json);
   } catch (e) {}
 }

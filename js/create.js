@@ -92,6 +92,19 @@ document.getElementById('avatar-back').addEventListener('click', () => goToStep(
 // 确认创建 → 进入游戏
 document.getElementById('avatar-confirm').addEventListener('click', () => {
   if (!createData.avatar) return;
+
+  // [v33] 防误覆盖：检测是否已有存档（非空角色），弹出二次确认
+  try {
+    const existing = JSON.parse(localStorage.getItem('wuxia_save') || 'null');
+    if (existing && existing.name && (existing.score > 0 || existing.xp > 500)) {
+      const msg = '⚠ 检测到已有角色「' + existing.name + '」' +
+        '（战力 ' + (existing.score || 0) + '，修为 ' + (existing.xp || 0) + '）\n\n' +
+        '创建新角色将永久覆盖此存档！建议先在设置中「导出存档」备份。\n\n' +
+        '是否继续覆盖？';
+      if (!confirm(msg)) return; // 用户取消 → 不覆盖，留在创建界面
+    }
+  } catch (_) {}
+
   player.name = createData.name;
   player.sect = createData.avatar.desc; // 门派=形象描述标签（与 online.js 门派下拉列表语义不同，待后续门派系统统一）
   player.avatarId = createData.avatar.id;

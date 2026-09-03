@@ -65,6 +65,8 @@ function checkSavedCharacter() {
       state = 'hub'; // 关键：进入主页必须把状态机切到 hub，否则底层 canvas 渲染循环会持续重绘地图/战斗帧（白耗算力）
       initHub();
       window.HUB.show();
+      // [v33] 检测是否有可恢复的备份存档（误覆盖后的一键恢复）
+      setTimeout(checkBackupRecovery, 500);
       if (offlineGain > 0) openModal(`<h3 style="color:#D4A843">离线挂机结算</h3><p style="color:rgba(241,239,232,0.8)">离线期间自动修炼，获得修为 <b style="color:#639922">+${formatNum(offlineGain)}</b>（含挂机加成 ${Math.round(player.xpBonus * 100)}%）。</p><button class="btn-full" onclick="closeModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">收下</button>`);
       return true;
     }
@@ -371,5 +373,50 @@ function prefetchBattleAssets() {
     }
   } catch (e) {}
 })();
+
+// [v33] 备份恢复检测：如果当前存档像新角色（低战力）而备份有高进度，弹窗提示恢复
+function checkBackupRecovery() {
+  try {
+    const prev = localStorage.getItem('wuxia_save_prev');
+    if (!prev) return;
+    const cur = JSON.parse(localStorage.getItem('wuxia_save') || 'null');
+    const bak = JSON.parse(prev);
+    if (!cur || !bak || !bak.name) return;
+    // 当前存档看起来是新创建的（低进度），而备份有明显进度 → 可能是误覆盖
+    const curProgress = (cur.score || 0) + (cur.xp || 0);
+    const bakProgress = (bak.score || 0) + (bak.xp || 0);
+    if (curProgress < 100 && bakProgress > curProgress * 3) {
+      openModal(
+        '<h3 style="color:#D4A843">🔮 检测到旧存档备份</h3>' +
+        '<p style="color:rgba(241,239,232,0.85);margin:8px 0">' +
+        '发现备份存档：<b style="color:#E87B7B">' + bak.name + '</b>' +
+        '（战力 ' + (bak.score || 0) + '，修为 ' + formatNum(bak.xp || 0) + '）<br>' +
+        '当前角色：<b>' + (cur.name || '未知') + '</b>' +
+        '（战力 ' + (cur.score || 0) + '）</p>' +
+        '<p style="color:rgba(212,168,67,0.8);font-size:12px">可能是之前误操作覆盖了旧存档。是否从备份恢复？</p>' +
+        '<div style="display:flex;gap:10px;margin-top:14px;justify-content:center">' +
+        '<button class="btn-full" onclick="restoreFromBackup()" style="background:rgba(99,153,34,0.6)">✓ 恢复备份</button>' +
+        '<button class="btn-full" onclick="closeModal()" style="background:rgba(255,255,255,0.08)">✗ 忽略</button>' +
+        '</div>'
+      );
+    }
+  } catch (_) {}
+}
+
+// 从备份恢复存档（由弹窗按钮调用）
+function restoreFromBackup() {
+  try {
+    const prev = localStorage.getItem('wuxia_save_prev');
+    if (!prev) { closeModal(); return; }
+    localStorage.setItem('wuxia_save', prev);
+    localStorage.removeItem('wuxia_save_prev');
+    closeModal();
+    showToast('✓ 存档已恢复，正在重新加载…');
+    setTimeout(() => location.reload(), 1200);
+  } catch (_) {
+    showToast('恢复失败，请刷新页面重试');
+  }
+}
+window.restoreFromBackup = restoreFromBackup;
 
 bootGame();
