@@ -137,7 +137,7 @@ function checkBossUnlock(bossIdx) {
 
 // ====== 头像选择弹窗 ======
 function showAvatarModal() {
-  refreshHub();
+  refreshHubAvatar();
 
   const cats = [
     { key: 'hero',  label: '✦ 主角' },
