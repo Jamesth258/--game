@@ -292,14 +292,25 @@
   .hub-top-float .cur-realm { font-size: 10px; color: #E8C77A; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.85); }
   .hub-top-float .xp-nums { font-size: 9px; color: rgba(232,199,122,0.55); }
 
-  /* ── 中央打坐画面区（视频填满 + 悬浮菜单叠加） ── */
+  /* ── 中央打坐画面区（黑底 + 居中视频容器） ── */
   .hub-char-area {
     flex: 1; display: flex; align-items: center; justify-content: center;
     position: relative; overflow: hidden;
     background: #0a0a0c;
   }
-  /* 视频填满整个区域，object-fit:contain 保证不裁切 */
+
+  /* 视频等大定位参照容器：尺寸=视频实际显示区域，顶栏/底栏相对此层定位 */
+  .hub-video-wrap {
+    position: relative;
+    width: 100%;
+    max-width: min(100%, 1180px, calc(74vh * 16 / 9));
+    max-height: 74vh;
+    aspect-ratio: 16 / 9;
+    margin: auto;
+  }
+  /* 视频填满容器（容器已与视频同比例，object-fit:contain 即完美填充） */
   .hub-char-video {
+    position: absolute; inset: 0;
     width: 100%; height: 100%;
     object-fit: contain;
     filter: drop-shadow(0 0 40px rgba(212,168,67,0.08));
