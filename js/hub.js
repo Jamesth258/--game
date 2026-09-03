@@ -56,7 +56,20 @@ const SHOP_REFRESH_PAID_COST = 500;  // 每次灵石付费刷新消耗的灵石
 function initHub() {
   const hub = document.getElementById('hub-screen');
   const floatIconContainer = document.getElementById('hub-float-icons');
-  const avatarEl = document.getElementById('hub-avatar');
+  // 初始化头像系统（兼容旧存档）
+  if (typeof initAvatarSystem === 'function') initAvatar();
+
+  // 头像点击 → 打开头像选择弹窗
+  const avatarWrap = document.querySelector('.hub-avatar-wrap');
+  if (avatarWrap) {
+    avatarWrap.style.cursor = 'pointer';
+    avatarWrap.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (typeof showAvatarModal === 'function') showAvatarModal();
+    });
+    // 恢复 pointer-events（CSS 设了 none）
+    avatarWrap.style.pointerEvents = 'auto';
+  }
   const powerEl = document.getElementById('hub-power-num');
   const charVideo = document.getElementById('hub-char-video');
 
@@ -153,7 +166,8 @@ function initHub() {
   function refreshHub() {
     // 玩家名字已隐藏（用户要求不显示）
     powerEl.textContent = formatNum(calcCombatPower(player));
-    avatarEl.src = 'assets/select/avatar_head.png?v=1';
+    // 头像：使用头像系统（默认当前角色，可切换）
+    if (typeof refreshHubAvatar === 'function') refreshHubAvatar();
     syncRealmDOM();
     // 角色展示：B+C 融合 —— 当前所选角色「打坐修炼」横版动画（视频，失败自动回退静图 poster）
     const _aid = player.avatarId || 'm2';

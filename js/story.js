@@ -239,6 +239,8 @@ function storySkipReward(ch) { openChapter(ch); }   // 不标记已领，下次�
 // 战斗结束（胜/负）后的路由：章节通关→弹三选一；否则回到本章继续/重战。供 battle.js 自动调用，确保有返回出口
 function storyAfterBattle() {
   const ch = (battle && battle.node && battle.node._story) ? battle.node._story.ch : 1;
+  // 头像解锁：通关对应卷的章节时解锁该卷敌人头像
+  if (typeof checkStoryUnlock === 'function') checkStoryUnlock(ch);
   if (player.storyCleared[ch] >= 10) openStoryScreen();   // 章节通关 → 触发三选一奖励
   else if (window.openChapter) openChapter(ch);          // 否则继续下一关 / 失败重战
   else openStoryScreen();

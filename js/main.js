@@ -41,6 +41,8 @@ function checkSavedCharacter() {
       if (typeof rebuildEquipCollected === 'function') rebuildEquipCollected();
       player.codexReward = (saved.codexReward && typeof saved.codexReward === 'object') ? saved.codexReward : { skill: 0, equip: 0 };
       player.skillPity = (typeof saved.skillPity === 'number') ? saved.skillPity : 0;
+      player.selectedAvatar = saved.selectedAvatar || player.avatarId || '';
+      player.unlockedAvatars = Array.isArray(saved.unlockedAvatars) ? saved.unlockedAvatars : [player.avatarId || 'm2'];
       const _all = CHARACTERS.male.concat(CHARACTERS.female);
       const _ch = _all.find(c => c.id === saved.avatarId);
       art.hero.src = _ch ? _ch.img : saved.avatarImg;

@@ -97,6 +97,8 @@ function saveGame() {
       equipCollected: player.equipCollected,
       codexReward: player.codexReward,
       skillPity: player.skillPity,
+      selectedAvatar: player.selectedAvatar,
+      unlockedAvatars: player.unlockedAvatars,
     }));
   } catch (e) {}
 }

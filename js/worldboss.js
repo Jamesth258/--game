@@ -238,6 +238,9 @@ function openWorldBossResult(slotIdx) {
   const remain = Math.max(0, WB_MAX_ATTEMPTS - sd.attempts);
   const board = wbBoard(slot);
   let html = `<div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#E87B7B" stroke-width="2"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg><h3 style="margin:0">世界BOSS · ${esc(slot.name)}</h3></div>`;
+  // 头像解锁：首次参与该BOSS战斗并造成伤害即解锁
+  if (sd.dmg > 0 && typeof checkBossUnlock === 'function') checkBossUnlock(slotIdx);
+
   html += `<p style="margin:4px 0">本时段累计伤害：<b style="color:#E87B7B">${wbFmt(sd.dmg)}</b> ｜ 剩余挑战：<b>${remain}</b> 次</p>`;
   html += `<p style="margin:2px 0;font-size:12px;color:rgba(241,239,232,0.7)">当前预估排名：<b style="color:#D4A843">第 ${board.rank} 名</b>（时段截止后确定最终名次）</p>`;
   html += `<div class="equip-sec-title">实时伤害榜</div><div class="bag-list">` +
