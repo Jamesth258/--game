@@ -228,17 +228,17 @@
   }
   #hub-screen[hidden] { display: none; }
 
-  /* ── 顶部悬浮信息栏（头像+战力+境界+经验条，浮在视频右上方） ── */
+  /* ── 顶部悬浮信息栏（头像+战力+境界+经验条，浮在视频左上方） ── */
   .hub-top-float {
-    position: absolute; top: 0; right: 0;
-    display: flex; align-items: center; gap: 8px;
-    padding: 12px 16px 10px;
+    position: absolute; top: 0; left: 0;
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 18px 12px;
     z-index: 5;
     pointer-events: none;
   }
   /* 头像区 */
   .hub-avatar-wrap {
-    position: relative; width: 46px; height: 46px; flex-shrink: 0;
+    position: relative; width: 48px; height: 48px; flex-shrink: 0;
     pointer-events: auto;
   }
   .hub-avatar-frame {
@@ -255,35 +255,29 @@
     object-fit: cover;
     border: 1.5px solid rgba(212,168,67,0.6);
   }
-  /* 战力 —— 烫金立体字效果 */
+  /* 战力 —— 与底部菜单标签统一风格（金色楷体） */
   .hub-power {
     display: flex; align-items: baseline; gap: 2px;
-    font-size: 11px; color: rgba(232,200,120,0.7);
+    font-family: "KaiTi","STKaiti","楷体","SimKai",serif;
+    font-size: 15px; font-weight: 600; color: #E8C77A;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.92), 0 0 10px rgba(212,168,67,0.35);
     pointer-events: auto;
   }
   .hub-power-num {
-    font-size: 20px; font-weight: 900;
-    font-family: 'KaiTi', 'STKaiti', 'FangSong', serif;
-    color: #FFE4A0;
-    text-shadow:
-      0 1px 0 #B8860B,
-      0 2px 0 #9A7209,
-      0 3px 2px rgba(0,0,0,0.5),
-      0 0 12px rgba(212,168,67,0.6),
-      0 0 24px rgba(212,168,67,0.25);
+    font-size: 20px; font-weight: 700; color: #FFE4A0;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.92), 0 0 12px rgba(212,168,67,0.55);
     letter-spacing: 1px;
   }
-  /* 境界 */
+  /* 境界 —— 与底部菜单标签统一 */
   .hub-realm {
-    font-size: 12px; font-weight: 700;
-    font-family: 'KaiTi', 'STKaiti', 'FangSong', serif;
-    color: #E8C77A;
+    font-family: "KaiTi","STKaiti","楷体","SimKai",serif;
+    font-size: 15px; font-weight: 600; color: #E8C77A;
     white-space: nowrap; letter-spacing: 1px;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.85), 0 0 8px rgba(212,168,67,0.3);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.92), 0 0 10px rgba(212,168,67,0.35);
     pointer-events: auto;
   }
-  /* 经验条（悬浮版） */
-  .hub-top-float .xp-bar-wrap { margin: 0; max-width: 110px; pointer-events: auto; }
+  /* 经验条（悬浮版，与整体金色风格统一） */
+  .hub-top-float .xp-bar-wrap { margin: 0; max-width: 120px; pointer-events: auto; }
   .hub-top-float .xp-bar-track {
     height: 6px; border-radius: 3px;
     background: rgba(0,0,0,0.45);
@@ -295,8 +289,8 @@
     box-shadow: 0 0 6px rgba(212,168,67,0.5);
   }
   .hub-top-float .xp-bar-info { margin-top: 1px; display: flex; justify-content: space-between; }
-  .hub-top-float .cur-realm { font-size: 9px; color: rgba(232,199,122,0.8); font-weight: 600; }
-  .hub-top-float .xp-nums { font-size: 8px; color: rgba(241,239,232,0.4); }
+  .hub-top-float .cur-realm { font-size: 10px; color: #E8C77A; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.85); }
+  .hub-top-float .xp-nums { font-size: 9px; color: rgba(232,199,122,0.55); }
 
   /* ── 中央打坐画面区（视频填满 + 悬浮菜单叠加） ── */
   .hub-char-area {
@@ -407,10 +401,10 @@
 
 /* ---- 响应式：窄屏适配（移动端基础断点） ---- */
 @media screen and (max-width: 400px) {
-  .hub-top-float { top: 4px; right: 8px; gap: 5px; padding: 8px 8px 6px; }
+  .hub-top-float { top: 4px; left: 8px; gap: 5px; padding: 8px 8px 6px; }
   .hub-top-float .hub-avatar-wrap { width: 36px; height: 36px; }
+  .hub-top-float .hub-power, .hub-top-float .hub-realm { font-size: 12px; }
   .hub-top-float .hub-power-num { font-size: 16px; }
-  .hub-top-float .hub-realm { font-size: 10px; }
   .hub-top-float .xp-bar-wrap { max-width: 80px; }
   .hub-float-bar { flex-wrap: wrap; gap: 4px; padding: 8px 10px 12px; justify-content: space-around; }
   .hub-float-btn { min-width: 46px; max-width: 80px; }
