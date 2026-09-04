@@ -109,7 +109,7 @@ function refreshHubAvatar() {
   const avatarEl = document.getElementById('hub-avatar');
   if (!avatarEl) return;
   const av = getCurrentAvatar();
-  avatarEl.src = av.img + '?v=1';
+  avatarEl.src = av.img + '?v=2';
   avatarEl.alt = av.name;
 }
 
