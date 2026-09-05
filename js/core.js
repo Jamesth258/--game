@@ -36,8 +36,12 @@ function loadBattleBg(name) {
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 const _modal = document.getElementById('modal');
 const _modalBox = document.getElementById('modal-box');
-function openModal(html) { _modalBox.innerHTML = html; _modal.hidden = false; }
-function closeModal() { _modal.hidden = true; _modalBox.innerHTML = ''; }
+function openModal(html, mode) {
+  _modalBox.className = 'modal-box' + (mode ? ' ' + mode : '');
+  _modalBox.innerHTML = html;
+  _modal.hidden = false;
+}
+function closeModal() { _modal.hidden = true; _modalBox.className = 'modal-box'; _modalBox.innerHTML = ''; }
 _modal.addEventListener('click', e => { if (e.target === _modal) closeModal(); });
 
 // 统一返回主页：关弹窗 + 强制显示主页 + 清掉残留战斗态 + 重置状态机

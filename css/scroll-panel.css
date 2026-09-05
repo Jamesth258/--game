@@ -1,0 +1,189 @@
+/* scroll-panel.css — 古卷轴弹窗框架（V4 立轴装裱）
+ * 用法：openModal(html, 'scroll')，html 最外层包 <div class="scroll-panel">
+ * 结构：scroll-rod.top → scroll-silk.top → scroll-painting
+ *        → scroll-paper(内容) → scroll-painting收口 → scroll-silk.bot → scroll-rod.bot
+ * 配色：暖宣纸 + 墨字 + 古铜金 + 朱砂，宋体数字 + 楷体标题。
+ * 复用 design/attr-v1-revamp.html(V4) 的纹理 data-URI。
+ */
+.modal-box.scroll { background: transparent; border-radius: 0; padding: 0; box-shadow: none; }
+
+.scroll-panel {
+  --s-silk:#1e2d28;
+  --s-paper:#f3eadc;
+  --s-paper-edge:#e8dcc2;
+  --s-ink:#1a1612;
+  --s-ink-mid:#3a3026;
+  --s-ink-light:#5c5042;
+  --s-gold:#9a7b3f;
+  --s-gold-light:#c4a35c;
+  --s-cinnabar:#a83828;
+  --s-jade:#2a6048;
+  --s-wood-1:#7a5530; --s-wood-2:#4a2e18; --s-wood-3:#2a180c; --s-cap:#b89428;
+  --s-kai:"KaiTi","STKaiti","楷体","Kaiti SC","华文楷体",serif;
+  --s-song:"SimSun","STSong","宋体","Songti SC","华文宋体",serif;
+  position: relative;
+  filter: drop-shadow(0 24px 50px rgba(0,0,0,.5));
+  font-family: var(--s-song);
+  color: var(--s-ink);
+}
+
+/* ── 木轴（天杆/地杆）── */
+.scroll-rod { height: 18px; border-radius: 9px; position: relative; z-index: 3;
+  background:
+    repeating-linear-gradient(85deg, transparent 0, rgba(255,255,255,.06) 1px, transparent 2px, transparent 5px, rgba(0,0,0,.08) 7px, transparent 9px),
+    linear-gradient(180deg, var(--s-wood-1), var(--s-wood-2) 35%, var(--s-wood-3) 70%, #1a0e06);
+  box-shadow: inset 0 2px 4px rgba(255,255,255,.15), inset 0 -2px 4px rgba(0,0,0,.45), 0 2px 6px rgba(0,0,0,.35);
+}
+.scroll-rod::before, .scroll-rod::after {
+  content: ""; position: absolute; top: 50%; transform: translateY(-50%);
+  width: 13px; height: 28px; border-radius: 7px; z-index: 4;
+  background: linear-gradient(180deg, #e0c86a, var(--s-cap) 40%, #8a6a1e 75%, #5a4208);
+  box-shadow: inset 0 2px 3px rgba(255,255,255,.35), inset 0 -2px 3px rgba(0,0,0,.35), 0 2px 5px rgba(0,0,0,.4);
+}
+.scroll-rod::before { left: -6px; } .scroll-rod::after { right: -6px; }
+.scroll-rod.bot { height: 22px; border-radius: 11px; }
+.scroll-rod.bot::before, .scroll-rod.bot::after { height: 34px; border-radius: 9px; }
+
+/* ── 绫边绢布（深墨绿 + 金色云气暗纹）── */
+.scroll-silk { position: relative; height: 34px; overflow: hidden;
+  background-color: var(--s-silk);
+  background-image:url("data:image/svg+xml,%3Csvg width='80' height='80' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='20' cy='20' r='1.5' fill='%23c8af78' opacity='.15'/%3E%3Ccircle cx='55' cy='15' r='1' fill='%23c8af78' opacity='.1'/%3E%3Ccircle cx='40' cy='50' r='1.2' fill='%23c8af78' opacity='.12'/%3E%3Ccircle cx='65' cy='58' r='0.8' fill='%23c8af78' opacity='.08'/%3E%3Ccircle cx='12' cy='60' r='1' fill='%23c8af78' opacity='.1'/%3E%3Cpath d='M10 35 Q20 30 30 35 T50 35' stroke='%23c8af78' stroke-width='.5' fill='none' opacity='.08'/%3E%3Cpath d='M30 55 Q40 52 50 56 T70 54' stroke='%23c8af78' stroke-width='.4' fill='none' opacity='.07'/%3E%3C/svg%3E");
+  border-left: 3px solid rgba(154,123,63,.4); border-right: 3px solid rgba(154,123,63,.4);
+}
+.scroll-silk::after { content: "◆ ◆ ◆ ◆ ◆"; color: rgba(200,175,120,.12); letter-spacing: 16px; font-size: 8px;
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); }
+
+/* ── 画心（绫边包边 + 宣纸）── */
+.scroll-painting { position: relative; padding: 3px;
+  background: linear-gradient(135deg, rgba(154,123,63,.25), rgba(154,123,63,.1) 30%, rgba(154,123,63,.1) 70%, rgba(154,123,63,.25));
+}
+.scroll-paper { position: relative; padding: 20px 22px 24px;
+  background:
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.04 .08' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23f)' opacity='.07'/%3E%3C/svg%3E"),
+    radial-gradient(ellipse 110% 95% at 50% -5%, var(--s-paper), var(--s-paper-edge)),
+    radial-gradient(ellipse 110% 95% at 50% 105%, var(--s-paper), var(--s-paper-edge)),
+    radial-gradient(ellipse 95% 110% at -5% 50%, var(--s-paper), var(--s-paper-edge)),
+    radial-gradient(ellipse 95% 110% at 105% 50%, var(--s-paper), var(--s-paper-edge)),
+    var(--s-paper);
+  box-shadow: inset 0 0 40px rgba(0,0,0,.03);
+  color: var(--s-ink);
+}
+.scroll-paper::before { content:""; position:absolute; inset:8px; border:1px solid rgba(154,123,63,.22); pointer-events:none; }
+.scroll-paper::after { content:""; position:absolute; inset:12px; border:1px solid rgba(154,123,63,.1); pointer-events:none; }
+.scroll-inner { position: relative; z-index: 2; }
+
+/* ── 头部（圆形头像 + 名号 + 战力）── */
+.scroll-head { display:flex; align-items:center; gap:14px; padding-bottom:14px;
+  border-bottom:1.5px solid rgba(154,123,63,.25); margin-bottom:14px; }
+.scroll-ava { width:72px; height:72px; border-radius:50%; flex:0 0 auto; background:var(--s-paper-edge); padding:3px;
+  box-shadow:0 0 0 2px var(--s-gold),0 3px 10px rgba(0,0,0,.15); }
+.scroll-ava img { width:100%; height:100%; border-radius:50%; object-fit:cover; border:1.5px solid rgba(154,123,63,.4); }
+.scroll-id { flex:1; min-width:0; }
+.scroll-name { font-size:23px; font-weight:700; color:var(--s-ink); letter-spacing:3px; line-height:1.2; font-family:var(--s-kai); }
+.scroll-realm { margin-top:2px; font-size:14px; color:var(--s-ink-mid); letter-spacing:2px; }
+.scroll-power { text-align:center; flex:0 0 auto; border:1.5px solid rgba(168,56,40,.25);
+  border-radius:8px; padding:7px 12px; background:rgba(168,56,40,.04); }
+.scroll-power .lbl { font-size:11px; font-weight:600; color:var(--s-cinnabar); letter-spacing:3px; }
+.scroll-power .num { font-size:18px; font-weight:700; color:var(--s-cinnabar); letter-spacing:1px; }
+
+/* ── 经验条（金色）── */
+.scroll-xp { margin-bottom:14px; }
+.scroll-xp .info { display:flex; justify-content:space-between; font-size:11.5px; margin-bottom:4px; }
+.scroll-xp .info .rlm { color:var(--s-ink); font-weight:600; }
+.scroll-xp .info .num { color:var(--s-ink-light); }
+.scroll-xp .track { height:8px; border-radius:4px; background:rgba(26,22,18,.07); border:1px solid rgba(154,123,63,.2); }
+.scroll-xp .fill { height:100%; border-radius:3px;
+  background:linear-gradient(90deg,#B8860B,#FFD700 55%,#D4A843);
+  box-shadow:inset 0 1px 2px rgba(255,255,255,.45),0 0 6px rgba(212,168,67,.45); position:relative; }
+.scroll-xp .fill::after { content:""; position:absolute; right:-1px; top:-2px; width:3px; height:12px; background:#FFD700; border-radius:2px; }
+
+/* ── 分区标题 ── */
+.scroll-sec { display:flex; align-items:center; justify-content:space-between; margin:12px 0 6px; }
+.scroll-sec .t { font-family:var(--s-kai); font-size:14px; color:var(--s-ink); font-weight:700; letter-spacing:3px; padding-left:10px; position:relative; }
+.scroll-sec .t::before { content:""; position:absolute; left:0; top:50%; transform:translateY(-50%); width:3px; height:14px; background:var(--s-gold); border-radius:1.5px; }
+.scroll-sec .free { font-size:11px; color:var(--s-ink-light); }
+.scroll-sec .free b { color:var(--s-cinnabar); font-size:13px; }
+
+/* ── 基础属性行 ── */
+.scroll-basic { display:flex; flex-direction:column; gap:3px; }
+.scroll-brow { display:flex; align-items:center; gap:10px; padding:7px 11px; border-radius:5px;
+  background:rgba(26,22,18,.025); border:1px solid rgba(154,123,63,.12); }
+.scroll-dot { width:8px; height:8px; border-radius:50%; flex:0 0 auto; background:var(--s-gold); }
+.scroll-bname { flex:1; font-size:13.5px; color:var(--s-ink-mid); font-weight:600; letter-spacing:2px; }
+.scroll-bval { font-size:16px; font-weight:700; color:var(--s-ink); min-width:26px; text-align:right; }
+.scroll-btns { display:flex; gap:5px; }
+.scroll-btns button { width:26px; height:26px; border-radius:6px; border:1.2px solid rgba(154,123,63,.3);
+  background:rgba(243,234,220,.7); color:var(--s-ink-mid); font-size:15px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; font-weight:600; }
+.scroll-btns button:hover { background:rgba(243,234,220,.95); border-color:var(--s-gold); color:var(--s-ink); }
+.scroll-btns button:disabled { opacity:.25; cursor:not-allowed; }
+
+/* ── 派生属性网格 ── */
+.scroll-grid { display:grid; grid-template-columns:1fr 1fr; gap:2px 14px; }
+.scroll-cell { display:flex; align-items:center; gap:7px; padding:5px 3px; border-bottom:1px dashed rgba(154,123,63,.15); }
+.scroll-cell .lab { font-size:12px; color:var(--s-ink-light); flex:1; }
+.scroll-cell .num { font-size:13.5px; font-weight:700; color:var(--s-ink); }
+.scroll-cell.power .lab, .scroll-cell.power .num { color:var(--s-cinnabar); }
+.scroll-cell.power .num { font-size:15px; }
+
+/* ── 分隔线 ── */
+.scroll-div { height:10px; margin:12px 0;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 10'%3E%3Cpath d='M0 5 H400' stroke='%239a7b3f' stroke-width='.6' opacity='.25'/%3E%3Crect x='195' y='2' width='10' height='6' rx='1' fill='%239a7b3f' opacity='.2'/%3E%3Ccircle cx='30' cy='5' r='1.5' fill='%239a7b3f' opacity='.2'/%3E%3Ccircle cx='370' cy='5' r='1.5' fill='%239a7b3f' opacity='.2'/%3E%3C/svg%3E") center/contain no-repeat; }
+
+/* ── 返回按钮 ── */
+.scroll-back { width:100%; margin-top:18px; padding:11px; border:none; border-radius:7px; cursor:pointer;
+  font-family:var(--s-kai); font-size:14px; letter-spacing:6px; color:#fff; font-weight:700;
+  background:linear-gradient(180deg,var(--s-cinnabar),#7a2820);
+  box-shadow:0 3px 0 #5a1a14,0 6px 12px rgba(0,0,0,.2); transition:.12s; }
+.scroll-back:active { transform:translateY(2px); box-shadow:0 1px 0 #5a1a14,0 3px 6px rgba(0,0,0,.2); }
+.scroll-back:hover { background:linear-gradient(180deg,#b84432,#8a2e22); }
+
+/* ════════════════════════════════════════════════════════════
+   既有弹窗类在卷轴作用域下的暖纸重定向（功法/装备/背包复用）
+   ════════════════════════════════════════════════════════════ */
+.scroll-panel .hub-modal-title { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+.scroll-panel .hub-modal-title svg { width:22px; height:22px; flex-shrink:0; stroke:var(--s-gold); }
+.scroll-panel .hub-modal-title h3 { margin:0; font-size:18px; font-weight:700; color:var(--s-ink); font-family:var(--s-kai); letter-spacing:2px; }
+.scroll-panel p { color:var(--s-ink-mid); font-size:12.5px; line-height:1.7; }
+.scroll-panel p b { color:var(--s-ink); }
+.scroll-panel hr { border:none; border-top:1px dashed rgba(154,123,63,.25); margin:12px 0; }
+.scroll-panel select { background:var(--s-paper-edge); color:var(--s-ink); border:0.5px solid rgba(154,123,63,.3); border-radius:6px; padding:4px 6px; font-family:var(--s-song); }
+.scroll-panel label { color:var(--s-ink-light); font-size:12px; }
+
+.scroll-panel .equip-sec-title { font-size:13px; color:var(--s-gold); font-weight:700; margin:4px 0 8px; letter-spacing:1px; }
+.scroll-panel .bag-list { display:flex; flex-direction:column; gap:8px; }
+.scroll-panel .bag-item { display:flex; align-items:center; justify-content:space-between; gap:8px;
+  background:rgba(26,22,18,.025); border:1px solid rgba(154,123,63,.15); border-radius:8px; padding:8px 10px; }
+.scroll-panel .bag-info { display:flex; flex-direction:column; gap:1px; min-width:0; }
+.scroll-panel .bag-name { font-size:13px; font-weight:600; color:var(--s-ink); }
+.scroll-panel .equip-bonus { font-size:11px; color:var(--s-ink-light); line-height:1.5; }
+.scroll-panel .equip-icon { font-size:15px; }
+.scroll-panel .equip-slot { background:rgba(26,22,18,.03); border:1px solid rgba(154,123,63,.18); border-radius:10px; padding:10px; }
+.scroll-panel .equip-slot-head { display:flex; align-items:center; gap:6px; font-size:13px; color:var(--s-ink-mid); font-weight:600; margin-bottom:6px; }
+.scroll-panel .equip-name { font-size:13px; font-weight:600; margin-bottom:2px; color:var(--s-ink); }
+.scroll-panel .equip-slots { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+/* 按钮：朱砂风（覆盖默认蓝）*/
+.scroll-panel .equip-btn { width:auto; min-width:48px; padding:0 12px; height:26px; font-size:12px; font-weight:600;
+  background:linear-gradient(180deg,var(--s-cinnabar),#7a2820); color:#fff; border:none; border-radius:6px; cursor:pointer; flex-shrink:0; }
+.scroll-panel .equip-btn:hover { background:#8a2e22; }
+.scroll-panel .equip-btn.danger { background:rgba(168,56,40,.12); color:var(--s-cinnabar); border:1px solid rgba(168,56,40,.3); }
+.scroll-panel .equip-btn.danger:hover { background:rgba(168,56,40,.2); }
+.scroll-panel .equip-btn:disabled { background:rgba(26,22,18,.06); color:rgba(26,22,18,.3); cursor:default; }
+.scroll-panel .equip-btn.diamond-buy-btn { flex:0 0 80px !important; width:80px !important; min-width:80px !important; max-width:80px !important; padding:0 !important; text-align:center; justify-content:center; box-sizing:border-box !important; overflow:hidden; }
+
+/* 返回钮 .btn-full 在卷轴内 → 朱砂（覆盖默认蓝）*/
+.scroll-panel .btn-full { width:100%; margin-top:14px; padding:11px; background:linear-gradient(180deg,var(--s-cinnabar),#7a2820);
+  color:#fff; border:none; border-radius:7px; cursor:pointer; font-size:14px; font-weight:600; font-family:var(--s-kai); letter-spacing:4px; }
+.scroll-panel .btn-full:hover { background:linear-gradient(180deg,#b84432,#8a2e22); }
+
+/* 经验条（复用游戏 .xp-bar-*，在卷轴内改金）*/
+.scroll-panel .xp-bar-wrap { margin:10px 0 4px; }
+.scroll-panel .xp-bar-info { display:flex; justify-content:space-between; align-items:baseline; font-size:12px; margin-bottom:4px; }
+.scroll-panel .xp-bar-info .cur-realm { font-weight:700; color:var(--s-gold); font-size:13px; }
+.scroll-panel .xp-bar-info .xp-nums { color:var(--s-ink-light); font-size:11px; }
+.scroll-panel .xp-bar-track { width:100%; height:10px; background:rgba(26,22,18,.07); border:1px solid rgba(154,123,63,.2); border-radius:5px; overflow:hidden; }
+.scroll-panel .xp-bar-fill { height:100%; background:linear-gradient(90deg,#B8860B,#FFD700 55%,#D4A843); border-radius:5px; transition:width .4s ease; box-shadow:inset 0 1px 2px rgba(255,255,255,.45); }
+
+/* 空态文字 */
+.scroll-panel .empty-tip { opacity:.55; padding:8px; font-size:12px; color:var(--s-ink-light); }

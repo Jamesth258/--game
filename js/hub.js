@@ -206,51 +206,72 @@ function initHub() {
     const free = earned - player.spent;
     const pct = v => Math.round(v * 100) + '%';
     const fmt = n => formatNum(n);
-    // 紧凑加减按钮
-    const btn = (k, d, disabled) =>
-      `<button class="alloc-btn" onclick="allocAttr('${k}',${d})" ${disabled ? 'disabled' : ''}>${d > 0 ? '+' : '−'}</button>`;
-    const attrRow = k => `
-      <tr>
-        <td style="padding:6px 6px;color:#D4A843;font-weight:600;font-size:13px;white-space:nowrap">${ATTR_NAMES[k]}</td>
-        <td style="text-align:center;color:#fff;font-weight:700;font-size:14px;min-width:36px">${player[k]}</td>
-        <td style="text-align:right;white-space:nowrap;padding-left:8px">
-          ${btn(k, -1, player[k] <= 10)} ${btn(k, 1, free <= 0)}
-        </td>
-      </tr>`;
-    // 经验进度条
-    const xpPct = Math.round(r.progress * 100);
-    const xpBarHtml = `
-      <div class="xp-bar-wrap">
-        <div class="xp-bar-info">
-          <span class="cur-realm">${esc(r.label)}</span>
-          <span class="xp-nums">${fmt(r.xpIntoStage)} / ${fmt(r.xpForStage)} (${xpPct}%)</span>
-        </div>
-        <div class="xp-bar-track"><div class="xp-bar-fill" style="width:${xpPct}%"></div></div>
+    const avatarFile = 'avatar_' + (player.avatarId || 'm1');
+    // 基础属性行（暖纸卷轴风）
+    const basicRow = k => `
+      <div class="scroll-brow">
+        <span class="scroll-dot"></span>
+        <span class="scroll-bname">${ATTR_NAMES[k]}</span>
+        <span class="scroll-bval">${player[k]}</span>
+        <span class="scroll-btns">
+          <button onclick="allocAttr('${k}',-1)" ${player[k] <= 10 ? 'disabled' : ''}>−</button>
+          <button onclick="allocAttr('${k}',1)" ${free <= 0 ? 'disabled' : ''}>+</button>
+        </span>
       </div>`;
+    // 经验条（金色）
+    const xpPct = Math.round(r.progress * 100);
+    const xpHtml = `
+      <div class="scroll-xp">
+        <div class="info"><span class="rlm">${esc(r.label)}</span><span class="num">${fmt(r.xpIntoStage)} / ${fmt(r.xpForStage)}（${xpPct}%）</span></div>
+        <div class="track"><div class="fill" style="width:${xpPct}%"></div></div>
+      </div>`;
+    // 派生属性网格（墨字，战力朱砂）
+    const cell = (lab, val, isPower) => `<div class="scroll-cell${isPower ? ' power' : ''}"><span class="lab">${lab}</span><span class="num">${val}</span></div>`;
+    const derived = [
+      cell('❤ 生命上限', player.maxHp),
+      cell('✦ 灵力上限', player.maxMp),
+      cell('⚔ 物理攻击', player.atk),
+      cell('☯ 精神攻击', player.spiAtk),
+      cell('🛡 物理防御', player.def),
+      cell('🛡 精神防御', player.spiDef),
+      cell('🎯 命中率', pct(player.hitRate)),
+      cell('⚡ 先攻值', player.init),
+      cell('🍀 闪避率', pct(player.eva)),
+      cell('🍀 幸运值', player.luck),
+      cell('🎯 暴击率', pct(player.critRate)),
+      cell('💥 暴击伤害', Math.round(player.critDmg * 100) + '%'),
+      cell('📈 挂机加成', pct(player.xpBonus)),
+      cell('⚡ 战力', fmt(calcCombatPower(player)), true),
+    ].join('');
     openModal(`
-      <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M5 21v-2a7 7 0 0114 0v2"/></svg>
-      <h3 style="margin:0">角色属性</h3></div>
-      <p style="margin:2px 0"><b style="color:#fff">${esc(player.name)}</b> · <b style="color:#D4A843">${esc(r.label)}</b></p>
-      ${xpBarHtml}
-      <p style="margin:6px 0 2px;color:#D4A843;font-size:13px">可分配点数：<b style="font-size:15px">${free}</b><span style="color:rgba(241,239,232,0.45);font-size:11px;margin-left:6px">（开局基础 ${BASE_FREE_POINTS} 点，每阶 +${POINTS_PER_STAGE}）</span></p>
-      <table style="width:100%;font-size:13px;border-collapse:collapse;margin-top:8px">
-        <tr style="color:rgba(241,239,232,0.35);font-size:11px;text-transform:uppercase;letter-spacing:1px">
-          <td style="padding:4px 6px">属性</td><td style="padding:4px;text-align:center">数值</td><td style="padding:4px;text-align:right">加点</td>
-        </tr>
-        ${ATTR_KEYS.map(attrRow).join('')}
-      </table>
-      <hr>
-      <table style="width:100%;font-size:13px;border-collapse:collapse">
-        <tr><td style="padding:4px 6px;color:#E87B7B;font-weight:500">❤ 生命上限</td><td style="text-align:right;font-weight:600;color:#fff">${player.maxHp}</td><td style="padding:4px 6px;color:#185FA5;font-weight:500">✦ 灵力上限</td><td style="text-align:right;font-weight:600;color:#fff">${player.maxMp}</td></tr>
-        <tr><td style="padding:4px 6px;color:#D4A843;font-weight:500">⚔ 物理攻击</td><td style="text-align:right;font-weight:600;color:#fff">${player.atk}</td><td style="padding:4px 6px;color:#9B6BCC;font-weight:500">☯ 精神攻击</td><td style="text-align:right;font-weight:600;color:#fff">${player.spiAtk}</td></tr>
-        <tr><td style="padding:4px 6px;color:#639922;font-weight:500">🛡 物理防御</td><td style="text-align:right;font-weight:600;color:#fff">${player.def}</td><td style="padding:4px 6px;color:#639922;font-weight:500">🛡 精神防御</td><td style="text-align:right;font-weight:600;color:#fff">${player.spiDef}</td></tr>
-        <tr><td style="padding:4px 6px;color:#378ADD;font-weight:500">🎯 命中率</td><td style="text-align:right;font-weight:600;color:#fff">${pct(player.hitRate)}</td><td style="padding:4px 6px;color:#9B6BCC;font-weight:500">⚡ 先攻值</td><td style="text-align:right;font-weight:600;color:#fff">${player.init}</td></tr>
-        <tr><td style="padding:4px 6px;color:#9B6BCC;font-weight:500">🍀 闪避率</td><td style="text-align:right;font-weight:600;color:#fff">${pct(player.eva)}</td><td style="padding:4px 6px;color:#E8D9A0;font-weight:500">🍀 幸运值</td><td style="text-align:right;font-weight:600;color:#fff">${player.luck}</td></tr>
-        <tr><td style="padding:4px 6px;color:#FF6B6B;font-weight:500">🎯 暴击率</td><td style="text-align:right;font-weight:600;color:#fff">${pct(player.critRate)}</td><td style="padding:4px 6px;color:#FFB347;font-weight:500">💥 暴击伤害</td><td style="text-align:right;font-weight:600;color:#fff">${Math.round(player.critDmg * 100)}%</td></tr>
-        <tr><td style="padding:4px 6px;color:#639922;font-weight:500">📈 挂机加成</td><td style="text-align:right;font-weight:600;color:#fff">${pct(player.xpBonus)}</td><td style="padding:4px 6px;color:#E87B7B;font-weight:700">⚡ 战力</td><td style="text-align:right;font-weight:700;color:#E87B7B">${fmt(calcCombatPower(player))}</td></tr>
-      </table>
-      <p style="margin:6px 0 0;font-size:10px;color:rgba(241,239,232,0.4)">命中率=基础25%+等级×0.5%+悟性×0.2%+装备加成。单件装备命中率加成至多+40%，总命中率上限100%。战斗实际命中=自身命中率−对方闪避率；负值时约8次命中1次。暴击率=基础15%+等级×0.2%+天命×0.2%+装备暴击+套装（集齐4件套额外+15%），上限100%；暴伤无封顶。暴击率/暴伤为常驻值（装备+套装），功法/残血可临时提升。</p>
-      <button class="btn-full" onclick="returnToHub()" style="margin-top:16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
+      <div class="scroll-panel">
+        <div class="scroll-rod top"></div>
+        <div class="scroll-silk top"></div>
+        <div class="scroll-painting">
+          <div class="scroll-paper">
+            <div class="scroll-inner">
+              <div class="scroll-head">
+                <div class="scroll-ava"><img src="assets/avatars/${avatarFile}.png?v=2" alt=""></div>
+                <div class="scroll-id">
+                  <div class="scroll-name">${esc(player.name)}</div>
+                  <div class="scroll-realm">${esc(r.label)}</div>
+                </div>
+                <div class="scroll-power"><div class="lbl">战力</div><div class="num">${fmt(calcCombatPower(player))}</div></div>
+              </div>
+              ${xpHtml}
+              <div class="scroll-sec"><div class="t">可分配点数</div><div class="free">基础 ${BASE_FREE_POINTS} · 每阶 +${POINTS_PER_STAGE}（剩余 <b>${free}</b>）</div></div>
+              <div class="scroll-basic">${ATTR_KEYS.map(basicRow).join('')}</div>
+              <div class="scroll-div"></div>
+              <div class="scroll-sec"><div class="t">详细属性</div></div>
+              <div class="scroll-grid">${derived}</div>
+              <p style="margin:10px 0 0;font-size:10.5px;line-height:1.9;color:rgba(26,22,18,.5)">命中率=基础25%+等级×0.5%+悟性×0.2%+装备加成，单件至多+40%、总上限100%；实际命中=自身命中−对方闪避。暴击率=基础15%+等级×0.2%+天命×0.2%+装备+套装（满4件+15%），上限100%；暴伤无封顶。暴击/暴伤为常驻值。</p>
+              <button class="scroll-back" onclick="returnToHub()">返回主页</button>
+            </div>
+          </div>
+        </div>
+        <div class="scroll-silk bot"></div>
+        <div class="scroll-rod bot"></div>
+      </div>`, 'scroll');
   }
 
   // 功法弹窗：最多装备 6 种，战斗中每回合点选；下方为已习得功法库（点选装备/卸下）
@@ -267,9 +288,9 @@ function initHub() {
     const isPassive = s.kind === 'passive';
     let right;
     if (isPassive) {
-      right = '<span style="color:#9B6BCC;font-size:12px;white-space:nowrap">【被动】自动加成</span>';
+      right = '<span style="color:#5a3d7a;font-size:12px;white-space:nowrap">【被动】自动加成</span>';
     } else if (on) {
-      right = '<span style="color:#639922;font-size:12px;white-space:nowrap">已装备</span>';
+      right = '<span style="color:#2a6048;font-size:12px;white-space:nowrap">已装备</span>';
     } else {
       const full = equipped.length >= MAX_EQUIPPED;
       right = `<button class="equip-btn" ${full ? 'disabled' : ''} onclick="equipSkill('${s.id}')">装备</button>`;
@@ -297,9 +318,9 @@ function initHub() {
     const act = list.filter(s => s.kind !== 'passive');
     const pas = list.filter(s => s.kind === 'passive');
     const actHtml = act.length ? act.map(s => skillRowHtml(s, isEquipped, equipped)).join('')
-      : '<div style="opacity:.5;padding:8px;font-size:12px">该筛选下暂无主动功法</div>';
+      : '<div style="opacity:.55;padding:8px;font-size:12px;color:#5c5042">该筛选下暂无主动功法</div>';
     const pasHtml = pas.length ? pas.map(s => skillRowHtml(s, isEquipped, equipped)).join('')
-      : '<div style="opacity:.5;padding:8px;font-size:12px">该筛选下暂无被动心法</div>';
+      : '<div style="opacity:.55;padding:8px;font-size:12px;color:#5c5042">该筛选下暂无被动心法</div>';
     const box = document.getElementById('skillLibBox');
     if (box) box.innerHTML = `
       <div class="equip-sec-title">主动型功法（${act.length}）</div>
@@ -325,23 +346,35 @@ function initHub() {
           <span class="equip-bonus">${esc(s.schoolCn)} · ${s.cost}灵</span></div>
           <button class="equip-btn danger" onclick="unequipSkill('${id}')">卸下</button></div>`;
       }
-      return `<div class="equip-slot" style="opacity:.45;text-align:center;color:rgba(241,239,232,.4);display:flex;align-items:center;justify-content:center">空槽位 ${i + 1}</div>`;
+      return `<div class="equip-slot" style="opacity:.5;text-align:center;color:#5c5042;display:flex;align-items:center;justify-content:center">空槽位 ${i + 1}</div>`;
     }).join('');
     // 已习得功法库：由 renderSkillLib() 动态渲染（分主动/被动两栏 + 品阶筛选/排序）
 
     openModal(`
-      <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-      <h3 style="margin:0">功法</h3></div>
-      <p style="margin:4px 0;font-size:12px;color:rgba(241,239,232,0.6)">最多同时装备 <b style="color:#D4A843">${MAX_EQUIPPED}</b> 种功法；战斗中每回合自行点选施展。普攻恒为物理（0 灵力）。</p>
-      <div class="equip-sec-title">已装备（${equipped.length}/${MAX_EQUIPPED}）</div>
-      <div class="bag-list">${slotHtml}</div>
-      <hr>
-      <div style="display:flex;gap:10px;margin:6px 0;flex-wrap:wrap">
-        <label style="font-size:12px;color:rgba(241,239,232,.7)">品阶 <select id="skillTierFilter" onchange="renderSkillLib()">${SKILL_TIER_OPTS}</select></label>
-        <label style="font-size:12px;color:rgba(241,239,232,.7)">排序 <select id="skillSortBy" onchange="renderSkillLib()"><option value="tier">按品阶</option><option value="school">按类型</option></select></label>
-      </div>
-      <div id="skillLibBox"></div>
-      <button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
+      <div class="scroll-panel">
+        <div class="scroll-rod top"></div>
+        <div class="scroll-silk top"></div>
+        <div class="scroll-painting">
+          <div class="scroll-paper">
+            <div class="scroll-inner">
+              <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+              <h3>功法</h3></div>
+              <p style="margin:4px 0;color:#5c5042">最多同时装备 <b style="color:#9a7b3f">${MAX_EQUIPPED}</b> 种功法；战斗中每回合自行点选施展。普攻恒为物理（0 灵力）。</p>
+              <div class="equip-sec-title">已装备（${equipped.length}/${MAX_EQUIPPED}）</div>
+              <div class="bag-list">${slotHtml}</div>
+              <hr>
+              <div style="display:flex;gap:10px;margin:6px 0;flex-wrap:wrap">
+                <label>品阶 <select id="skillTierFilter" onchange="renderSkillLib()">${SKILL_TIER_OPTS}</select></label>
+                <label>排序 <select id="skillSortBy" onchange="renderSkillLib()"><option value="tier">按品阶</option><option value="school">按类型</option></select></label>
+              </div>
+              <div id="skillLibBox"></div>
+              <button class="scroll-back" onclick="returnToHub()">返回主页</button>
+            </div>
+          </div>
+        </div>
+        <div class="scroll-silk bot"></div>
+        <div class="scroll-rod bot"></div>
+      </div>`, 'scroll');
     renderSkillLib();
   }
 
@@ -376,7 +409,7 @@ function initHub() {
         ? `<div class="equip-name" style="color:${it.rarityColor}">${esc(it.name)}</div>
            <div class="equip-bonus">${esc(equipBonusText(it))}${equipEffectText(it) ? esc(' · ' + equipEffectText(it)) : ''}</div>
            <button class="equip-btn danger" onclick="unequipSlot('${slot}')">卸下</button>`
-        : `<div class="equip-name" style="color:rgba(241,239,232,0.4)">未装备</div>`;
+        : `<div class="equip-name" style="color:#5c5042">未装备</div>`;
       return `<div class="equip-slot">
         <div class="equip-slot-head"><span class="equip-icon">${def.icon}</span>${def.name}</div>
         ${body}
@@ -392,17 +425,29 @@ function initHub() {
             <span class="equip-bonus">${esc(equipBonusText(it))}${equipEffectText(it) ? esc(' · ' + equipEffectText(it)) : ''}</span></div>
           <button class="equip-btn" onclick="equipItem('${it.uid}')">装备</button>
         </div>`).join('')
-      : `<p style="color:rgba(241,239,232,0.4);font-size:12px;margin:6px 0">背包为空 — 击败江湖敌人可掉落装备宝箱。</p>`;
+      : `<div class="empty-tip">背包为空 — 击败江湖敌人可掉落装备宝箱。</div>`;
 
     openModal(`
-      <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M12 2L4 7l8 5 8-5-8-5zM4 12l8 5 8-5M4 17l8 5 8-5"/></svg>
-      <h3 style="margin:0">装备</h3></div>
-      <p style="margin:2px 0 10px;font-size:12px;color:rgba(241,239,232,0.6)">灵石 <b style="color:#D4A843">${gold}</b> · 战力 <b style="color:#E87B7B">${formatNum(calcCombatPower(player))}</b></p>
-      <div class="equip-slots">${EQUIP_SLOT_KEYS.map(slotCard).join('')}</div>
-      <hr>
-      <div class="equip-sec-title">背包（${player.bag.length}）</div>
-      <div class="bag-list">${bagHtml}</div>
-      <button class="btn-full" onclick="returnToHub()" style="margin-top:16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
+      <div class="scroll-panel">
+        <div class="scroll-rod top"></div>
+        <div class="scroll-silk top"></div>
+        <div class="scroll-painting">
+          <div class="scroll-paper">
+            <div class="scroll-inner">
+              <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2L4 7l8 5 8-5-8-5zM4 12l8 5 8-5M4 17l8 5 8-5"/></svg>
+              <h3>装备</h3></div>
+              <p style="margin:2px 0 10px;color:#5c5042">灵石 <b style="color:#9a7b3f">${gold}</b> · 战力 <b style="color:#a83828">${formatNum(calcCombatPower(player))}</b></p>
+              <div class="equip-slots">${EQUIP_SLOT_KEYS.map(slotCard).join('')}</div>
+              <hr>
+              <div class="equip-sec-title">背包（${player.bag.length}）</div>
+              <div class="bag-list">${bagHtml}</div>
+              <button class="scroll-back" onclick="returnToHub()">返回主页</button>
+            </div>
+          </div>
+        </div>
+        <div class="scroll-silk bot"></div>
+        <div class="scroll-rod bot"></div>
+      </div>`, 'scroll');
   }
 
   // 穿戴：从背包取出装备到对应部位，旧装备退回背包
@@ -445,7 +490,7 @@ function initHub() {
     const equips = (player.bag || []).filter(it => !it || it.type !== 'chest');
     const chestHtml = chests.map(it => `<div class="bag-item">
         <div class="bag-info">
-          <span class="bag-name" style="color:#D4A843">${esc(it.icon || '🎁')} ${esc(it.name)}</span>
+          <span class="bag-name" style="color:#9a7b3f">${esc(it.icon || '🎁')} ${esc(it.name)}</span>
           <span class="equip-bonus">${esc(it.desc || '')}</span>
         </div>
         <button class="equip-btn" onclick="openChestItem('${it.uid}')">开启</button>
@@ -459,7 +504,7 @@ function initHub() {
             <div class="bag-info">
               <span class="equip-icon">${EQUIP_SLOTS[it.slot].icon}</span>
               <span class="bag-name" style="color:${it.rarityColor}">${esc(it.name)}</span>
-              <span class="equip-bonus">${esc(equipBonusText(it))}${better ? ' <b style="color:#639922">▲更优</b>' : ''}${equipEffectText(it) ? esc(' · ' + equipEffectText(it)) : ''}</span>
+              <span class="equip-bonus">${esc(equipBonusText(it))}${better ? ' <b style="color:#2a6048">▲更优</b>' : ''}${equipEffectText(it) ? esc(' · ' + equipEffectText(it)) : ''}</span>
             </div>
             <div style="display:flex;gap:6px;flex-shrink:0">
               <button class="equip-btn" onclick="equipItem('${it.uid}')">装备</button>
@@ -467,29 +512,41 @@ function initHub() {
             </div>
           </div>`;
         }).join('')
-      : `<p style="color:rgba(241,239,232,0.4);font-size:12px;margin:6px 0">暂无背包装备 — 击败江湖敌人可掉落宝箱，或去商店购买。</p>`;
+      : `<div class="empty-tip">暂无背包装备 — 击败江湖敌人可掉落宝箱，或去商店购买。</div>`;
     const pills = (player.items || []).filter(x => x.qty > 0);
     const pillHtml = pills.length
       ? pills.map(x => `<div class="bag-item">
           <div class="bag-info">
-            <span class="bag-name" style="color:${ITEM_DB[x.tid].kind === 'hp' ? '#3B6D11' : '#378ADD'}">${ITEM_DB[x.tid].name}</span>
+            <span class="bag-name" style="color:${ITEM_DB[x.tid].kind === 'hp' ? '#3B6D11' : '#2a6048'}">${ITEM_DB[x.tid].name}</span>
             <span class="equip-bonus">${ITEM_DB[x.tid].tierName}·${ITEM_DB[x.tid].kind === 'hp' ? '回血' : '回蓝'}${ITEM_DB[x.tid].pct * 100}% × ${x.qty}</span>
           </div>
         </div>`).join('')
-      : `<p style="color:rgba(241,239,232,0.4);font-size:12px;margin:6px 0">暂无丹药 — 可在商店「丹药专区」购买。</p>`;
+      : `<div class="empty-tip">暂无丹药 — 可在商店「丹药专区」购买。</div>`;
     const chestSection = chests.length
       ? `<div class="equip-sec-title">宝箱（${chests.length}）· 点击开启</div><div class="bag-list">${chestHtml}</div><hr>`
       : '';
     openModal(`
-      <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6V4a2 0 012-2h4a2 0 012 2v2"/></svg>
-      <h3 style="margin:0">背包</h3></div>
-      <p style="margin:2px 0 10px;font-size:12px;color:rgba(241,239,232,0.6)">灵石 <b style="color:#D4A843">${gold}</b> · 装备 <b style="color:#fff">${equips.length}</b> · 宝箱 <b style="color:#D4A843">${chests.length}</b> · 丹药 <b style="color:#fff">${pills.reduce((s, x) => s + x.qty, 0)}</b></p>
-      ${chestSection}
-      <div class="equip-sec-title">丹药（${pills.reduce((s, x) => s + x.qty, 0)}）</div>
-      <div class="bag-list">${pillHtml}</div>
-      <div class="equip-sec-title">背包装备（${equips.length}）</div>
-      <div class="bag-list">${list}</div>
-      <button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
+      <div class="scroll-panel">
+        <div class="scroll-rod top"></div>
+        <div class="scroll-silk top"></div>
+        <div class="scroll-painting">
+          <div class="scroll-paper">
+            <div class="scroll-inner">
+              <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6V4a2 0 012-2h4a2 0 012 2v2"/></svg>
+              <h3>背包</h3></div>
+              <p style="margin:2px 0 10px;color:#5c5042">灵石 <b style="color:#9a7b3f">${gold}</b> · 装备 <b style="color:#1a1612">${equips.length}</b> · 宝箱 <b style="color:#9a7b3f">${chests.length}</b> · 丹药 <b style="color:#1a1612">${pills.reduce((s, x) => s + x.qty, 0)}</b></p>
+              ${chestSection}
+              <div class="equip-sec-title">丹药（${pills.reduce((s, x) => s + x.qty, 0)}）</div>
+              <div class="bag-list">${pillHtml}</div>
+              <div class="equip-sec-title">背包装备（${equips.length}）</div>
+              <div class="bag-list">${list}</div>
+              <button class="scroll-back" onclick="returnToHub()">返回主页</button>
+            </div>
+          </div>
+        </div>
+        <div class="scroll-silk bot"></div>
+        <div class="scroll-rod bot"></div>
+      </div>`, 'scroll');
   }
 
   // 商店弹窗：4 部位各一件随机在售装备，灵石足够可购买；不足则禁用
