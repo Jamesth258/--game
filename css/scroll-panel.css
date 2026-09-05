@@ -207,4 +207,8 @@
   background:var(--s-jade); color:#f3eadc; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .scroll-panel .inv-cell .ic-btn.sell { background:var(--s-cinnabar); }
 .scroll-panel .inv-cell .ic-btn.open { background:var(--s-gold); color:#1a1612; }
+/* 已穿戴：部位标签 + 空槽位 */
+.scroll-panel .inv-cell .ic-slot-label { font-family:var(--s-kai); font-size:11px; color:var(--s-ink-light); font-weight:600; margin-bottom:2px; }
+.scroll-panel .inv-cell.empty { border-color:rgba(154,123,63,.35); background:rgba(255,255,255,.18); }
+.scroll-panel .inv-cell.empty .ic-name { color:var(--s-ink-light); }
 .scroll-panel .inv-cell.pill { background:linear-gradient(180deg,rgba(255,255,255,.52),rgba(255,255,255,.3)); }

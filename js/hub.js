@@ -401,31 +401,49 @@ function initHub() {
     refreshHub(); // 同步主页战力
     const gold = player.gold || 0;
 
-    // 已穿戴的部位卡
-    const slotCard = slot => {
+    // 已穿戴：固定 6 个部位，每部位一格（空槽位显"未装备"）
+    const slotCell = slot => {
       const def = EQUIP_SLOTS[slot];
       const it = player.equipment[slot];
-      const body = it
-        ? `<div class="equip-name" style="color:${it.rarityColor}">${esc(it.name)}</div>
-           <div class="equip-bonus">${esc(equipBonusText(it))}${equipEffectText(it) ? esc(' · ' + equipEffectText(it)) : ''}</div>
-           <button class="equip-btn danger" onclick="unequipSlot('${slot}')">卸下</button>`
-        : `<div class="equip-name" style="color:#5c5042">未装备</div>`;
-      return `<div class="equip-slot">
-        <div class="equip-slot-head"><span class="equip-icon">${def.icon}</span>${def.name}</div>
-        ${body}
+      if (it) {
+        return `<div class="inv-cell" style="border-color:${it.rarityColor}">
+          <div class="ic-slot-label">${def.icon} ${def.name}</div>
+          <div class="ic-ico">${def.icon}</div>
+          <div class="ic-name" style="color:${it.rarityColor}">${esc(it.name)}</div>
+          <div class="ic-sub">${esc(equipBonusText(it))}${equipEffectText(it) ? ' · ' + esc(equipEffectText(it)) : ''}</div>
+          <div class="ic-acts"><button class="ic-btn sell" onclick="unequipSlot('${slot}')">卸下</button></div>
+        </div>`;
+      }
+      return `<div class="inv-cell empty">
+        <div class="ic-slot-label">${def.icon} ${def.name}</div>
+        <div class="ic-ico" style="opacity:.3">${def.icon}</div>
+        <div class="ic-name">未装备</div>
+        <div class="ic-acts"></div>
       </div>`;
     };
 
-    // 背包列表（仅装备，宝箱不可在此装备）
+    // 背包装备：合并相同物品（部位+名称+品质），数量角标；仅"装备"钮
     const bagEquips = (player.bag || []).filter(it => it && it.type !== 'chest');
-    const bagHtml = bagEquips.length
-      ? bagEquips.map(it => `<div class="bag-item">
-          <div class="bag-info"><span class="equip-icon">${EQUIP_SLOTS[it.slot].icon}</span>
-            <span class="bag-name" style="color:${it.rarityColor}">${esc(it.name)}</span>
-            <span class="equip-bonus">${esc(equipBonusText(it))}${equipEffectText(it) ? esc(' · ' + equipEffectText(it)) : ''}</span></div>
-          <button class="equip-btn" onclick="equipItem('${it.uid}')">装备</button>
-        </div>`).join('')
-      : `<div class="empty-tip">背包为空 — 击败江湖敌人可掉落装备宝箱。</div>`;
+    const eqGroups = [];
+    const seen = new Map();
+    bagEquips.forEach(it => {
+      const k = it.slot + '|' + it.name + '|' + it.rarity;
+      if (!seen.has(k)) { seen.set(k, eqGroups.length); eqGroups.push([it]); }
+      else eqGroups[seen.get(k)].push(it);
+    });
+    const bagCells = eqGroups.length ? eqGroups.map(g => {
+      const rep = g[0], qty = g.length;
+      const equipped = player.equipment[rep.slot];
+      const better = compareEquip(rep, equipped);
+      return `<div class="inv-cell" style="border-color:${rep.rarityColor}">
+        ${qty > 1 ? `<span class="ic-qty">${qty}</span>` : ''}
+        <div class="ic-ico">${EQUIP_SLOTS[rep.slot].icon}</div>
+        <div class="ic-name" style="color:${rep.rarityColor}">${esc(rep.name)}</div>
+        <div class="ic-sub">${esc(equipBonusText(rep))}${better ? ' ▲更优' : ''}${equipEffectText(rep) ? ' · ' + esc(equipEffectText(rep)) : ''}</div>
+        <div class="ic-acts"><button class="ic-btn" onclick="equipItem('${rep.uid}')">装备</button></div>
+      </div>`;
+    }).join('')
+      : `<div class="empty-tip">背包无装备 — 击败江湖敌人可掉落装备宝箱，或去商店购买。</div>`;
 
     openModal(`
       <div class="scroll-panel">
@@ -437,10 +455,11 @@ function initHub() {
               <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2L4 7l8 5 8-5-8-5zM4 12l8 5 8-5M4 17l8 5 8-5"/></svg>
               <h3>装备</h3></div>
               <p style="margin:2px 0 10px;color:#5c5042">灵石 <b style="color:#9a7b3f">${gold}</b> · 战力 <b style="color:#a83828">${formatNum(calcCombatPower(player))}</b></p>
-              <div class="equip-slots">${EQUIP_SLOT_KEYS.map(slotCard).join('')}</div>
+              <div class="equip-sec-title">已穿戴</div>
+              <div class="inv-grid">${EQUIP_SLOT_KEYS.map(slotCell).join('')}</div>
               <hr>
-              <div class="equip-sec-title">背包（${player.bag.length}）</div>
-              <div class="bag-list">${bagHtml}</div>
+              <div class="equip-sec-title">背包装备（${bagEquips.length}）</div>
+              <div class="inv-grid">${bagCells}</div>
               <button class="scroll-back" onclick="returnToHub()">返回主页</button>
             </div>
           </div>
