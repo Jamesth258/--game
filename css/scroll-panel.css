@@ -187,3 +187,24 @@
 
 /* 空态文字 */
 .scroll-panel .empty-tip { opacity:.55; padding:8px; font-size:12px; color:var(--s-ink-light); }
+
+/* ── 背包格子（合并相同物品 + 数量角标）── */
+.scroll-panel .inv-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(104px,1fr)); gap:10px; margin:6px 0 4px; }
+.scroll-panel .inv-cell { position:relative; display:flex; flex-direction:column; align-items:center;
+  min-height:110px; padding:10px 6px 8px; border-radius:9px; border:1.5px solid var(--s-gold);
+  background:linear-gradient(180deg,rgba(255,255,255,.44),rgba(255,255,255,.2));
+  box-shadow:inset 0 1px 2px rgba(255,255,255,.55),0 1px 3px rgba(0,0,0,.14); text-align:center; }
+.scroll-panel .inv-cell .ic-ico { font-size:30px; line-height:1; margin:2px 0 4px; filter:drop-shadow(0 1px 1px rgba(0,0,0,.18)); }
+.scroll-panel .inv-cell .ic-name { font-size:12px; line-height:1.25; color:var(--s-ink); font-family:var(--s-kai); font-weight:600;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height:30px; }
+.scroll-panel .inv-cell .ic-sub { font-size:10.5px; color:var(--s-ink-light); font-family:var(--s-song); margin-top:2px; line-height:1.25;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.scroll-panel .inv-cell .ic-qty { position:absolute; top:-9px; right:-9px; min-width:22px; height:22px; padding:0 5px; border-radius:11px;
+  background:var(--s-cinnabar); color:#fff3e6; font-family:var(--s-song); font-weight:700; font-size:12px;
+  display:flex; align-items:center; justify-content:center; border:1.5px solid var(--s-paper); box-shadow:0 1px 3px rgba(0,0,0,.32); }
+.scroll-panel .inv-cell .ic-acts { display:flex; gap:4px; margin-top:auto; width:100%; padding-top:6px; }
+.scroll-panel .inv-cell .ic-btn { flex:1; min-width:0; font-family:var(--s-song); font-size:11px; padding:4px 0; border:none; border-radius:5px; cursor:pointer;
+  background:var(--s-jade); color:#f3eadc; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.scroll-panel .inv-cell .ic-btn.sell { background:var(--s-cinnabar); }
+.scroll-panel .inv-cell .ic-btn.open { background:var(--s-gold); color:#1a1612; }
+.scroll-panel .inv-cell.pill { background:linear-gradient(180deg,rgba(255,255,255,.52),rgba(255,255,255,.3)); }

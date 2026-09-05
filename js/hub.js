@@ -486,44 +486,63 @@ function initHub() {
   function showBagModal() {
     refreshHub();
     const gold = player.gold || 0;
-    const chests = (player.bag || []).filter(it => it && it.type === 'chest');
-    const equips = (player.bag || []).filter(it => !it || it.type !== 'chest');
-    const chestHtml = chests.map(it => `<div class="bag-item">
-        <div class="bag-info">
-          <span class="bag-name" style="color:#9a7b3f">${esc(it.icon || '🎁')} ${esc(it.name)}</span>
-          <span class="equip-bonus">${esc(it.desc || '')}</span>
-        </div>
-        <button class="equip-btn" onclick="openChestItem('${it.uid}')">开启</button>
-      </div>`).join('');
-    const list = equips.length
-      ? equips.map(it => {
-          const equipped = player.equipment[it.slot];
-          const better = compareEquip(it, equipped);
-          const sell = SELL_PRICE[it.rarity] || 8;
-          return `<div class="bag-item">
-            <div class="bag-info">
-              <span class="equip-icon">${EQUIP_SLOTS[it.slot].icon}</span>
-              <span class="bag-name" style="color:${it.rarityColor}">${esc(it.name)}</span>
-              <span class="equip-bonus">${esc(equipBonusText(it))}${better ? ' <b style="color:#2a6048">▲更优</b>' : ''}${equipEffectText(it) ? esc(' · ' + equipEffectText(it)) : ''}</span>
-            </div>
-            <div style="display:flex;gap:6px;flex-shrink:0">
-              <button class="equip-btn" onclick="equipItem('${it.uid}')">装备</button>
-              <button class="equip-btn danger" onclick="sellItem('${it.uid}')">出售·${sell}</button>
-            </div>
-          </div>`;
-        }).join('')
-      : `<div class="empty-tip">暂无背包装备 — 击败江湖敌人可掉落宝箱，或去商店购买。</div>`;
+    const bag = player.bag || [];
+    const chests = bag.filter(it => it && it.type === 'chest');
+    const equips = bag.filter(it => it && it.type !== 'chest');
     const pills = (player.items || []).filter(x => x.qty > 0);
-    const pillHtml = pills.length
-      ? pills.map(x => `<div class="bag-item">
-          <div class="bag-info">
-            <span class="bag-name" style="color:${ITEM_DB[x.tid].kind === 'hp' ? '#3B6D11' : '#2a6048'}">${ITEM_DB[x.tid].name}</span>
-            <span class="equip-bonus">${ITEM_DB[x.tid].tierName}·${ITEM_DB[x.tid].kind === 'hp' ? '回血' : '回蓝'}${ITEM_DB[x.tid].pct * 100}% × ${x.qty}</span>
-          </div>
-        </div>`).join('')
-      : `<div class="empty-tip">暂无丹药 — 可在商店「丹药专区」购买。</div>`;
+    // 合并相同物品：装备按「部位+名称+品质」、宝箱按「名称+品质」归组，数量叠加；操作取组内首个 uid
+    const groupBy = (arr, keyFn) => {
+      const m = new Map();
+      arr.forEach(it => { const k = keyFn(it); if (!m.has(k)) m.set(k, []); m.get(k).push(it); });
+      return [...m.values()];
+    };
+    const eqGroups = groupBy(equips, it => it.slot + '|' + it.name + '|' + it.rarity);
+    const chGroups = groupBy(chests, it => it.name + '|' + (it.rarity || ''));
+
+    const eqCells = eqGroups.length ? eqGroups.map(g => {
+      const rep = g[0], qty = g.length;
+      const equipped = player.equipment[rep.slot];
+      const better = compareEquip(rep, equipped);
+      const sell = SELL_PRICE[rep.rarity] || 8;
+      return `<div class="inv-cell" style="border-color:${rep.rarityColor}">
+        ${qty > 1 ? `<span class="ic-qty">${qty}</span>` : ''}
+        <div class="ic-ico">${EQUIP_SLOTS[rep.slot].icon}</div>
+        <div class="ic-name" style="color:${rep.rarityColor}">${esc(rep.name)}</div>
+        <div class="ic-sub">${esc(equipBonusText(rep))}${better ? ' ▲更优' : ''}${equipEffectText(rep) ? ' · ' + esc(equipEffectText(rep)) : ''}</div>
+        <div class="ic-acts">
+          <button class="ic-btn" onclick="equipItem('${rep.uid}')">装备</button>
+          <button class="ic-btn sell" onclick="sellItem('${rep.uid}')">售${sell}</button>
+        </div>
+      </div>`;
+    }).join('') : `<div class="empty-tip">暂无背包装备 — 击败江湖敌人可掉落宝箱，或去商店购买。</div>`;
+
+    const chCells = chGroups.length ? chGroups.map(g => {
+      const rep = g[0], qty = g.length;
+      const rc = rep.rarityColor || '#9a7b3f';
+      return `<div class="inv-cell" style="border-color:${rc}">
+        ${qty > 1 ? `<span class="ic-qty">${qty}</span>` : ''}
+        <div class="ic-ico">${esc(rep.icon || '🎁')}</div>
+        <div class="ic-name" style="color:${rc}">${esc(rep.name)}</div>
+        <div class="ic-sub">${esc(rep.desc || '')}</div>
+        <div class="ic-acts"><button class="ic-btn open" onclick="openChestItem('${rep.uid}')">开启</button></div>
+      </div>`;
+    }).join('') : '';
+
+    const pillCells = pills.length ? pills.map(x => {
+      const db = ITEM_DB[x.tid]; if (!db) return '';
+      const isHp = db.kind === 'hp';
+      return `<div class="inv-cell pill">
+        <span class="ic-qty">${x.qty}</span>
+        <div class="ic-ico" style="color:${isHp ? '#3B6D11' : '#2a6048'}">${isHp ? '❤' : '✦'}</div>
+        <div class="ic-name">${esc(db.name)}</div>
+        <div class="ic-sub">${db.tierName}·${isHp ? '回血' : '回蓝'}${db.pct * 100}%</div>
+        <div class="ic-acts"><span style="font-size:10px;color:var(--s-ink-light)">战斗中使用</span></div>
+      </div>`;
+    }).join('') : `<div class="empty-tip">暂无丹药 — 可在商店「丹药专区」购买。</div>`;
+
+    const pillTotal = pills.reduce((s, x) => s + x.qty, 0);
     const chestSection = chests.length
-      ? `<div class="equip-sec-title">宝箱（${chests.length}）· 点击开启</div><div class="bag-list">${chestHtml}</div><hr>`
+      ? `<div class="equip-sec-title">宝箱（${chests.length}）</div><div class="inv-grid">${chCells}</div><hr>`
       : '';
     openModal(`
       <div class="scroll-panel">
@@ -534,12 +553,12 @@ function initHub() {
             <div class="scroll-inner">
               <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6V4a2 0 012-2h4a2 0 012 2v2"/></svg>
               <h3>背包</h3></div>
-              <p style="margin:2px 0 10px;color:#5c5042">灵石 <b style="color:#9a7b3f">${gold}</b> · 装备 <b style="color:#1a1612">${equips.length}</b> · 宝箱 <b style="color:#9a7b3f">${chests.length}</b> · 丹药 <b style="color:#1a1612">${pills.reduce((s, x) => s + x.qty, 0)}</b></p>
+              <p style="margin:2px 0 10px;color:#5c5042">灵石 <b style="color:#9a7b3f">${gold}</b> · 装备 <b style="color:#1a1612">${equips.length}</b> · 宝箱 <b style="color:#9a7b3f">${chests.length}</b> · 丹药 <b style="color:#1a1612">${pillTotal}</b></p>
               ${chestSection}
-              <div class="equip-sec-title">丹药（${pills.reduce((s, x) => s + x.qty, 0)}）</div>
-              <div class="bag-list">${pillHtml}</div>
+              <div class="equip-sec-title">丹药（${pillTotal}）</div>
+              <div class="inv-grid">${pillCells}</div>
               <div class="equip-sec-title">背包装备（${equips.length}）</div>
-              <div class="bag-list">${list}</div>
+              <div class="inv-grid">${eqCells}</div>
               <button class="scroll-back" onclick="returnToHub()">返回主页</button>
             </div>
           </div>
