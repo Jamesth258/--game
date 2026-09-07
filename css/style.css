@@ -510,7 +510,7 @@
     rgba(5,8,16,0.6) 100%);
 }
 .loading-title {
-  position: absolute; top: 13%; left: 50%; transform: translateX(-50%); z-index: 2;
+  position: absolute; top: 18%; left: 50%; transform: translateX(-50%); z-index: 2;
   margin: 0; font-size: 54px; font-weight: 800; letter-spacing: 12px;
   background: linear-gradient(180deg, #fff7e0 0%, #f0c75a 55%, #c9972f 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
@@ -518,7 +518,7 @@
   white-space: nowrap;
 }
 .loading-sub {
-  position: absolute; top: calc(13% + 66px); left: 50%; transform: translateX(-50%); z-index: 2;
+  position: absolute; top: calc(18% + 66px); left: 50%; transform: translateX(-50%); z-index: 2;
   margin: 0; color: rgba(241,239,232,0.72); font-size: 14px; letter-spacing: 5px; white-space: nowrap;
 }
 .loading-bar-wrap {
