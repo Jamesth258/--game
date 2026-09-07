@@ -397,32 +397,125 @@ function initHub() {
 
   window.showSkillsModal = showSkillsModal;
   // 装备弹窗（穿戴 / 卸下 / 背包）
+  // ===== 物品图标（SVG，按类型/部位/品质绘制，替代纯 emoji）=====
+  function invIconSVG(type, ref, rc) {
+    const wrap = inner => `<svg viewBox="0 0 48 48" class="ii" preserveAspectRatio="xMidYMid meet">${inner}</svg>`;
+    const c = rc || '#9a7b3f';
+    if (type === 'equip') {
+      if (ref === 'weapon') return wrap(`<path d="M24 4 L27.5 26 L24 31 L20.5 26 Z" fill="#e3e9ef" stroke="${c}" stroke-width="1.2"/><rect x="18.5" y="29" width="11" height="3.2" rx="1.6" fill="${c}"/><rect x="22.5" y="32" width="3" height="10" rx="1.5" fill="#7a4f23"/><circle cx="24" cy="43" r="2.4" fill="${c}"/>`);
+      if (ref === 'armor') return wrap(`<path d="M13 11 H35 L39 17 V30 Q39 40 24 44 Q9 40 9 30 V17 Z" fill="#b9c2cc" stroke="${c}" stroke-width="1.2"/><path d="M24 11 V44" stroke="#8a93a0" stroke-width="1.6"/><circle cx="24" cy="21" r="3.2" fill="${c}"/>`);
+      if (ref === 'accessory') return wrap(`<circle cx="24" cy="24" r="15" fill="#3aa886" stroke="${c}" stroke-width="1.4"/><circle cx="24" cy="24" r="15" fill="none" stroke="#cdeee0" stroke-width="1.4"/><circle cx="24" cy="24" r="6" fill="#15302a"/>`);
+      if (ref === 'boots') return wrap(`<path d="M18 8 H26 V27 L34 29 V35 H18 Z" fill="#8a5a2e" stroke="${c}" stroke-width="1.2"/><rect x="17" y="35" width="18" height="4.5" rx="1.5" fill="#5a3a1c"/><path d="M20 12 H24" stroke="#c79a5e" stroke-width="1.4"/>`);
+      return wrap(`<rect x="14" y="14" width="20" height="20" rx="3" fill="${c}"/>`);
+    }
+    if (type === 'chest') {
+      if (ref === 'skill') return wrap(`<rect x="14" y="9" width="20" height="30" rx="2" fill="#f3eadc" stroke="${c}" stroke-width="1.2"/><rect x="12" y="6" width="24" height="5" rx="2.5" fill="#9a6a33"/><rect x="12" y="37" width="24" height="5" rx="2.5" fill="#9a6a33"/><path d="M18 17 H30 M18 23 H30 M18 29 H26" stroke="#9a7b3f" stroke-width="1.6"/>`);
+      if (ref === 'equip') return wrap(`<rect x="10" y="23" width="28" height="15" rx="2" fill="#7a4f23" stroke="${c}" stroke-width="1.2"/><path d="M10 23 Q24 11 38 23 Z" fill="#9a6a33"/><rect x="10" y="21" width="28" height="3.2" fill="${c}"/><rect x="21.5" y="19" width="5" height="9" rx="1" fill="${c}"/>`);
+      if (ref === 'exp') return wrap(`<path d="M24 5 L28 19 L42 19 L31 28 L35 43 L24 34 L13 43 L17 28 L6 19 L20 19 Z" fill="${c}" stroke="#fff3d0" stroke-width="1"/>`);
+      if (ref === 'stone') return wrap(`<ellipse cx="24" cy="33" rx="13" ry="5" fill="#c79a3a"/><ellipse cx="24" cy="28" rx="13" ry="5" fill="#e0b94e"/><ellipse cx="24" cy="23" rx="13" ry="5" fill="#f0d068"/><text x="24" y="27" font-size="10" text-anchor="middle" fill="#7a5f1e" font-family="serif">灵</text>`);
+      return wrap(`<rect x="12" y="12" width="24" height="24" rx="4" fill="${c}"/>`);
+    }
+    if (type === 'pill') {
+      const col = ref === 'hp' ? '#d9534f' : '#3a78c2';
+      return wrap(`<rect x="20" y="5" width="8" height="6" rx="1.5" fill="#caa15a"/><path d="M19 11 H29 V20 Q29 34 24 39 Q19 34 19 20 Z" fill="${col}"/>${ref === 'hp' ? '<path d="M24 16 V30 M18 23 H30" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>' : '<path d="M24 16 V30 M20.5 23 H27.5" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>'}`);
+    }
+    return wrap(`<rect x="14" y="14" width="20" height="20" rx="3" fill="${c}"/>`);
+  }
+
+  // ===== 悬浮提示系统（小格子物品栏）=====
+  function invBuildTip(kind, key) {
+    if (kind === 'equip') {
+      const it = (player.bag || []).find(x => x.uid === key); if (!it) return '';
+      const bonus = equipBonusText(it), eff = equipEffectText(it), sell = SELL_PRICE[it.rarity] || 8;
+      return `<div class="tt-name" style="color:${it.rarityColor}">${esc(it.name)}</div>
+        <div class="tt-meta">${it.rarityName} · ${EQUIP_SLOTS[it.slot].name}</div>
+        <div class="tt-stat">${esc(bonus)}${eff ? '<br>' + esc(eff) : ''}</div>
+        <div class="tt-acts">
+          <button class="tt-btn go" onclick="invAct(function(){equipItem('${it.uid}')})">装备</button>
+          <button class="tt-btn sell" onclick="invAct(function(){sellItem('${it.uid}')})">出售 ${sell}</button>
+        </div>`;
+    }
+    if (kind === 'equipped') {
+      const it = player.equipment[key]; if (!it) return '';
+      const bonus = equipBonusText(it), eff = equipEffectText(it);
+      return `<div class="tt-name" style="color:${it.rarityColor}">${esc(it.name)}</div>
+        <div class="tt-meta">已穿戴 · ${it.rarityName} · ${EQUIP_SLOTS[it.slot].name}</div>
+        <div class="tt-stat">${esc(bonus)}${eff ? '<br>' + esc(eff) : ''}</div>
+        <div class="tt-acts"><button class="tt-btn off" onclick="invAct(function(){unequipSlot('${key}')})">卸下</button></div>`;
+    }
+    if (kind === 'chest') {
+      const it = (player.bag || []).find(x => x.uid === key); if (!it) return '';
+      const rc = it.rarityColor || '#9a7b3f';
+      return `<div class="tt-name" style="color:${rc}">${esc(it.name)}</div>
+        <div class="tt-meta">宝箱 · 点击开启</div>
+        <div class="tt-stat">${esc(it.desc || '')}</div>
+        <div class="tt-acts"><button class="tt-btn go" onclick="invAct(function(){openChestItem('${it.uid}')})">开启</button></div>`;
+    }
+    if (kind === 'pill') {
+      const db = ITEM_DB[key]; if (!db) return '';
+      const isHp = db.kind === 'hp', col = isHp ? '#d9534f' : '#3a78c2';
+      const amt = Math.round((isHp ? player.maxHp : player.maxMp) * db.pct);
+      return `<div class="tt-name" style="color:${col}">${esc(db.name)}</div>
+        <div class="tt-meta">丹药 · ${db.tierName} · ${isHp ? '恢复气血' : '恢复灵力'}</div>
+        <div class="tt-stat">单次恢复 <b>${amt}</b>（${Math.round(db.pct * 100)}%）<br>战斗中点击使用</div>`;
+    }
+    return '';
+  }
+  let _invTipTimer = null;
+  function invShowTip(e, kind, key) {
+    const el = document.getElementById('item-tip'); if (!el) return;
+    el.innerHTML = invBuildTip(kind, key);
+    if (!el.innerHTML) return;
+    el.style.display = 'block';
+    const r = e.currentTarget.getBoundingClientRect();
+    const tw = el.offsetWidth, th = el.offsetHeight;
+    let left = r.right + 10;
+    if (left + tw > window.innerWidth - 8) left = r.left - tw - 10;
+    if (left < 8) left = 8;
+    let top = r.top + r.height / 2 - th / 2;
+    top = Math.max(8, Math.min(top, window.innerHeight - th - 8));
+    el.style.left = left + 'px'; el.style.top = top + 'px';
+    clearTimeout(_invTipTimer);
+  }
+  function invHideTip() {
+    _invTipTimer = setTimeout(() => { const el = document.getElementById('item-tip'); if (el) el.style.display = 'none'; }, 160);
+  }
+  function invAct(fn) {
+    const el = document.getElementById('item-tip'); if (el) el.style.display = 'none';
+    if (typeof fn === 'function') fn();
+  }
+  function invInitTip() {
+    if (document.getElementById('item-tip')) return;
+    const el = document.createElement('div');
+    el.id = 'item-tip';
+    el.addEventListener('mouseenter', () => clearTimeout(_invTipTimer));
+    el.addEventListener('mouseleave', invHideTip);
+    document.body.appendChild(el);
+  }
+  window.invShowTip = invShowTip; window.invHideTip = invHideTip; window.invAct = invAct;
+
   function showEquipModal() {
     refreshHub(); // 同步主页战力
     const gold = player.gold || 0;
+    invInitTip();
 
-    // 已穿戴：固定 6 个部位，每部位一格（空槽位显"未装备"）
+    // 已穿戴：固定 4 个部位，每部位一格（空槽位显部位名）
     const slotCell = slot => {
       const def = EQUIP_SLOTS[slot];
       const it = player.equipment[slot];
       if (it) {
-        return `<div class="inv-cell" style="border-color:${it.rarityColor}">
-          <div class="ic-slot-label">${def.icon} ${def.name}</div>
-          <div class="ic-ico">${def.icon}</div>
-          <div class="ic-name" style="color:${it.rarityColor}">${esc(it.name)}</div>
-          <div class="ic-sub">${esc(equipBonusText(it))}${equipEffectText(it) ? ' · ' + esc(equipEffectText(it)) : ''}</div>
-          <div class="ic-acts"><button class="ic-btn sell" onclick="unequipSlot('${slot}')">卸下</button></div>
+        return `<div class="inv2-cell" style="--rc:${it.rarityColor}" onmouseenter="invShowTip(event,'equipped','${slot}')" onmouseleave="invHideTip()">
+          <div class="tile">${invIconSVG('equip', slot, it.rarityColor)}</div>
+          <span class="nm" style="color:${it.rarityColor}">${esc(it.name)}</span>
         </div>`;
       }
-      return `<div class="inv-cell empty">
-        <div class="ic-slot-label">${def.icon} ${def.name}</div>
-        <div class="ic-ico" style="opacity:.3">${def.icon}</div>
-        <div class="ic-name">未装备</div>
-        <div class="ic-acts"></div>
+      return `<div class="inv2-cell empty" onmouseenter="invHideTip()">
+        <div class="tile" style="opacity:.35">${invIconSVG('equip', slot, '#9a7b3f')}</div>
+        <span class="nm">${def.name}</span>
       </div>`;
     };
 
-    // 背包装备：合并相同物品（部位+名称+品质），数量角标；仅"装备"钮
+    // 背包装备：合并相同物品（部位+名称+品质），数量角标；悬浮出操作
     const bagEquips = (player.bag || []).filter(it => it && it.type !== 'chest');
     const eqGroups = [];
     const seen = new Map();
@@ -435,12 +528,11 @@ function initHub() {
       const rep = g[0], qty = g.length;
       const equipped = player.equipment[rep.slot];
       const better = compareEquip(rep, equipped);
-      return `<div class="inv-cell" style="border-color:${rep.rarityColor}">
-        ${qty > 1 ? `<span class="ic-qty">${qty}</span>` : ''}
-        <div class="ic-ico">${EQUIP_SLOTS[rep.slot].icon}</div>
-        <div class="ic-name" style="color:${rep.rarityColor}">${esc(rep.name)}</div>
-        <div class="ic-sub">${esc(equipBonusText(rep))}${better ? ' ▲更优' : ''}${equipEffectText(rep) ? ' · ' + esc(equipEffectText(rep)) : ''}</div>
-        <div class="ic-acts"><button class="ic-btn" onclick="equipItem('${rep.uid}')">装备</button></div>
+      return `<div class="inv2-cell" style="--rc:${rep.rarityColor}" onmouseenter="invShowTip(event,'equip','${rep.uid}')" onmouseleave="invHideTip()">
+        ${qty > 1 ? `<span class="qty">${qty}</span>` : ''}
+        ${better ? '<span class="better">▲</span>' : ''}
+        <div class="tile">${invIconSVG('equip', rep.slot, rep.rarityColor)}</div>
+        <span class="nm" style="color:${rep.rarityColor}">${esc(rep.name)}</span>
       </div>`;
     }).join('')
       : `<div class="empty-tip">背包无装备 — 击败江湖敌人可掉落装备宝箱，或去商店购买。</div>`;
@@ -456,10 +548,10 @@ function initHub() {
               <h3>装备</h3></div>
               <p style="margin:2px 0 10px;color:#5c5042">灵石 <b style="color:#9a7b3f">${gold}</b> · 战力 <b style="color:#a83828">${formatNum(calcCombatPower(player))}</b></p>
               <div class="equip-sec-title">已穿戴</div>
-              <div class="inv-grid">${EQUIP_SLOT_KEYS.map(slotCell).join('')}</div>
+              <div class="inv2-grid">${EQUIP_SLOT_KEYS.map(slotCell).join('')}</div>
               <hr>
               <div class="equip-sec-title">背包装备（${bagEquips.length}）</div>
-              <div class="inv-grid">${bagCells}</div>
+              <div class="inv2-grid">${bagCells}</div>
               <button class="scroll-back" onclick="returnToHub()">返回主页</button>
             </div>
           </div>
@@ -501,15 +593,15 @@ function initHub() {
   window.showEquipModal = showEquipModal;
   window.showBagModal = showBagModal;
 
-  // 背包弹窗：列出全部装备，可装备 / 出售，并对比已穿戴部位标"更优"
+  // 背包弹窗：宝箱 > 丹药 > 装备 三段小格子，悬浮出详情/操作
   function showBagModal() {
     refreshHub();
+    invInitTip();
     const gold = player.gold || 0;
     const bag = player.bag || [];
     const chests = bag.filter(it => it && it.type === 'chest');
     const equips = bag.filter(it => it && it.type !== 'chest');
     const pills = (player.items || []).filter(x => x.qty > 0);
-    // 合并相同物品：装备按「部位+名称+品质」、宝箱按「名称+品质」归组，数量叠加；操作取组内首个 uid
     const groupBy = (arr, keyFn) => {
       const m = new Map();
       arr.forEach(it => { const k = keyFn(it); if (!m.has(k)) m.set(k, []); m.get(k).push(it); });
@@ -520,49 +612,36 @@ function initHub() {
 
     const eqCells = eqGroups.length ? eqGroups.map(g => {
       const rep = g[0], qty = g.length;
-      const equipped = player.equipment[rep.slot];
-      const better = compareEquip(rep, equipped);
-      const sell = SELL_PRICE[rep.rarity] || 8;
-      return `<div class="inv-cell" style="border-color:${rep.rarityColor}">
-        ${qty > 1 ? `<span class="ic-qty">${qty}</span>` : ''}
-        <div class="ic-ico">${EQUIP_SLOTS[rep.slot].icon}</div>
-        <div class="ic-name" style="color:${rep.rarityColor}">${esc(rep.name)}</div>
-        <div class="ic-sub">${esc(equipBonusText(rep))}${better ? ' ▲更优' : ''}${equipEffectText(rep) ? ' · ' + esc(equipEffectText(rep)) : ''}</div>
-        <div class="ic-acts">
-          <button class="ic-btn" onclick="equipItem('${rep.uid}')">装备</button>
-          <button class="ic-btn sell" onclick="sellItem('${rep.uid}')">售${sell}</button>
-        </div>
+      const better = compareEquip(rep, player.equipment[rep.slot]);
+      return `<div class="inv2-cell" style="--rc:${rep.rarityColor}" onmouseenter="invShowTip(event,'equip','${rep.uid}')" onmouseleave="invHideTip()">
+        ${qty > 1 ? `<span class="qty">${qty}</span>` : ''}
+        ${better ? '<span class="better">▲</span>' : ''}
+        <div class="tile">${invIconSVG('equip', rep.slot, rep.rarityColor)}</div>
+        <span class="nm" style="color:${rep.rarityColor}">${esc(rep.name)}</span>
       </div>`;
     }).join('') : `<div class="empty-tip">暂无背包装备 — 击败江湖敌人可掉落宝箱，或去商店购买。</div>`;
 
     const chCells = chGroups.length ? chGroups.map(g => {
       const rep = g[0], qty = g.length;
       const rc = rep.rarityColor || '#9a7b3f';
-      return `<div class="inv-cell" style="border-color:${rc}">
-        ${qty > 1 ? `<span class="ic-qty">${qty}</span>` : ''}
-        <div class="ic-ico">${esc(rep.icon || '🎁')}</div>
-        <div class="ic-name" style="color:${rc}">${esc(rep.name)}</div>
-        <div class="ic-sub">${esc(rep.desc || '')}</div>
-        <div class="ic-acts"><button class="ic-btn open" onclick="openChestItem('${rep.uid}')">开启</button></div>
+      return `<div class="inv2-cell" style="--rc:${rc}" onmouseenter="invShowTip(event,'chest','${rep.uid}')" onmouseleave="invHideTip()">
+        ${qty > 1 ? `<span class="qty">${qty}</span>` : ''}
+        <div class="tile">${invIconSVG('chest', rep.chestKind, rc)}</div>
+        <span class="nm" style="color:${rc}">${esc(rep.name)}</span>
       </div>`;
-    }).join('') : '';
+    }).join('') : `<div class="empty-tip">暂无宝箱 — 挑战世界BOSS、每日签到或商城可获宝箱。</div>`;
 
     const pillCells = pills.length ? pills.map(x => {
       const db = ITEM_DB[x.tid]; if (!db) return '';
-      const isHp = db.kind === 'hp';
-      return `<div class="inv-cell pill">
-        <span class="ic-qty">${x.qty}</span>
-        <div class="ic-ico" style="color:${isHp ? '#3B6D11' : '#2a6048'}">${isHp ? '❤' : '✦'}</div>
-        <div class="ic-name">${esc(db.name)}</div>
-        <div class="ic-sub">${db.tierName}·${isHp ? '回血' : '回蓝'}${db.pct * 100}%</div>
-        <div class="ic-acts"><span style="font-size:10px;color:var(--s-ink-light)">战斗中使用</span></div>
+      const isHp = db.kind === 'hp', col = isHp ? '#d9534f' : '#3a78c2';
+      return `<div class="inv2-cell" style="--rc:${col}" onmouseenter="invShowTip(event,'pill','${x.tid}')" onmouseleave="invHideTip()">
+        <span class="qty">${x.qty}</span>
+        <div class="tile">${invIconSVG('pill', db.kind, col)}</div>
+        <span class="nm" style="color:${col}">${esc(db.name)}</span>
       </div>`;
     }).join('') : `<div class="empty-tip">暂无丹药 — 可在商店「丹药专区」购买。</div>`;
 
     const pillTotal = pills.reduce((s, x) => s + x.qty, 0);
-    const chestSection = chests.length
-      ? `<div class="equip-sec-title">宝箱（${chests.length}）</div><div class="inv-grid">${chCells}</div><hr>`
-      : '';
     openModal(`
       <div class="scroll-panel">
         <div class="scroll-rod top"></div>
@@ -573,11 +652,12 @@ function initHub() {
               <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6V4a2 0 012-2h4a2 0 012 2v2"/></svg>
               <h3>背包</h3></div>
               <p style="margin:2px 0 10px;color:#5c5042">灵石 <b style="color:#9a7b3f">${gold}</b> · 装备 <b style="color:#1a1612">${equips.length}</b> · 宝箱 <b style="color:#9a7b3f">${chests.length}</b> · 丹药 <b style="color:#1a1612">${pillTotal}</b></p>
-              ${chestSection}
+              <div class="equip-sec-title">宝箱（${chests.length}）</div>
+              <div class="inv2-grid">${chCells}</div>
               <div class="equip-sec-title">丹药（${pillTotal}）</div>
-              <div class="inv-grid">${pillCells}</div>
+              <div class="inv2-grid">${pillCells}</div>
               <div class="equip-sec-title">背包装备（${equips.length}）</div>
-              <div class="inv-grid">${eqCells}</div>
+              <div class="inv2-grid">${eqCells}</div>
               <button class="scroll-back" onclick="returnToHub()">返回主页</button>
             </div>
           </div>

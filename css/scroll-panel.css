@@ -212,3 +212,37 @@
 .scroll-panel .inv-cell.empty { border-color:rgba(154,123,63,.35); background:rgba(255,255,255,.18); }
 .scroll-panel .inv-cell.empty .ic-name { color:var(--s-ink-light); }
 .scroll-panel .inv-cell.pill { background:linear-gradient(180deg,rgba(255,255,255,.52),rgba(255,255,255,.3)); }
+
+/* ════════════════════════════════════════════════════════════
+   小格子物品栏（梦幻西游风 · 图标+小名，详情/操作悬浮显示）
+   ════════════════════════════════════════════════════════════ */
+.scroll-panel .inv2-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(58px,1fr)); gap:10px 8px; margin:8px 0 6px; }
+.scroll-panel .inv2-cell { position:relative; display:flex; flex-direction:column; align-items:center; gap:3px; padding:5px 2px 4px; border-radius:9px;
+  border:1.5px solid var(--rc, #9a7b3f); background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,.2));
+  box-shadow:inset 0 1px 2px rgba(255,255,255,.5),0 1px 3px rgba(0,0,0,.12); cursor:pointer; transition:transform .1s, box-shadow .1s; box-sizing:border-box; }
+.scroll-panel .inv2-cell:hover { transform:translateY(-2px); box-shadow:inset 0 1px 2px rgba(255,255,255,.6),0 5px 12px rgba(0,0,0,.24); }
+.scroll-panel .inv2-cell.empty { border-color:rgba(154,123,63,.35); background:rgba(255,255,255,.16); cursor:default; }
+.scroll-panel .inv2-cell.empty:hover { transform:none; box-shadow:inset 0 1px 2px rgba(255,255,255,.5),0 1px 3px rgba(0,0,0,.12); }
+.scroll-panel .inv2-cell .tile { width:100%; aspect-ratio:1/1; display:flex; align-items:center; justify-content:center; }
+.scroll-panel .inv2-cell .tile .ii { width:88%; height:88%; display:block; filter:drop-shadow(0 1px 1px rgba(0,0,0,.18)); }
+.scroll-panel .inv2-cell .nm { font-size:10px; line-height:1.15; color:var(--s-ink-mid); max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-family:var(--s-kai); }
+.scroll-panel .inv2-cell .qty { position:absolute; right:1px; bottom:15px; min-width:17px; height:17px; padding:0 4px; border-radius:9px;
+  background:var(--s-cinnabar); color:#fff3e6; font-family:var(--s-song); font-weight:700; font-size:10px; display:flex; align-items:center; justify-content:center; border:1.5px solid var(--s-paper); box-shadow:0 1px 3px rgba(0,0,0,.3); }
+.scroll-panel .inv2-cell .better { position:absolute; top:-8px; left:-6px; color:#2a6048; font-size:14px; font-weight:700; text-shadow:0 1px 2px rgba(255,255,255,.6); }
+
+/* 悬浮提示浮层（挂在 body，避免被 modal overflow 裁剪）*/
+#item-tip { position:fixed; z-index:999999; display:none; width:max-content; max-width:232px; padding:10px 12px; border-radius:9px;
+  background:rgba(22,17,12,.97); border:1px solid rgba(212,168,67,.55); box-shadow:0 12px 32px rgba(0,0,0,.55);
+  color:#f3eadc; font-family:"SimSun","STSong","宋体",serif; pointer-events:auto; }
+#item-tip .tt-name { font-size:14px; font-weight:700; font-family:"KaiTi","STKaiti","楷体",serif; letter-spacing:1px; }
+#item-tip .tt-meta { font-size:11px; color:rgba(243,234,220,.62); margin:2px 0 7px; }
+#item-tip .tt-stat { font-size:12px; color:#e8dcc0; line-height:1.65; margin-bottom:9px; }
+#item-tip .tt-stat b { color:#f0c75a; font-family:var(--s-song); }
+#item-tip .tt-acts { display:flex; gap:6px; }
+#item-tip .tt-btn { flex:1; min-width:0; padding:6px 0; border:none; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; font-family:"Microsoft YaHei",sans-serif; white-space:nowrap; }
+#item-tip .tt-btn.go { background:linear-gradient(180deg,#2a6048,#1d4736); color:#f3eadc; }
+#item-tip .tt-btn.go:hover { background:linear-gradient(180deg,#357a5a,#235740); }
+#item-tip .tt-btn.sell { background:linear-gradient(180deg,#a83828,#7a2820); color:#fff; }
+#item-tip .tt-btn.sell:hover { background:linear-gradient(180deg,#b84432,#8a2e22); }
+#item-tip .tt-btn.off { background:linear-gradient(180deg,#9a7b3f,#7a5f2e); color:#1a1612; }
+#item-tip .tt-btn.off:hover { background:linear-gradient(180deg,#b08a48,#8a6a36); }
