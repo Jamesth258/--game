@@ -397,27 +397,224 @@ function initHub() {
 
   window.showSkillsModal = showSkillsModal;
   // 装备弹窗（穿戴 / 卸下 / 背包）
-  // ===== 物品图标（SVG，按类型/部位/品质绘制，替代纯 emoji）=====
-  function invIconSVG(type, ref, rc) {
+  // ===== 物品图标（SVG，按类型/部位/品质/名称绘制）=====
+  //   type: equip|chest|pill
+  //   ref:  equip→slot(weapon/armor/accessory/boots), chest→kind(skill/equip/exp/stone), pill→kind(hp/mp)
+  //   rc:   品质描边色
+  //   name: 物品名称（可选，用于区分武器子类：剑/刀/枪/戟）
+  function invIconSVG(type, ref, rc, name) {
     const wrap = inner => `<svg viewBox="0 0 48 48" class="ii" preserveAspectRatio="xMidYMid meet">${inner}</svg>`;
     const c = rc || '#9a7b3f';
+    // ── 武器：按名称后缀区分子类 ──
+    if (type === 'equip' && ref === 'weapon') {
+      const wt = (name || '').includes('刀') ? 'dao'
+        : (name || '').includes('枪') ? 'qiang'
+        : (name || '').includes('戟') ? 'ji' : 'jian';
+      if (wt === 'jian') return wrap(
+        // ── 剑：直刃双锋，优雅修长 ──
+        `<defs>
+          <linearGradient id="jBlade" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#e8eef5"/><stop offset="50%" stop-color="#c5d1de"/><stop offset="100%" stop-color="#9aabbe"/></linearGradient>
+          <linearGradient id="jHilt" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#8b6914"/><stop offset="100%" stop-color="#5a4309"/></linearGradient>
+          <linearGradient id="jGold" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#f0c75a"/><stop offset="100%" stop-color="#c9972f"/></linearGradient>
+        </defs>
+        <!-- 剑身 -->
+        <path d="M23.5 3 L25.5 3 L26 24 L24 27 L22 24 Z" fill="url(#jBlade)" stroke="${c}" stroke-width="0.8"/>
+        <path d="M24 4 L24 25" stroke="#fff" stroke-width="0.5" opacity="0.5"/>
+        <!-- 护手 -->
+        <rect x="17" y="25" width="14" height="2.5" rx="1" fill="url(#jGold)" stroke="${c}" stroke-width="0.6"/>
+        <rect x="18.5" y="24" width="11" height="1" rx="0.5" fill="#fff3d0" opacity="0.4"/>
+        <!-- 剑柄 -->
+        <rect x="22.5" y="27.5" width="3" height="9" rx="1" fill="url(#jHilt)" stroke="${c}" stroke-width="0.6"/>
+        <line x1="23" y1="29.5" x2="25" y2="29.5" stroke="#c79a5e" stroke-width="0.6"/>
+        <line x1="23" y1="32" x2="25" y2="32" stroke="#c79a5e" stroke-width="0.6"/>
+        <line x1="23" y1="34.5" x2="25" y2="34.5" stroke="#c79a5e" stroke-width="0.6"/>
+        <!-- 剑首 -->
+        <ellipse cx="24" cy="38" rx="2.8" ry="2" fill="url(#jGold)" stroke="${c}" stroke-width="0.6"/>
+        <ellipse cx="24" cy="37.5" rx="1.8" ry="1" fill="#fff3d0" opacity="0.35"/>`);
+      if (wt === 'dao') return wrap(
+        // ── 刀：弧形单刃，刚猛厚重 ──
+        `<defs>
+          <linearGradient id="dBlade" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f0ebe3"/><stop offset="40%" stop-color="#d4c9b8"/><stop offset="100%" stop-color="#a89a85"/></linearGradient>
+          <linearGradient id="dHilt" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6b4423"/><stop offset="100%" stop-color="#3d2612"/></linearGradient>
+          <linearGradient id="dGold" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#e6b86a"/><stop offset="100%" stop-color="#b8893d"/></linearGradient>
+        </defs>
+        <!-- 刀身（弧形） -->
+        <path d="M20 4 Q28 6 30 16 Q31 22 28 26 L19 25 Q17 20 16 14 Q15 8 20 4 Z" fill="url(#dBlade)" stroke="${c}" stroke-width="0.8"/>
+        <!-- 刃线 -->
+        <path d="M21 5.5 Q27.5 7.5 29 16 Q29.8 21 27.5 24.5" stroke="#fff" stroke-width="0.6" fill="none" opacity="0.45"/>
+        <!-- 刀背 -->
+        <path d="M19 5 Q16 10 16 14 Q16.5 19 19 24.5" stroke="#8a7a65" stroke-width="1" fill="none"/>
+        <!-- 刀镡(圆盘) -->
+        <circle cx="22" cy="26" r="3.5" fill="url(#dGold)" stroke="${c}" stroke-width="0.6"/>
+        <circle cx="22" cy="25.6" r="2.2" fill="#fff3d0" opacity="0.3"/>
+        <!-- 刀柄 -->
+        <rect x="20.8" y="29" width="2.4" height="8" rx="1" fill="url(#dHilt)" stroke="${c}" stroke-width="0.6"/>
+        <line x1="21.2" y1="31" x2="22.8" y2="31" stroke="#a67c4a" stroke-width="0.5"/>
+        <line x1="21.2" y1="33.5" x2="22.8" y2="33.5" stroke="#a67c4a" stroke-width="0.5"/>
+        <!-- 环首 -->
+        <circle cx="22" cy="38.5" r="2.2" fill="none" stroke="url(#dGold)" stroke-width="1.2"/>`);
+      if (wt === 'qiang') return wrap(
+        // ── 枪：长杆直刺，红缨飘扬 ──
+        `<defs>
+          <linearGradient qShaft x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#c4956a"/><stop offset="50%" stop-color="#8b633a"/><stop offset="100%" stop-color="#6b4725"/></linearGradient>
+          <linearGradient qHead x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#e8eef5"/><stop offset="100%" stop-color="#8a9aae"/></linearGradient>
+        </defs>
+        <!-- 枪杆 -->
+        <rect x="23" y="12" width="2" height="33" rx="0.5" fill="url(#qShaft)" stroke="${c}" stroke-width="0.5"/>
+        <!-- 枪头（菱形） -->
+        <path d="M24 2 L28 13 L24 11 L20 13 Z" fill="url(#qHead)" stroke="${c}" stroke-width="0.8"/>
+        <path d="M24 3 L26.5 12 L24 10.5 L21.5 12 Z" stroke="#fff" stroke-width="0.4" fill="none" opacity="0.5"/>
+        <!-- 枪缨（红色） -->
+        <path d="M21 13 Q19 16 20 19 Q22 17 23 14" fill="#c43c3c" opacity="0.85"/>
+        <path d="M27 13 Q29 16 28 19 Q26 17 25 14" fill="#c43c3c" opacity="0.85"/>
+        <path d="M22 13 Q21 15 21.5 17.5" stroke="#e86b6b" stroke-width="0.5" fill="none" opacity="0.6"/>
+        <path d="M26 13 Q27 15 26.5 17.5" stroke="#e86b6b" stroke-width="0.5" fill="none" opacity="0.6"/>`);
+      if (wt === 'ji') return wrap(
+        // ── 戟：月牙侧刃+直锋，威武双刃 ──
+        `<defs>
+          <linearGradient jShaft x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#9a7b55"/><stop offset="100%" stop-color="#5c462d"/></linearGradient>
+          <linearGradient jSteel x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#dde4ed"/><stop offset="60%" stop-color="#a8b8cc"/><stop offset="100%" stop-color="#7a8a9e"/></linearGradient>
+          <linearGradient jGold x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#f0c75a"/><stop offset="100%" stop-color="#b8893d"/></linearGradient>
+        </defs>
+        <!-- 戟杆 -->
+        <rect x="23" y="14" width="2" height="31" rx="0.5" fill="url(#jShaft)" stroke="${c}" stroke-width="0.5"/>
+        <!-- 直刃（类似短剑） -->
+        <path d="M24 2 L26.5 14 L24 16 L21.5 14 Z" fill="url(#jSteel)" stroke="${c}" stroke-width="0.8"/>
+        <path d="M24 3 L25.5 13 L24 14.5 L22.5 13 Z" stroke="#fff" stroke-width="0.4" fill="none" opacity="0.4"/>
+        <!-- 月牙刃（侧边弯刀） -->
+        <path d="M26.5 9 Q34 11 33 16 Q32 19 27 17 Q28 14 26.5 12 Z" fill="url(#jSteel)" stroke="${c}" stroke-width="0.8"/>
+        <!-- 月牙内弧高光 -->
+        <path d="M27.5 10.5 Q32 12 31.5 15.5 Q31 17 28 16" stroke="#fff" stroke-width="0.4" fill="none" opacity="0.35"/>
+        <!-- 装饰箍 -->
+        <rect x="21.5" y="14.5" width="5" height="2" rx="0.5" fill="url(#jGold)" stroke="${c}" stroke-width="0.5"/>`);
+    }
     if (type === 'equip') {
-      if (ref === 'weapon') return wrap(`<path d="M24 4 L27.5 26 L24 31 L20.5 26 Z" fill="#e3e9ef" stroke="${c}" stroke-width="1.2"/><rect x="18.5" y="29" width="11" height="3.2" rx="1.6" fill="${c}"/><rect x="22.5" y="32" width="3" height="10" rx="1.5" fill="#7a4f23"/><circle cx="24" cy="43" r="2.4" fill="${c}"/>`);
-      if (ref === 'armor') return wrap(`<path d="M13 11 H35 L39 17 V30 Q39 40 24 44 Q9 40 9 30 V17 Z" fill="#b9c2cc" stroke="${c}" stroke-width="1.2"/><path d="M24 11 V44" stroke="#8a93a0" stroke-width="1.6"/><circle cx="24" cy="21" r="3.2" fill="${c}"/>`);
-      if (ref === 'accessory') return wrap(`<circle cx="24" cy="24" r="15" fill="#3aa886" stroke="${c}" stroke-width="1.4"/><circle cx="24" cy="24" r="15" fill="none" stroke="#cdeee0" stroke-width="1.4"/><circle cx="24" cy="24" r="6" fill="#15302a"/>`);
-      if (ref === 'boots') return wrap(`<path d="M18 8 H26 V27 L34 29 V35 H18 Z" fill="#8a5a2e" stroke="${c}" stroke-width="1.2"/><rect x="17" y="35" width="18" height="4.5" rx="1.5" fill="#5a3a1c"/><path d="M20 12 H24" stroke="#c79a5e" stroke-width="1.4"/>`);
+      if (ref === 'armor') return wrap(
+        // ── 甲：护心镜战甲 ──
+        `<defs>
+          <linearGradient aBody x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#c8d0dc"/><stop offset="50%" stop-color="#9aa8bc"/><stop offset="100%" stop-color="#6a7a8e"/></linearGradient>
+          <linearGradient aMirror x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#f0c75a"/><stop offset="100%" stop-color="#c9972f"/></linearGradient>
+        </defs>
+        <path d="M14 13 H34 L37 19 V32 Q37 41 24 44 Q11 41 11 32 V19 Z" fill="url(#aBody)" stroke="${c}" stroke-width="1"/>
+        <!-- 中缝 -->
+        <path d="M24 13 V43" stroke="#7a8a9e" stroke-width="1.2"/>
+        <!-- 护心镜 -->
+        <circle cx="24" cy="23" r="4" fill="url(#aMirror)" stroke="${c}" stroke-width="0.8"/>
+        <circle cx="23.5" cy="22.5" r="2.5" fill="#fff3d0" opacity="0.35"/>
+        <!-- 肩甲 -->
+        <path d="M11 17 Q8 15 10 12 Q14 13 14 15" fill="#8a98aa" stroke="${c}" stroke-width="0.8"/>
+        <path d="M37 17 Q40 15 38 12 Q34 13 34 15" fill="#8a98aa" stroke="${c}" stroke-width="0.8"/>`);
+      if (ref === 'accessory') return wrap(
+        // ── 饰：玉佩流苏 ──
+        `<defs>
+          <linearGradient rJade x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#5edab8"/><stop offset="50%" stop-color="#2aaf8a"/><stop offset="100%" stop-color="#1a8065"/></linearGradient>
+          <linearGradient rGold x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#f0c75a"/><stop offset="100%" stop-color="#c9972f"/></linearGradient>
+        </defs>
+        <!-- 玉佩主体 -->
+        <path d="M24 7 C31 7 36 13 36 20 C36 28 30 35 24 39 C18 35 12 28 12 20 C12 13 17 7 24 7 Z" fill="url(#rJade)" stroke="${c}" stroke-width="1.2"/>
+        <!-- 内圈光泽 -->
+        <path d="M24 10 C29 10 33 15 33 20 C33 26 29 32 24 35 C19 32 15 26 15 20 C15 15 19 10 24 10 Z" stroke="#a0f0d8" stroke-width="0.6" fill="none" opacity="0.4"/>
+        <!-- 玉孔 -->
+        <circle cx="24" cy="19" r="2.5" fill="#0d3328" stroke="${c}" stroke-width="0.6"/>
+        <!-- 流苏 -->
+        <line x1="24" y1="38" x2="24" y2="44" stroke="url(#rGold)" stroke-width="1"/>
+        <circle cx="24" cy="44.5" r="1.2" fill="#f0c75a"/>`);
+      if (ref === 'boots') return wrap(
+        // ── 靴：武靴云纹 ──
+        `<defs>
+          <linearGradient bLeather x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#b8845c"/><stop offset="50%" stop-color="#8b633a"/><stop offset="100%" stop-color="#5c3f22"/></linearGradient>
+          <linearGradient bSole x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4a3218"/><stop offset="100%" stop-color="#2a1a0c"/></linearGradient>
+        </defs>
+        <!-- 靴筒 -->
+        <path d="M17 7 H29 V24 L33 28 V33 H15 V28 L19 24 Z" fill="url(#bLeather)" stroke="${c}" stroke-width="1"/>
+        <!-- 靴面装饰线 -->
+        <path d="M19 10 H27 M19 14 H27 M19 18 H24" stroke="#d4a87a" stroke-width="0.8" stroke-linecap="round"/>
+        <!-- 靴底 -->
+        <path d="M14 33 H34 V37 Q34 39 30 40 H18 Q14 39 14 37 Z" fill="url(#bSole)" stroke="${c}" stroke-width="0.8"/>
+        <!-- 云纹装饰 -->
+        <path d="M21 26 Q24 24 27 26" stroke="#d4a87a" stroke-width="0.8" fill="none" stroke-linecap="round"/>`);
       return wrap(`<rect x="14" y="14" width="20" height="20" rx="3" fill="${c}"/>`);
     }
     if (type === 'chest') {
-      if (ref === 'skill') return wrap(`<rect x="14" y="9" width="20" height="30" rx="2" fill="#f3eadc" stroke="${c}" stroke-width="1.2"/><rect x="12" y="6" width="24" height="5" rx="2.5" fill="#9a6a33"/><rect x="12" y="37" width="24" height="5" rx="2.5" fill="#9a6a33"/><path d="M18 17 H30 M18 23 H30 M18 29 H26" stroke="#9a7b3f" stroke-width="1.6"/>`);
-      if (ref === 'equip') return wrap(`<rect x="10" y="23" width="28" height="15" rx="2" fill="#7a4f23" stroke="${c}" stroke-width="1.2"/><path d="M10 23 Q24 11 38 23 Z" fill="#9a6a33"/><rect x="10" y="21" width="28" height="3.2" fill="${c}"/><rect x="21.5" y="19" width="5" height="9" rx="1" fill="${c}"/>`);
-      if (ref === 'exp') return wrap(`<path d="M24 5 L28 19 L42 19 L31 28 L35 43 L24 34 L13 43 L17 28 L6 19 L20 19 Z" fill="${c}" stroke="#fff3d0" stroke-width="1"/>`);
-      if (ref === 'stone') return wrap(`<ellipse cx="24" cy="33" rx="13" ry="5" fill="#c79a3a"/><ellipse cx="24" cy="28" rx="13" ry="5" fill="#e0b94e"/><ellipse cx="24" cy="23" rx="13" ry="5" fill="#f0d068"/><text x="24" y="27" font-size="10" text-anchor="middle" fill="#7a5f1e" font-family="serif">灵</text>`);
+      if (ref === 'skill') return wrap(
+        // ── 功法箱：竹简卷轴 ──
+        `<defs>
+          <linearGradient sRoll x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f5ecd6"/><stop offset="100%" stop-color="#dccfa8"/></linearGradient>
+          <linearGradient sBind x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#9a6a33"/><stop offset="100%" stop-color="#7a5025"/></linearGradient>
+        </defs>
+        <rect x="13" y="10" width="22" height="28" rx="2" fill="url(#sRoll)" stroke="${c}" stroke-width="1"/>
+        <!-- 卷轴轴头 -->
+        <rect x="11" y="8" width="26" height="4" rx="2" fill="url(#sBind)" stroke="${c}" stroke-width="0.8"/>
+        <rect x="11" y="36" width="26" height="4" rx="2" fill="url(#sBind)" stroke="${c}" stroke-width="0.8"/>
+        <!-- 文字纹路 -->
+        <path d="M17 16 H31 M17 21 H31 M17 26 H28" stroke="#9a7b3f" stroke-width="1.2" stroke-linecap="round"/>
+        <!-- 印章 -->
+        <rect x="26" y="29" width="6" height="4" rx="1" fill="#c43c3c" opacity="0.75"/>`);
+      if (ref === 'equip') return wrap(
+        // ── 装备箱：兵器匣 ──
+        `<defs>
+          <linearGradient eBox x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#8b5a2a"/><stop offset="100%" stop-color="#5c3a18"/></linearGradient>
+          <linearGradient eLid x1="0" y1="0" x2="1" x2="0"><stop offset="0%" stop-color="#c49a5c"/><stop offset="100%" stop-color="#9a6a33"/></linearGradient>
+        </defs>
+        <rect x="10" y="22" width="28" height="16" rx="2" fill="url(#eBox)" stroke="${c}" stroke-width="1"/>
+        <!-- 匣盖（微开） -->
+        <path d="M10 22 Q24 10 38 22 Z" fill="url(#eLid)" stroke="${c}" stroke-width="1"/>
+        <rect x="10" y="20" width="28" height="3" rx="1" fill="${c}"/>
+        <!-- 匣上交叉剑纹 -->
+        <line x1="18" y1="17" x2="30" y2="17" stroke="${c}" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="24" y1="13" x2="24" y2="21" stroke="${c}" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- 锁扣 -->
+        <rect x="21.5" y="18" width="5" height="5" rx="1" fill="${c}"/>`);
+      if (ref === 'exp') return wrap(
+        // ── 经验星：璀璨星光 ──
+        `<defs>
+          <radialGradient xStar><stop offset="0%" stop-color="#fff7e0"/><stop offset="40%" stop-color="${c}"/><stop offset="100%" stop-color="#8a6a28"/></radialGradient>
+        </defs>
+        <path d="M24 4 L28 18 L42 18 L31 27 L35 42 L24 33 L13 42 L17 27 L6 18 L20 18 Z" fill="url(#xStar)" stroke="#fff3d0" stroke-width="0.8"/>
+        <!-- 星芒 -->
+        <g stroke="#fff" stroke-width="0.6" opacity="0.5" stroke-linecap="round">
+          <line x1="24" y1="1" x2="24" y2="4"/><line x1="24" y1="44" x2="24" y2="41"/>
+          <line x1="1" y1="24" x2="4" y2="24"/><line x1="44" y1="24" x2="41" y2="24"/>
+          <line x1="8" y1="8" x2="10" y2="10"/><line x1="40" y1="40" x2="38" y2="38"/>
+          <line x1="40" y1="8" x2="38" y2="10"/><line x1="8" y1="40" x2="10" y2="38"/>
+        </g>`);
+      if (ref === 'stone') return wrap(
+        // ── 灵石：温润灵韵 ──
+        `<defs>
+          <linearGradient stTop x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f0d068"/><stop offset="100%" stop-color="#c49a2e"/></linearGradient>
+          <radialGradient stGlow><stop offset="0%" stop-color="#fff7e0" stop-opacity="0.6"/><stop offset="100%" stop-color="#f0d068" stop-opacity="0"/></radialGradient>
+        </defs>
+        <ellipse cx="24" cy="34" rx="13" ry="5" fill="#a07a20" opacity="0.3"/>
+        <ellipse cx="24" cy="30" rx="13" ry="5" fill="#c49a2e"/>
+        <ellipse cx="24" cy="26" rx="13" ry="5" fill="#ddb84a"/>
+        <ellipse cx="24" cy="22" rx="13" ry="5" fill="url(#stTop)"/>
+        <!-- 光晕 -->
+        <ellipse cx="24" cy="22" rx="9" ry="3" fill="url(#stGlow)"/>
+        <!-- 灵字 -->
+        <text x="24" y="25" font-size="9" font-weight="700" text-anchor="middle" fill="#7a5f1e" font-family="'KaiTi','STKaiti',serif">灵</text>`);
       return wrap(`<rect x="12" y="12" width="24" height="24" rx="4" fill="${c}"/>`);
     }
     if (type === 'pill') {
       const col = ref === 'hp' ? '#d9534f' : '#3a78c2';
-      return wrap(`<rect x="20" y="5" width="8" height="6" rx="1.5" fill="#caa15a"/><path d="M19 11 H29 V20 Q29 34 24 39 Q19 34 19 20 Z" fill="${col}"/>${ref === 'hp' ? '<path d="M24 16 V30 M18 23 H30" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>' : '<path d="M24 16 V30 M20.5 23 H27.5" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>'}`);
+      const colLight = ref === 'hp' ? '#e88a85' : '#7aaddd';
+      const colDark = ref === 'hp' ? '#a32d2a' : '#255a94';
+      return wrap(
+        // ── 丹药：玉瓶丹药 ──
+        `<defs>
+          <linearGradient pGlass x1="0" y1="0" x2="1" x2="0"><stop offset="0%" stop-color="${colLight}" stop-opacity="0.5"/><stop offset="50%" stop-color="#fff" stop-opacity="0.25"/><stop offset="100%" stop-color="${colLight}" stop-opacity="0.5"/></linearGradient>
+          <linearGradient pLiquid x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${col}"/><stop offset="100%" stop-color="${colDark}</stop></linearGradient>
+          <linearGradient pCork x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#caa15a"/><stop offset="100%" stop-color="#9a7a3a"/></linearGradient>
+        </defs>
+        <!-- 瓶塞 -->
+        <rect x="20.5" y="4" width="7" height="5" rx="1.5" fill="url(#pCork)" stroke="${c}" stroke-width="0.6"/>
+        <!-- 瓶身 -->
+        <path d="M19 9 H29 V21 Q29 35 24 40 Q19 35 19 21 Z" fill="url(#pLiquid)" stroke="${c}" stroke-width="0.8"/>
+        <!-- 玻璃高光 -->
+        <path d="M20.5 10.5 H27.5 V20 Q27.5 32 24 36 Q20.5 32 20.5 20 Z" fill="url(#pGlass)"/>
+        <!-- 标记符号 -->
+        ${ref === 'hp'
+          ? '<path d="M24 16 V28 M19 22 H29" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>'
+          : '<path d="M24 16 V28 M21 22 H27" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>'}`);
     }
     return wrap(`<rect x="14" y="14" width="20" height="20" rx="3" fill="${c}"/>`);
   }
@@ -505,7 +702,7 @@ function initHub() {
       const it = player.equipment[slot];
       if (it) {
         return `<div class="inv2-cell" style="--rc:${it.rarityColor}" onmouseenter="invShowTip(event,'equipped','${slot}')" onmouseleave="invHideTip()">
-          <div class="tile">${invIconSVG('equip', slot, it.rarityColor)}</div>
+          <div class="tile">${invIconSVG('equip', slot, it.rarityColor, it.name)}</div>
           <span class="nm" style="color:${it.rarityColor}">${esc(it.name)}</span>
         </div>`;
       }
@@ -531,9 +728,9 @@ function initHub() {
       return `<div class="inv2-cell" style="--rc:${rep.rarityColor}" onmouseenter="invShowTip(event,'equip','${rep.uid}')" onmouseleave="invHideTip()">
         ${qty > 1 ? `<span class="qty">${qty}</span>` : ''}
         ${better ? '<span class="better">▲</span>' : ''}
-        <div class="tile">${invIconSVG('equip', rep.slot, rep.rarityColor)}</div>
-        <span class="nm" style="color:${rep.rarityColor}">${esc(rep.name)}</span>
-      </div>`;
+        <div class="tile">${invIconSVG('equip', rep.slot, rep.rarityColor, rep.name)}</div>
+          <span class="nm" style="color:${rep.rarityColor}">${esc(rep.name)}</span>
+        </div>`;
     }).join('')
       : `<div class="empty-tip">背包无装备 — 击败江湖敌人可掉落装备宝箱，或去商店购买。</div>`;
 
@@ -616,8 +813,8 @@ function initHub() {
       return `<div class="inv2-cell" style="--rc:${rep.rarityColor}" onmouseenter="invShowTip(event,'equip','${rep.uid}')" onmouseleave="invHideTip()">
         ${qty > 1 ? `<span class="qty">${qty}</span>` : ''}
         ${better ? '<span class="better">▲</span>' : ''}
-        <div class="tile">${invIconSVG('equip', rep.slot, rep.rarityColor)}</div>
-        <span class="nm" style="color:${rep.rarityColor}">${esc(rep.name)}</span>
+        <div class="tile">${invIconSVG('equip', rep.slot, rep.rarityColor, rep.name)}</div>
+          <span class="nm" style="color:${rep.rarityColor}">${esc(rep.name)}</span>
       </div>`;
     }).join('') : `<div class="empty-tip">暂无背包装备 — 击败江湖敌人可掉落宝箱，或去商店购买。</div>`;
 
