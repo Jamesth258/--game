@@ -67,6 +67,7 @@ function startStoryBattle(ch, lv) {
 // ===== 副本主页：卷标签 + 章节卡片 =====
 function openStoryScreen() {
   // 若有已通关但未领奖励的章节 → 先弹三选一
+  document.body.classList.remove('battle-mode');
   for (let c = 1; c <= 100; c++) {
     if ((player.storyCleared[c] || 0) >= 10 && !player.storyRewardClaimed[c]) { showStoryReward(c); return; }
   }

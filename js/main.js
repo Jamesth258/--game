@@ -63,6 +63,7 @@ function checkSavedCharacter() {
       createScreen.setAttribute('hidden', '');
       // 有存档 → 初始化并进入主页
       state = 'hub'; // 关键：进入主页必须把状态机切到 hub，否则底层 canvas 渲染循环会持续重绘地图/战斗帧（白耗算力）
+      document.body.classList.remove('battle-mode');
       initHub();
       window.HUB.show();
       // [v33] 检测是否有可恢复的备份存档（误覆盖后的一键恢复）

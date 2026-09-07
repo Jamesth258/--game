@@ -578,7 +578,8 @@ function checkEnd() {
 }
 
 function endBattle(win) {
-  document.body.classList.remove('battle-mode');
+  // 注意：不在此处移除 battle-mode！移除后 .wrap 会从 1180px 缩回 680px，
+  // 导致胜利/失败画面瞬间变小留白。改为在真正回到主页的各出口点统一移除。
   awaitingInput = false;
   setButtons(false);
   if (win) {
@@ -677,7 +678,7 @@ canvas.addEventListener('click', e => {
     } else if (battle && battle.mode === 'worldboss') {
       openWorldBossResult(battle.node._wb);
     } else if (window.HUB) { window.HUB.refresh(); window.HUB.show(); }
-    else { state = 'hub'; toast = ''; }
+    else { document.body.classList.remove('battle-mode'); state = 'hub'; toast = ''; }
   }
 });
 
