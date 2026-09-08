@@ -6,6 +6,7 @@
 <title>逍遥仙 · 修仙武侠</title>
 <link rel="stylesheet" href="css/style.css?v=35">
 <link rel="stylesheet" href="css/scroll-panel.css?v=4">
+<link rel="stylesheet" href="css/modal-blackgold.css?v=1">
 </head>
 <body>
 <!-- ===== 登录等待画面（游戏封面 + 进度条） ===== -->
@@ -144,5 +145,20 @@
 <script src="js/codex.js?v=20"></script>
 <script src="js/main.js?v=34"></script>
 <script src="online.js?v=19"></script>
+<script>
+/* 黑金沙弹窗主题切换器 — 控制台输入 setModalTheme('A'|'B'|'C') */
+function setModalTheme(v) {
+  var m = document.getElementById('modal');
+  m.classList.remove('modal-theme-A','modal-theme-B','modal-theme-C');
+  if (v) m.classList.add('modal-theme-' + v.toUpperCase());
+  // 同步到 scroll-panel
+  var sp = document.querySelector('.scroll-panel');
+  if (sp) { sp.classList.remove('theme-A','theme-B','theme-C'); if (v) sp.classList.add('theme-' + v.toUpperCase()); }
+  console.log('[Modal Theme] 切换至版本 ' + (v||'C（默认暗金龙纹）'));
+  return v;
+}
+// 默认 C（暗金龙纹）
+setModalTheme('C');
+</script>
 </body>
 </html>
