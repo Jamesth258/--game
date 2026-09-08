@@ -62,18 +62,29 @@
    卷轴面板 — 黑金沙重写（替代原暖纸卷轴）
    ══════════════════════════════════════════════════════════════════ */
 
-/* 隐藏旧卷轴装饰元素（木轴/绫边），黑金沙主题不使用 */
+/* 旧卷轴装饰：隐藏木轴和绫边（它们是独立兄弟节点，不影响内容） */
 .scroll-panel .scroll-rod,
-.scroll-panel .scroll-silk,
-.scroll-panel .scroll-painting {
+.scroll-panel .scroll-silk {
   display: none !important;
 }
-/* scroll-paper 直接作为内容容器 */
-.scroll-panel .scroll-paper {
-  display: block !important;
+/*
+ * scroll-painting 包裹着 scroll-paper（所有内容都在里面）！
+ * 不能 display: none，否则内容全消失。
+ * 改为：去掉装饰效果（边框/背景/阴影），保留盒子让子元素正常渲染。
+ */
+.scroll-panel .scroll-painting {
   padding: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
+  border: none !important;
+}
+/* scroll-paper 承载黑金沙背景 + 内容内边距 */
+.scroll-panel .scroll-paper {
+  display: block !important;
+  padding: 20px 22px 24px !important;
+  background: var(--mg-bg, #0a090c) !important;
+  box-shadow: none !important;
+  color: var(--mg-text, #e8dcc0) !important;
 }
 .scroll-panel .scroll-paper::before,
 .scroll-panel .scroll-paper::after {
