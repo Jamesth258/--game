@@ -102,6 +102,9 @@ function startBattle(node, mode) {
   };
   // 立绘（方案A）：按 avatarId / 卷 / BOSS 动态加载写实古风立绘，挂到 battle 上（不污染 art.hero / art.enemy）
   battle.heroSprite = loadImg(HERO_SPRITES[player.avatarId] || HERO_SPRITES.m1);
+  // 头像 portrait（用于战斗 UI 卡片圆形小头像，与主页头像图鉴 assets/avatars/ 同步）
+  const _pAv = (typeof AVATAR_MAP !== 'undefined' && AVATAR_MAP[player.avatarId]) || null;
+  battle.heroAvatar = loadImg(_pAv ? _pAv.img : 'assets/avatars/avatar_m2.png');
   let _enemySrc;
   if (isWB) {
     const _slot = WB_SLOTS.find(s => s.idx === node._wb) || WB_SLOTS[0];
@@ -113,6 +116,17 @@ function startBattle(node, mode) {
     _enemySrc = ENEMY_SPRITES[1];
   }
   battle.enemySprite = loadImg(_enemySrc);
+  // 敌人头像 portrait（与头像图鉴同步）
+  let _eAid;
+  if (isWB) {
+    const _slot2 = WB_SLOTS.find(s => s.idx === node._wb) || WB_SLOTS[0];
+    _eAid = 'boss_' + (_slot2.idx || 1);
+  } else {
+    const _vol2 = (node && node._story && typeof STORY_BY_CH !== 'undefined') ? ((STORY_BY_CH[node._story.ch] || {}).volume || 1) : 1;
+    _eAid = 'enemy_v' + _vol2;
+  }
+  const _eAv = (typeof AVATAR_MAP !== 'undefined' && AVATAR_MAP[_eAid]) || null;
+  battle.enemyAvatar = loadImg(_eAv ? _eAv.img : 'assets/avatars/avatar_enemy_v1.png');
   state = 'battle';
   document.body.classList.add('battle-mode');
   toast = '';
@@ -789,12 +803,12 @@ function drawActorCard(x, y, w, h, actor, isPlayer) {
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // 头像 40x40（圆形裁剪）
+  // 头像 40x40（圆形裁剪，使用头像图鉴 portrait 而非全身立绘）
   const avatarSize = 40;
   const ax = x + 6, ay = y + 5;
   const img = isPlayer
-    ? ((battle && battle.heroSprite && ready(battle.heroSprite)) ? battle.heroSprite : art.hero)
-    : ((battle && battle.enemySprite && ready(battle.enemySprite)) ? battle.enemySprite : art.enemy);
+    ? ((battle && battle.heroAvatar && ready(battle.heroAvatar)) ? battle.heroAvatar : art.hero)
+    : ((battle && battle.enemyAvatar && ready(battle.enemyAvatar)) ? battle.enemyAvatar : art.enemy);
   ctx.save();
   ctx.beginPath();
   ctx.arc(ax + avatarSize / 2, ay + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
