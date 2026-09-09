@@ -334,3 +334,124 @@
   font-family:"KaiTi","STKaiti","楷体",serif; font-weight:700; transition:all .2s;
 }
 .attr-panel-a .btn-back-a:hover { background:linear-gradient(180deg, #c9972f48, #c9972f20); border-color:rgba(201,151,47,.55); box-shadow:0 2px 12px rgba(201,151,47,.15); }
+
+/* ════════════════════════════════════════════════════════════
+   通用黑金面板 B（bg-modal · 支持滚动 · 全弹窗统一）
+   用于：装备/背包/功法/副本/每日奖励/商店/图鉴/世界BOSS/排行榜/设置/头像
+   与 A 的区别：保留 max-height + overflow-y:auto 滚动能力
+   ════════════════════════════════════════════════════════════ */
+.modal-box.bg-modal {
+  background: transparent !important; padding: 10px !important; border-radius: 10px !important;
+  box-shadow: 0 0 60px rgba(0,0,0,.7) !important;
+}
+.bg-panel-a {
+  position: relative; width: 100%; box-sizing: border-box;
+  border-radius: 10px; overflow: hidden; padding: 20px 18px 16px;
+  background:
+    radial-gradient(ellipse at 30% 0%, rgba(201,151,47,.07) 0%, transparent 50%),
+    linear-gradient(180deg, rgba(18,16,14,.94), rgba(12,10,8,.97));
+  border: 1.5px solid rgba(201,151,47,.38);
+  box-shadow: inset 0 1px 0 rgba(255,245,220,.07), 0 0 1px rgba(201,151,47,.45);
+}
+/* 磨砂噪点 */
+.bg-panel-a::before {
+  content:''; position:absolute; inset:0; z-index:0; pointer-events:none; opacity:.035;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 128 128' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:96px 96px;
+}
+.bg-panel-a > * { position: relative; z-index: 1; }
+/* 顶部金线 */
+.bg-panel-a::after {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px; z-index:2;
+  background:linear-gradient(90deg,transparent,#f0d678,#c9972f,#f0d678,transparent);
+}
+/* 标题栏 */
+.bg-panel-a .bg-title {
+  display:flex; align-items:center; gap:10px; padding-bottom:10px; margin-bottom:12px;
+  border-bottom:1px solid rgba(201,151,47,.18);
+  font-family:"KaiTi","STKaiti","楷体","Kaiti SC","华文楷体",serif;
+}
+.bg-panel-a .bg-title svg { flex-shrink:0; }
+.bg-panel-a .bg-title span {
+  font-size:17px; font-weight:700; letter-spacing:4px;
+  background:linear-gradient(180deg,#f0d678,#c9972f); -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+/* 副标题文字 */
+.bg-panel-a .bg-sub { font-size:11.5px; color:rgba(232,220,192,.55); margin:0 0 12px; line-height:1.5; }
+.bg-panel-a .bg-sub b { color:#d4a843; }
+/* 段落标题 */
+.bg-panel-a .bg-sec { font-size:12px; color:rgba(201,151,47,.7); letter-spacing:3px; margin:10px 0 6px; padding-left:2px; font-family:"KaiTi","STKaiti","楷体",serif; }
+/* 分隔线 */
+.bg-panel-a .bg-hr { height:1px; background:linear-gradient(90deg,transparent,rgba(201,151,47,.22),transparent); margin:10px 0; border:none; }
+/* 列表项（bag-item 兼容） */
+.bg-panel-a .bag-item {
+  background:linear-gradient(135deg, rgba(255,245,220,.04), rgba(255,245,220,.01)) !important;
+  border:1px solid rgba(201,151,47,.14) !important; border-radius:6px !important;
+  margin-bottom:5px !important;
+}
+.bg-panel-a .bag-name { color:#e8dcc0 !important; }
+.bg-panel-a .equip-bonus { color:rgba(232,220,192,.5) !important; }
+/* 按钮 */
+.bg-panel-a .equip-btn {
+  background:linear-gradient(180deg, rgba(201,151,47,.18), rgba(201,151,47,.08)) !important;
+  border:1px solid rgba(201,151,47,.35) !important; color:#d4a843 !important; border-radius:5px !important;
+  font-size:12px !important; padding:5px 12px !important; cursor:pointer !important;
+  transition:all .15s !important; white-space:nowrap !important;
+}
+.bg-panel-a .equip-btn:hover:not(:disabled) {
+  background:linear-gradient(180deg, rgba(201,151,47,.32), rgba(201,151,47,.14)) !important;
+  border-color:rgba(201,151,47,.55) !important; box-shadow:0 1px 6px rgba(201,151,47,.2) !important;
+}
+.bg-panel-a .equip-btn:disabled { opacity:.28 !important; cursor:default !important; background:rgba(255,255,255,.05) !important; color:rgba(241,239,232,.3) !important; border-color:rgba(255,255,255,.1) !important; }
+/* 主按钮（返回主页等） */
+.bg-panel-a .btn-full {
+  background:linear-gradient(180deg, #c9972f28, #c9972f10) !important;
+  border:1px solid rgba(201,151,47,.4) !important; border-radius:6px !important;
+  color:#c9972f !important; font-size:13px !important; letter-spacing:3px !important;
+  font-family:"KaiTi","STKaiti","楷体",serif !important; font-weight:700 !important;
+  transition:all .2s !important; padding:9px 0 !important;
+}
+.bg-panel-a .btn-full:hover {
+  background:linear-gradient(180deg, #c9972f45, #c9972f18) !important;
+  border-color:rgba(201,151,47,.55) !important; box-shadow:0 2px 12px rgba(201,151,47,.15) !important;
+}
+/* 危险按钮（红色系） */
+.bg-panel-a .equip-btn.danger {
+  background:linear-gradient(180deg, rgba(220,80,80,.15), rgba(180,60,60,.06)) !important;
+  border:1px solid rgba(220,80,80,.3) !important; color:#e87b7b !important;
+}
+.bg-panel-a .equip-btn.danger:hover:not(:disabled) {
+  background:linear-gradient(180deg, rgba(220,80,80,.28), rgba(180,60,60,.12)) !important;
+  border-color:rgba(220,80,80,.5) !important;
+}
+/* 钻石按钮 */
+.bg-panel-a .diamond-buy-btn {
+  background:linear-gradient(180deg, rgba(55,138,220,.15), rgba(40,100,180,.06)) !important;
+  border:1px solid rgba(55,138,220,.3) !important; color:#7db8ff !important;
+}
+.bg-panel-a .diamond-buy-btn:hover:not(:disabled) {
+  background:linear-gradient(180deg, rgba(55,138,220,.28), rgba(40,100,180,.12)) !important;
+  border-color:rgba(55,138,220,.5) !important;
+}
+/* 返回按钮专用 */
+.bg-panel-a .bg-back {
+  display:block; width:100%; margin-top:12px; padding:9px 0; border:1px solid rgba(201,151,47,.4); border-radius:6px;
+  background:linear-gradient(180deg, #c9972f28, #c9972f10); color:#c9972f; font-size:13px; letter-spacing:4px; cursor:pointer;
+  font-family:"KaiTi","STKaiti","楷体",serif; font-weight:700; transition:all .2s;
+}
+.bg-panel-a .bg-back:hover { background:linear-gradient(180deg, #c9972f45, #c9972f18); border-color:rgba(201,151,47,.55); box-shadow:0 2px 12px rgba(201,151,47,.15); }
+/* 信息卡片 */
+.bg-panel-a .bg-info-card {
+  padding:10px 12px; background:rgba(255,255,255,.03); border-radius:6px;
+  border:1px solid rgba(201,151,47,.1); margin:8px 0;
+}
+.bg-panel-a .bg-info-card .lbl { font-size:11px; color:rgba(232,220,192,.42); margin-bottom:4px; }
+.bg-panel-a .bg-info-card .val { font-size:12px; color:rgba(232,220,192,.7); line-height:1.7; }
+.bg-info-card b { color:#d4a843; }
+/* 小格子网格兼容 */
+.bg-panel-a .inv2-grid { padding:2px 0; }
+.bg-panel-a .inv2-cell { border-color:rgba(201,151,47,.2) !important; background:rgba(255,245,220,.02) !important; }
+/* 空提示 */
+.bg-panel-a .empty-tip { text-align:center; padding:16px 8px; color:rgba(232,220,192,.35); font-size:12px; }
+/* hr 兼容 */
+.bg-panel-a hr { height:1px; background:linear-gradient(90deg,transparent,rgba(201,151,47,.22),transparent); border:none; margin:10px 0; }

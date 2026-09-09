@@ -153,14 +153,16 @@ function dailySignIn() {
   });
   saveGame();
   // 结果弹窗
-  let html = `<div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 16l2 2 4-4"/></svg><h3 style="margin:0">签到成功</h3></div>`;
-  html += `<p style="margin:4px 0;font-size:13px;color:rgba(241,239,232,0.75)">本月已累计签到 <b style="color:#D4A843">${d.monthSignCount}</b> 次</p>`;
+  let html = `<div class="bg-panel-a">
+    <div class="bg-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 16l2 2 4-4"/></svg>
+    <span>签到成功</span></div>`;
+  html += `<p class="bg-sub">本月已累计签到 <b>${d.monthSignCount}</b> 次</p>`;
   html += `<div class="bag-list">` + items.map(it =>
     `<div class="bag-item"><div class="bag-info"><span class="bag-name" style="color:#639922">${esc(it[0])}</span><span class="equip-bonus">${esc(it[1])}</span></div></div>`
   ).join('') + `</div>`;
-  html += `<button class="btn-full" onclick="openDailyRewardScreen()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回每日奖励</button>`;
-  html += `<button class="btn-full" onclick="returnToHub()" style="margin-top:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`;
-  openModal(html);
+  html += `<button class="btn-full" onclick="openDailyRewardScreen()">返回每日奖励</button>`;
+  html += `<button class="bg-back" onclick="returnToHub()">返回主页</button></div>`;
+  openModal(html, 'bg-modal');
 }
 
 // ===== 第二重：在线时长累计（由 initDaily 的定时器每秒调用）=====
@@ -265,17 +267,19 @@ function openDailyRewardScreen() {
     ? `<button class="equip-btn" disabled style="background:rgba(255,255,255,0.06);color:rgba(241,239,232,0.3);cursor:default">今日已签到</button>`
     : `<button class="equip-btn" onclick="dailySignIn()">签到领 ${stones} 灵石</button>`;
 
-  let html = `<div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 16l2 2 4-4"/></svg><h3 style="margin:0">每日奖励</h3></div>`;
-  html += `<p style="margin:2px 0 10px;font-size:12px;color:rgba(241,239,232,0.7)">灵石 <b style="color:#D4A843">${player.gold || 0}</b> ｜ 钻石 <b style="color:#378ADD">${player.diamond || 0}</b> ｜ 当前境界 <b style="color:#D4A843">${esc(realmLabel)}</b>（等级 ${lvl}）｜ 今日在线 <b>${dailyFmtDur(d.onlineSecToday)}</b></p>`;
+  let html = `<div class="bg-panel-a">
+    <div class="bg-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 16l2 2 4-4"/></svg>
+    <span>每日奖励</span></div>`;
+  html += `<p class="bg-sub">灵石 <b>${player.gold || 0}</b> ｜ 钻石 <b style="color:#7db8ff">${player.diamond || 0}</b> ｜ 当前境界 <b>${esc(realmLabel)}</b>（等级 ${lvl}）｜ 今日在线 <b>${dailyFmtDur(d.onlineSecToday)}</b></p>`;
 
-  html += `<div class="equip-sec-title">第一重 · 每日签到</div>`;
-  html += `<div class="bag-item" style="align-items:center"><div class="bag-info"><span class="bag-name">今日签到</span><span class="equip-bonus">送灵石 = 境界等级(${lvl}) × 100 = <b style="color:#D4A843">${stones}</b></span></div>${signBtn}</div>`;
-  html += `<p style="margin:6px 0 2px;font-size:12px;color:rgba(241,239,232,0.6)">本月已签到 <b style="color:#D4A843">${d.monthSignCount}</b> 次 · 月度里程碑：</p>`;
+  html += `<div class="bg-sec">第一重 · 每日签到</div>`;
+  html += `<div class="bag-item" style="align-items:center"><div class="bag-info"><span class="bag-name">今日签到</span><span class="equip-bonus">送灵石 = 境界等级(${lvl}) × 100 = <b>${stones}</b></span></div>${signBtn}</div>`;
+  html += `<p class="bg-sub">本月已签到 <b>${d.monthSignCount}</b> 次 · 月度里程碑：</p>`;
   html += `<div class="bag-list">${signRows}</div>`;
 
-  html += `<div class="equip-sec-title" style="margin-top:12px">第二重 · 在线时长奖励（达成即自动发放）</div>`;
+  html += `<div class="bg-sec" style="margin-top:12px">第二重 · 在线时长奖励（达成即自动发放）</div>`;
   html += `<div class="bag-list">${onlineRows}</div>`;
-  html += `<p style="margin:6px 0 0;font-size:11px;color:rgba(241,239,232,0.4)">在线奖励在达成时长后自动发放到账，无需手动领取；次日 0 点重置。</p>`;
+  html += `<p class="bg-sub">在线奖励在达成时长后自动发放到账，无需手动领取；次日 0 点重置。</p>`;
 
   // 第三重 · 日常任务奖励
   const storyTasks = DAILY_TASK_MILESTONES.filter(m => m.metric === 'story');
@@ -283,19 +287,19 @@ function openDailyRewardScreen() {
   const taskRow = (m, cur) => {
     const done = !!d.taskClaimed[m.metric + m.count];
     const reached = cur >= m.count;
-    const cls = done ? 'color:#639922' : (reached ? 'color:#D4A843' : 'color:rgba(241,239,232,0.45)');
+    const cls = done ? 'color:#639922' : (reached ? 'color:#D4A843' : 'color:rgba(232,220,192,.45)');
     const tag = done ? '已领取' : (reached ? '已达成' : '未达成');
     const label = m.metric === 'story' ? ('每日通关副本 ' + cur + '/' + m.count) : ('今日挑战世界BOSS ' + cur + '/' + m.count);
     return `<div class="bag-item"><div class="bag-info">
       <span class="bag-name" style="${cls}">${label}</span>
       <span class="equip-bonus">${esc(m.desc)} · <b style="${cls}">${tag}</b></span></div></div>`;
   };
-  html += `<div class="equip-sec-title" style="margin-top:12px">第三重 · 日常任务奖励（达成即自动发放）</div>`;
+  html += `<div class="bg-sec" style="margin-top:12px">第三重 · 日常任务奖励（达成即自动发放）</div>`;
   html += `<div class="bag-list">` + storyTasks.map(m => taskRow(m, d.storyClearToday || 0)).join('') + bossTasks.map(m => taskRow(m, d.bossChalToday || 0)).join('') + `</div>`;
-  html += `<p style="margin:6px 0 0;font-size:11px;color:rgba(241,239,232,0.4)">通关副本 / 挑战世界BOSS 即累计进度，达成后奖励自动发放；次日 0 点重置。</p>`;
+  html += `<p class="bg-sub">通关副本 / 挑战世界BOSS 即累计进度，达成后奖励自动发放；次日 0 点重置。</p>`;
 
-  html += `<button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`;
-  openModal(html);
+  html += `<button class="bg-back" onclick="returnToHub()">返回主页</button></div>`;
+  openModal(html, 'bg-modal');
 }
 
 window.openDailyRewardScreen = openDailyRewardScreen;

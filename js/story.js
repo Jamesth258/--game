@@ -94,14 +94,15 @@ function openStoryScreen() {
         : `<button class="equip-btn" disabled style="background:rgba(255,255,255,0.06);color:rgba(241,239,232,0.3);cursor:default">${storyChapterLockReason(c)}</button>`}
     </div>`);
   }
-  openModal(`
-    <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-    <h3 style="margin:0">剧情副本</h3></div>
-    <p style="margin:2px 0 8px;font-size:12px;color:rgba(241,239,232,0.6)">每章 10 关，单关胜得经验；通关领 <b style="color:#D4A843">功法三选一 + 装备三选一</b>。</p>
+  openModal(`<div class="bg-panel-a">
+    <div class="bg-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+    <span>剧情副本</span></div>
+    <p class="bg-sub">每章 10 关，单关胜得经验；通关领 <b>功法三选一 + 装备三选一</b>。</p>
     <div class="story-vol-tabs">${volTabs}</div>
-    <div class="equip-sec-title">${esc(vol.name)}</div>
+    <div class="bg-sec">${esc(vol.name)}</div>
     <div class="bag-list">${chapters.join('')}</div>
-    <button class="btn-full" onclick="storyClose()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
+    <button class="bg-back" onclick="storyClose()">返回主页</button>
+  </div>`, 'bg-modal');
 }
 
 function storySetVol(v) { _storyVol = v; openStoryScreen(); }
@@ -136,16 +137,17 @@ function openChapter(ch) {
   const skNames = rw.skills.map(id => SKILLS_DB_MAP[id]).filter(Boolean)
     .map(s => `<span style="color:${sTierColor(s.tier)}">${esc(s.name)}</span>`).join('、');
   const eqNames = rw.equip.map(e => `<span style="color:${RARITY[e.rarity].color}">${EQUIP_SLOTS[e.slot].name}·${RARITY[e.rarity].name}</span>`).join('、');
-  openModal(`
-    <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-    <h3 style="margin:0">第${ch}章 · ${esc(d.title)}</h3></div>
-    <p style="margin:2px 0;font-size:12px;color:rgba(241,239,232,0.7)">${esc(d.plot)}</p>
-    <p style="margin:2px 0 8px;font-size:12px;color:rgba(241,239,232,0.55)">${esc(d.realmName)} · 功法${d.tierName} · 装备${d.rarityName} · 进度 ${cleared}/10 ${player.storyRewardClaimed[ch] ? '· 已领奖' : ''}</p>
-    <div class="equip-sec-title">十关挑战</div>
+  openModal(`<div class="bg-panel-a">
+    <div class="bg-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+    <span>第${ch}章 · ${esc(d.title)}</span></div>
+    <p class="bg-sub">${esc(d.plot)}</p>
+    <p class="bg-sub">${esc(d.realmName)} · 功法${d.tierName} · 装备${d.rarityName} · 进度 ${cleared}/10 ${player.storyRewardClaimed[ch] ? '· 已领奖' : ''}</p>
+    <div class="bg-sec">十关挑战</div>
     <div class="bag-list">${rows.join('')}</div>
-    <div class="equip-sec-title">通关奖励（三选一）</div>
-    <p style="margin:4px 0;font-size:12px;color:rgba(241,239,232,0.7)">功法：${skNames}<br>装备：${eqNames}</p>
-    <button class="btn-full" onclick="storyBackVol()" style="margin-top:12px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回章节列表</button>`);
+    <div class="bg-sec">通关奖励（三选一）</div>
+    <p class="bg-sub">功法：${skNames}<br>装备：${eqNames}</p>
+    <button class="bg-back" onclick="storyBackVol()">返回章节列表</button>
+  </div>`, 'bg-modal');
 }
 
 // ===== 章节通关三选一奖励 =====
@@ -176,9 +178,9 @@ function showStoryReward(ch) {
       <span class="reward-tag" style="display:none">已选</span>
     </div>`;
   }).join('');
-  openModal(`
-    <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M12 2l3 7 7 .5-5.5 4.5 2 7L12 17l-6.5 4 2-7L2 9.5 9 9z"/></svg>
-    <h3 style="margin:0">第${ch}章通关 · 奖励三选一</h3></div>
+  openModal(`<div class="bg-panel-a">
+    <div class="bg-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M12 2l3 7 7 .5-5.5 4.5 2 7L12 17l-6.5 4 2-7L2 9.5 9 9z"/></svg>
+    <span>第${ch}章通关 · 奖励三选一</span></div>
     <p style="margin:2px 0 8px;font-size:12px;color:rgba(241,239,232,0.7)">点击卡片选择功法与装备（默认选中第一项），下方实时显示已选，确认后领取。</p>
     <div class="equip-sec-title">功法（选 1）</div>
     <div class="reward-grid" id="reward-skills">${skillCards}</div>
@@ -186,7 +188,8 @@ function showStoryReward(ch) {
     <div class="reward-grid" id="reward-equips">${eqCards}</div>
     <p id="reward-pick" style="margin:10px 0 0;font-size:13px;color:rgba(241,239,232,0.9)">已选：功法 <b style="color:#D4A843">—</b> ＋ 装备 <b style="color:#D4A843">—</b></p>
     <button class="btn-full" onclick="storyClaimReward(${ch})" style="margin-top:14px;background:#D4A843;color:#1a1a1a;font-weight:700;border:none">确认领取</button>
-    <button class="btn-full" onclick="storySkipReward(${ch})" style="margin-top:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">暂不选（回本章再领）</button>`);
+    <button class="btn-full" onclick="storySkipReward(${ch})" style="margin-top:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">暂不选（回本章再领）</button>
+    <button class="bg-back" onclick="returnToHub()">返回主页</button></div>`, 'bg-modal');
   setTimeout(() => { highlightReward('skill', rw.skills[0]); highlightReward('equip', 0); updateRewardPick(); }, 0);
 }
 
@@ -231,9 +234,10 @@ function storyClaimReward(ch) {
   saveGame();
   const sName = SKILLS_DB_MAP[sid] ? SKILLS_DB_MAP[sid].name : sid;
   const r = RARITY[eq.rarity], slot = EQUIP_SLOTS[eq.slot];
-  openModal(`<h3 style="color:#D4A843">领取成功</h3>
+  openModal(`<div class="bg-panel-a"><div class="bg-title"><span>领取成功</span></div>
     <p style="color:rgba(241,239,232,0.8)">功法《${esc(sName)}》已入功法库。<br>获得装备 ${esc(r.name)}·${esc(slot.name)}，已入背包。</p>
-    <button class="btn-full" onclick="openChapter(${ch})" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回本章</button>`);
+    <button class="btn-full" onclick="openChapter(${ch})">返回本章</button>
+    <button class="bg-back" onclick="returnToHub()">返回主页</button></div>`, 'bg-modal');
 }
 function storySkipReward(ch) { openChapter(ch); }   // 不标记已领，下次进入本章仍会提示
 
