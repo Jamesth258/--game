@@ -246,3 +246,91 @@
 #item-tip .tt-btn.sell:hover { background:linear-gradient(180deg,#b84432,#8a2e22); }
 #item-tip .tt-btn.off { background:linear-gradient(180deg,#9a7b3f,#7a5f2e); color:#1a1612; }
 #item-tip .tt-btn.off:hover { background:linear-gradient(180deg,#b08a48,#8a6a36); }
+
+/* ════════════════════════════════════════════════════════════
+   属性面板 A 鎏金玄铁（黑金磨砂 · 写实仙侠风）
+   仅作用于 showAttrModal() 的 openModal(html,'attr-modal')，不污染其它弹窗
+   ════════════════════════════════════════════════════════════ */
+/* 透明化共用外层 .modal-box，交给黑金面板接管；去掉 max-height/overflow 满足「一屏不滚动」 */
+.modal-box.attr-modal {
+  background: transparent !important; padding: 0 !important; border-radius: 0 !important;
+  box-shadow: none !important; max-height: none !important; overflow: visible !important; width: auto !important;
+}
+.attr-panel-a {
+  position: relative; width: min(520px, 94vw); box-sizing: border-box;
+  border-radius: 10px; overflow: hidden; padding: 24px 22px 20px;
+  background:
+    radial-gradient(ellipse at 30% 0%, rgba(201,151,47,.08) 0%, transparent 50%),
+    linear-gradient(180deg, rgba(18,16,14,.94), rgba(12,10,8,.97));
+  border: 1.5px solid rgba(201,151,47,.4);
+  box-shadow: 0 0 50px rgba(0,0,0,.75), inset 0 1px 0 rgba(255,245,220,.08), 0 0 1px rgba(201,151,47,.5);
+}
+/* 磨砂噪点 */
+.attr-panel-a::before {
+  content:''; position:absolute; inset:0; z-index:0; pointer-events:none; opacity:.038;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 128 128' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:96px 96px;
+}
+.attr-panel-a > * { position: relative; z-index: 1; }
+/* 顶部金线 */
+.attr-panel-a::after {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px; z-index:2;
+  background:linear-gradient(90deg,transparent,#f0d678,#c9972f,#f0d678,transparent);
+}
+.attr-panel-a .p-title-a {
+  display:flex; align-items:center; gap:10px; padding-bottom:12px; margin-bottom:14px;
+  border-bottom:1px solid rgba(201,151,47,.2);
+  font-family:"KaiTi","STKaiti","楷体","Kaiti SC","华文楷体",serif;
+}
+.attr-panel-a .p-title-a span {
+  font-size:18px; font-weight:700; letter-spacing:4px;
+  background:linear-gradient(180deg,#f0d678,#c9972f); -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+/* 经验条 */
+.attr-panel-a .xp-bar-a { margin-bottom:14px; }
+.attr-panel-a .xp-info-a { display:flex; justify-content:space-between; font-size:11.5px; color:rgba(232,220,192,.65); margin-bottom:5px; }
+.attr-panel-a .xp-info-a .rlm { color:#d4a843; font-weight:700; }
+.attr-panel-a .xp-info-a .num { color:rgba(232,220,192,.65); }
+.attr-panel-a .xp-track-a { height:8px; background:rgba(255,255,255,.06); border-radius:4px; overflow:hidden; border:1px solid rgba(201,151,47,.15); }
+.attr-panel-a .xp-fill-a { height:100%; background:linear-gradient(90deg,#8b6914,#c9972f,#d4a843); border-radius:4px; box-shadow:0 0 8px rgba(201,151,47,.3); }
+/* 段落标题 */
+.attr-panel-a .sec-head-a { font-size:12px; color:rgba(201,151,47,.75); letter-spacing:3px; margin:10px 0 8px; padding-left:2px; font-family:"KaiTi","STKaiti","楷体",serif; }
+.attr-panel-a .free-info-a { font-size:11px; color:rgba(232,220,192,.55); margin-bottom:10px; }
+.attr-panel-a .free-info-a b { color:#d4a843; }
+/* 6大属性 3行×2列 */
+.attr-panel-a .attr-grid-a { display:grid; grid-template-columns:1fr 1fr; gap:6px 12px; margin-bottom:14px; }
+.attr-panel-a .attr-cell-a {
+  display:flex; align-items:center; justify-content:space-between; padding:7px 10px; border-radius:6px;
+  background:linear-gradient(135deg, rgba(255,245,220,.05), rgba(255,245,220,.02)); border:1px solid rgba(201,151,47,.18);
+}
+.attr-panel-a .attr-l-a { display:flex; align-items:center; gap:7px; }
+.attr-panel-a .attr-l-a .nm { font-size:13px; font-weight:700; color:#e8dcc0; letter-spacing:2px; min-width:32px; }
+.attr-panel-a .attr-l-a .val { font-size:14px; color:#d4a843; font-weight:800; min-width:22px; text-align:right; }
+.attr-panel-a .attr-btns-a { display:flex; gap:4px; }
+.attr-panel-a .attr-btns-a button {
+  width:24px; height:24px; border-radius:5px; border:1px solid rgba(201,151,47,.35);
+  background:linear-gradient(180deg, rgba(201,151,47,.15), rgba(201,151,47,.06)); color:#d4a843; font-size:15px; font-weight:700;
+  cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; padding:0; transition:all .15s;
+}
+.attr-panel-a .attr-btns-a button:hover:not(:disabled) { background:linear-gradient(180deg, rgba(201,151,47,.3), rgba(201,151,47,.12)); border-color:rgba(201,151,47,.55); box-shadow:0 1px 6px rgba(201,151,47,.2); }
+.attr-panel-a .attr-btns-a button:disabled { opacity:.25; cursor:default; }
+/* 分隔线 */
+.attr-panel-a .div-line-a { height:1px; background:linear-gradient(90deg,transparent,rgba(201,151,47,.25),transparent); margin:12px 0; }
+/* 详细属性（保持原始 scroll-cell 网格排版：图标+名称+数值，auto-fill 自然流式）*/
+.attr-panel-a .detail-grid-a { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:5px 8px; }
+.attr-panel-a .detail-cell-a {
+  display:flex; align-items:center; gap:6px; padding:5px 8px; border-radius:4px;
+  background:rgba(255,255,255,.02); border:1px solid rgba(201,151,47,.08); font-size:11.5px; white-space:nowrap;
+}
+.attr-panel-a .detail-cell-a .dc-icon { font-size:13px; flex-shrink:0; }
+.attr-panel-a .detail-cell-a .dc-lab { color:rgba(232,220,192,.6); }
+.attr-panel-a .detail-cell-a .dc-val { color:#e8dcc0; font-weight:600; margin-left:auto; }
+.attr-panel-a .detail-cell-a.power { background:rgba(201,151,47,.08); border-color:rgba(201,151,47,.25); }
+.attr-panel-a .detail-cell-a.power .dc-lab, .attr-panel-a .detail-cell-a.power .dc-val { color:#d4a843; }
+/* 返回按钮 */
+.attr-panel-a .btn-back-a {
+  display:block; width:100%; margin-top:14px; padding:9px 0; border:1px solid rgba(201,151,47,.45); border-radius:6px;
+  background:linear-gradient(180deg, #c9972f30, #c9972f12); color:#c9972f; font-size:13px; letter-spacing:4px; cursor:pointer;
+  font-family:"KaiTi","STKaiti","楷体",serif; font-weight:700; transition:all .2s;
+}
+.attr-panel-a .btn-back-a:hover { background:linear-gradient(180deg, #c9972f48, #c9972f20); border-color:rgba(201,151,47,.55); box-shadow:0 2px 12px rgba(201,151,47,.15); }

@@ -198,7 +198,7 @@ function initHub() {
     }, HUB_TICK_MS);
   }
 
-  // 属性弹窗（含自由加点 + 经验进度条）
+  // 属性弹窗 A 鎏金玄铁 · 黑金磨砂写实仙侠风 · 一屏紧凑 · 详细属性保持原排版
   function showAttrModal() {
     refreshHub(); // 先同步主页境界/进度条/战力，保证与弹窗一致
     const r = CULTIVATION.realmFromXp(player.xp);
@@ -206,72 +206,55 @@ function initHub() {
     const free = earned - player.spent;
     const pct = v => Math.round(v * 100) + '%';
     const fmt = n => formatNum(n);
-    const avatarFile = 'avatar_' + (player.avatarId || 'm1');
-    // 基础属性行（暖纸卷轴风）
-    const basicRow = k => `
-      <div class="scroll-brow">
-        <span class="scroll-dot"></span>
-        <span class="scroll-bname">${ATTR_NAMES[k]}</span>
-        <span class="scroll-bval">${player[k]}</span>
-        <span class="scroll-btns">
+    // 6大属性（3行×2列紧凑网格）
+    const mainRow = k => `
+      <div class="attr-cell-a">
+        <div class="attr-l-a"><span class="nm">${ATTR_NAMES[k]}</span><span class="val">${player[k]}</span></div>
+        <div class="attr-btns-a">
           <button onclick="allocAttr('${k}',-1)" ${player[k] <= 10 ? 'disabled' : ''}>−</button>
           <button onclick="allocAttr('${k}',1)" ${free <= 0 ? 'disabled' : ''}>+</button>
-        </span>
+        </div>
       </div>`;
-    // 经验条（金色）
+    // 经验条
     const xpPct = Math.round(r.progress * 100);
     const xpHtml = `
-      <div class="scroll-xp">
-        <div class="info"><span class="rlm">${esc(r.label)}</span><span class="num">${fmt(r.xpIntoStage)} / ${fmt(r.xpForStage)}（${xpPct}%）</span></div>
-        <div class="track"><div class="fill" style="width:${xpPct}%"></div></div>
+      <div class="xp-bar-a">
+        <div class="xp-info-a"><span class="rlm">${esc(r.label)}</span><span class="num">${fmt(r.xpIntoStage)} / ${fmt(r.xpForStage)}（${xpPct}%）</span></div>
+        <div class="xp-track-a"><div class="xp-fill-a" style="width:${xpPct}%"></div></div>
       </div>`;
-    // 派生属性网格（墨字，战力朱砂）
-    const cell = (lab, val, isPower) => `<div class="scroll-cell${isPower ? ' power' : ''}"><span class="lab">${lab}</span><span class="num">${val}</span></div>`;
+    // 详细属性（保持原始 cell 网格排版：图标+名称+数值，auto-fill 自然流式）
+    const dCell = (ic, lab, val, isPower) => `<div class="detail-cell-a${isPower ? ' power' : ''}"><span class="dc-icon">${ic}</span><span class="dc-lab">${lab}</span><span class="dc-val">${val}</span></div>`;
     const derived = [
-      cell('❤ 生命上限', player.maxHp),
-      cell('✦ 灵力上限', player.maxMp),
-      cell('⚔ 物理攻击', player.atk),
-      cell('☯ 精神攻击', player.spiAtk),
-      cell('🛡 物理防御', player.def),
-      cell('🛡 精神防御', player.spiDef),
-      cell('🎯 命中率', pct(player.hitRate)),
-      cell('⚡ 先攻值', player.init),
-      cell('🍀 闪避率', pct(player.eva)),
-      cell('🍀 幸运值', player.luck),
-      cell('🎯 暴击率', pct(player.critRate)),
-      cell('💥 暴击伤害', Math.round(player.critDmg * 100) + '%'),
-      cell('📈 挂机加成', pct(player.xpBonus)),
-      cell('⚡ 战力', fmt(calcCombatPower(player)), true),
+      dCell('❤', '生命上限', fmt(player.maxHp)),
+      dCell('✦', '灵力上限', fmt(player.maxMp)),
+      dCell('⚔', '物理攻击', fmt(player.atk)),
+      dCell('☯', '精神攻击', fmt(player.spiAtk)),
+      dCell('🛡', '物理防御', fmt(player.def)),
+      dCell('🛡', '精神防御', fmt(player.spiDef)),
+      dCell('🎯', '命中率', pct(player.hitRate)),
+      dCell('⚡', '先攻值', fmt(player.init)),
+      dCell('🍀', '闪避率', pct(player.eva)),
+      dCell('🍀', '幸运值', fmt(player.luck)),
+      dCell('🎯', '暴击率', pct(player.critRate)),
+      dCell('💥', '暴击伤害', Math.round(player.critDmg * 100) + '%'),
+      dCell('📈', '挂机加成', pct(player.xpBonus)),
+      dCell('⚡', '战力', fmt(calcCombatPower(player)), true),
     ].join('');
     openModal(`
-      <div class="scroll-panel">
-        <div class="scroll-rod top"></div>
-        <div class="scroll-silk top"></div>
-        <div class="scroll-painting">
-          <div class="scroll-paper">
-            <div class="scroll-inner">
-              <div class="scroll-head">
-                <div class="scroll-ava"><img src="assets/avatars/${avatarFile}.png?v=2" alt=""></div>
-                <div class="scroll-id">
-                  <div class="scroll-name">${esc(player.name)}</div>
-                  <div class="scroll-realm">${esc(r.label)}</div>
-                </div>
-                <div class="scroll-power"><div class="lbl">战力</div><div class="num">${fmt(calcCombatPower(player))}</div></div>
-              </div>
-              ${xpHtml}
-              <div class="scroll-sec"><div class="t">可分配点数</div><div class="free">基础 ${BASE_FREE_POINTS} · 每阶 +${POINTS_PER_STAGE}（剩余 <b>${free}</b>）</div></div>
-              <div class="scroll-basic">${ATTR_KEYS.map(basicRow).join('')}</div>
-              <div class="scroll-div"></div>
-              <div class="scroll-sec"><div class="t">详细属性</div></div>
-              <div class="scroll-grid">${derived}</div>
-              <p style="margin:10px 0 0;font-size:10.5px;line-height:1.9;color:rgba(26,22,18,.5)">命中率=基础25%+等级×0.5%+悟性×0.2%+装备加成，单件至多+40%、总上限100%；实际命中=自身命中−对方闪避。暴击率=基础15%+等级×0.2%+天命×0.2%+装备+套装（满4件+15%），上限100%；暴伤无封顶。暴击/暴伤为常驻值。</p>
-              <button class="scroll-back" onclick="returnToHub()">返回主页</button>
-            </div>
-          </div>
+      <div class="attr-panel-a">
+        <div class="p-title-a">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2L4 7l8 5 8-5-8-5zM4 12l8 5 8-5M4 17l8 5 8-5" stroke="#c9972f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>角色属性</span>
         </div>
-        <div class="scroll-silk bot"></div>
-        <div class="scroll-rod bot"></div>
-      </div>`, 'scroll');
+        ${xpHtml}
+        <div class="sec-head-a">— 可分配点数 —</div>
+        <div class="free-info-a">基础 ${BASE_FREE_POINTS} · 每阶 +${POINTS_PER_STAGE}（剩余 <b>${free}</b>）</div>
+        <div class="attr-grid-a">${ATTR_KEYS.map(mainRow).join('')}</div>
+        <div class="div-line-a"></div>
+        <div class="sec-head-a">— 详细属性 —</div>
+        <div class="detail-grid-a">${derived}</div>
+        <button class="btn-back-a" onclick="returnToHub()">返回主页</button>
+      </div>`, 'attr-modal');
   }
 
   // 功法弹窗：最多装备 6 种，战斗中每回合点选；下方为已习得功法库（点选装备/卸下）
