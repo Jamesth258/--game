@@ -341,11 +341,11 @@
    与 A 的区别：保留 max-height + overflow-y:auto 滚动能力
    ════════════════════════════════════════════════════════════ */
 .modal-box.bg-modal {
-  background: transparent !important; padding: 10px !important; border-radius: 10px !important;
-  box-shadow: 0 0 60px rgba(0,0,0,.7) !important;
+  background: transparent !important; padding: 0 !important; border-radius: 0 !important;
+  box-shadow: none !important; width: auto !important;
 }
 .bg-panel-a {
-  position: relative; width: 100%; box-sizing: border-box;
+  position: relative; width: min(520px, 94vw); box-sizing: border-box;
   border-radius: 10px; overflow: hidden; padding: 20px 18px 16px;
   background:
     radial-gradient(ellipse at 30% 0%, rgba(201,151,47,.07) 0%, transparent 50%),
