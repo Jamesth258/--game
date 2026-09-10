@@ -189,7 +189,7 @@ function openExpChest() { const x = 2000 + Math.floor(Math.random() * 8000); gai
 function openWorldBossScreen() {
   ensureWorldBossDaily();
   const stTxt = { open: '<b style="color:#639922">进行中</b>', locked: '<b style="color:#D4A843">已截止·可领奖</b>', ended: '<b style="color:rgba(241,239,232,.5)">已结束</b>', upcoming: '<b style="color:#378ADD">未开启</b>' };
-  let html = `<div class="bg-title"><svg viewBox="0 0 24 24" fill="none" stroke="#E87B7B" stroke-width="2"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg><span>世界BOSS</span></div>`;
+  let html = `<div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#E87B7B" stroke-width="2"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg><h3 style="margin:0">世界BOSS</h3></div>`;
   html += `<p style="font-size:12px;color:rgba(241,239,232,0.7);margin:4px 0 10px">每日 5 个时段，每时段 1 只世界BOSS（<b style="color:#E87B7B">100倍气血·最高境界属性</b>）。单场最多 10 回合、每时段最多挑战 ${WB_MAX_ATTEMPTS} 次，比拼累计伤害。时段结束前 15 分钟截止，按累计伤害排名发奖。</p>`;
   WB_SLOTS.forEach(slot => {
     const st = wbSlotState(slot);
@@ -210,8 +210,8 @@ function openWorldBossScreen() {
         <span class="equip-bonus">${timeTxt} ｜ ${stTxt[st]} ｜ 累计 ${wbFmt(sd.dmg)} ｜ 剩 ${remain} 次</span>
       </div>${btn}</div>`;
   });
-  html += `<button class="bg-back" onclick="returnToHub()">返回主页</button>`;
-  openModal('<div class="bg-panel-a">' + html + '</div>', 'bg-modal');
+  html += `<button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`;
+  openModal(html);
 }
 
 // ====== 挑战入口 ======
@@ -237,7 +237,7 @@ function openWorldBossResult(slotIdx) {
   const st = wbSlotState(slot);
   const remain = Math.max(0, WB_MAX_ATTEMPTS - sd.attempts);
   const board = wbBoard(slot);
-  let html = `<div class="bg-title"><svg viewBox="0 0 24 24" fill="none" stroke="#E87B7B" stroke-width="2"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg><span>世界BOSS · ${esc(slot.name)}</span></div>`;
+  let html = `<div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#E87B7B" stroke-width="2"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg><h3 style="margin:0">世界BOSS · ${esc(slot.name)}</h3></div>`;
   // 头像解锁：首次参与该BOSS战斗并造成伤害即解锁
   if (sd.dmg > 0 && typeof checkBossUnlock === 'function') checkBossUnlock(slotIdx);
 
@@ -252,7 +252,7 @@ function openWorldBossResult(slotIdx) {
   else if ((st === 'locked' || st === 'ended') && sd.dmg > 0 && !sd.claimed) act = `<button class="equip-btn" onclick="openWorldBossClaim(${slotIdx})">领取奖励</button>`;
   else if (sd.claimed) act = `<span style="color:#639922;font-size:12px">已领取（第${sd.rank}名）</span>`;
   html += `<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">${act}<button class="equip-btn" onclick="openWorldBossScreen()">返回列表</button><button class="equip-btn" onclick="returnToHub()">返回主页</button></div>`;
-  openModal('<div class="bg-panel-a">' + html + '</div>', 'bg-modal');
+  openModal(html);
 }
 
 // ====== 领奖（截止后）======
@@ -272,7 +272,7 @@ function openWorldBossClaim(slotIdx) {
   else { for (let i = 0; i < 2; i++) results.push(['灵石宝箱', makeChestItem('stone', 0)]); for (let i = 0; i < 5; i++) results.push(['经验宝箱', makeChestItem('exp', 0)]); }
   results.forEach(r => player.bag.push(r[1]));
   saveGame();
-  let html = `<div class="bg-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg><span>世界BOSS 领奖</span></div>`;
+  let html = `<div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg><h3 style="margin:0">世界BOSS 领奖</h3></div>`;
   html += `<p style="margin:4px 0">你在「${esc(slot.name)}」时段获得 <b style="color:#D4A843">第 ${rank} 名</b>（累计伤害 ${wbFmt(sd.dmg)}）</p>`;
   const rewardDesc = r => {
     if (r[0] === '功法宝箱') return '随机功法（越高阶越稀有）· 已存入背包';
@@ -282,9 +282,9 @@ function openWorldBossClaim(slotIdx) {
     return '';
   };
   html += `<div class="bag-list">` + results.map(r => `<div class="bag-item"><div class="bag-info"><span class="bag-name" style="color:#D4A843">${esc(r[0])}</span><span class="equip-bonus">${rewardDesc(r)}</span></div></div>`).join('') + `</div>`;
-  html += `<button class="btn-full" onclick="showBagModal()">前往背包开启</button>`;
-  html += `<button class="bg-back" onclick="returnToHub()">返回主页</button>`;
-  openModal('<div class="bg-panel-a">' + html + '</div>', 'bg-modal');
+  html += `<button class="btn-full" onclick="showBagModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">前往背包开启</button>`;
+  html += `<button class="btn-full" onclick="returnToHub()" style="margin-top:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`;
+  openModal(html);
 }
 
 // ====== 宝箱概率详情页 ======
@@ -304,7 +304,7 @@ function openChestInfo() {
     `<td style="text-align:right;padding:4px 8px;font-weight:600;color:#fff">${SKILL_TIER_WEIGHTS[t]}%</td></tr>`);
   const skRowsHtml = skRows.join('');
   const html =
-`<div class="bg-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v16M16 4v16"/></svg><span>抽奖概率说明</span></div>
+`<div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v16M16 4v16"/></svg><h3 style="margin:0">抽奖概率说明</h3></div>
 <p style="margin:6px 0 2px;color:rgba(241,239,232,0.7);font-size:13px">当前境界等级 <b style="color:#D4A843">${realmLv}</b>（品质概率随境界提升而变高）</p>
 
 <div style="margin-top:10px;padding:10px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;background:rgba(255,255,255,0.03)">
@@ -319,8 +319,8 @@ function openChestInfo() {
   <p style="margin:6px 0 0;font-size:12px;color:rgba(241,239,232,0.55)">· 仅在「未拥有」功法中按阶加权抽取（已集齐的阶不再出现）。<br>· 来源加成：世界BOSS 第1名 +2 阶、第2/3名 +1 阶。<br>· <b style="color:#D4A843">保底</b>：连续开启满 ${SKILL_PITY_LIMIT} 次必出帝阶，抽到皇/帝阶即重置计数。</p>
 </div>
 
-<button class="bg-back" onclick="returnToHub()">返回主页</button>`;
-  openModal('<div class="bg-panel-a">' + html + '</div>', 'bg-modal');
+<button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`;
+  openModal(html);
 }
 window.openChestInfo = openChestInfo;
 
@@ -386,10 +386,10 @@ function playChestOpenAnim(box, res) {
 }
 // 弹出开奖结果
 function showChestResult(box, res) {
-  openModal(`<div class="bg-panel-a"><div class="bg-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg><span>开启${esc(box.name)}</span></div>
+  openModal(`<div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg><h3 style="margin:0">开启${esc(box.name)}</h3></div>
     <p class="chest-result-pop" style="margin:6px 0;color:rgba(241,239,232,0.9);font-size:15px;font-weight:600">${esc(res)}</p>
-    <button class="btn-full" onclick="showBagModal()">返回背包</button>
-    <button class="bg-back" onclick="returnToHub()">返回主页</button></div>`, 'bg-modal');
+    <button class="btn-full" onclick="showBagModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回背包</button>
+    <button class="btn-full" onclick="returnToHub()" style="margin-top:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
 }
 window.makeChestItem = makeChestItem;
 window.openChestItem = openChestItem;

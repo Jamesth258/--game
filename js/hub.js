@@ -78,7 +78,7 @@ function initHub() {
   const ALL_HUB_ITEMS = [...HUB_BOTTOM_ITEMS, ...HUB_TOP_ITEMS];
 
   floatIconContainer.innerHTML = ALL_HUB_ITEMS.map(item =>
-    `<button class="hub-float-btn" data-hub="${item.id}" title="${item.label}">${item.icon}<span>${item.label}</span></button>`
+    `<button class="hub-float-btn" data-hub="${item.id}" title="${item.label}">${item.icon}<h3 style="margin:0">${item.label}</h3></button>`
   ).join('');
 
   // 统一事件绑定（全部 11 个图标在悬浮栏内）
@@ -97,7 +97,7 @@ function initHub() {
       case 'go_worldboss': openWorldBossScreen(); break;
       case 'go_rank':
         if (window.Online && window.Online.showBoard) window.Online.showBoard();
-        else openModal('<div class="bg-panel-a"><div class="bg-title"><span>排行榜</span></div><p class="bg-sub">联网功能尚未开启，完成腾讯云配置后即可查看全服排行榜。</p><button class="bg-back" onclick="returnToHub()">返回主页</button></div>', 'bg-modal');
+        else openModal('<div class="hub-modal-title"><h3 style="margin:0">排行榜</h3></div><p style="color:rgba(241,239,232,0.7)">联网功能尚未开启，完成腾讯云配置后即可查看全服排行榜。</p><button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button></div>');
         break;
       case 'modal_attr':    showAttrModal(); break;
       case 'modal_skills':  showSkillsModal(); break;
@@ -109,7 +109,7 @@ function initHub() {
       case 'modal_chestinfo':openChestInfo(); break;
       case 'modal_settings':showSettingsModal(); break;
       default:
-        openModal(`<div class="bg-panel-a"><div class="bg-title"><span>${item.label}</span></div><p class="bg-sub">「${item.label}」功能正在开发中，敬请期待！</p><button class="bg-back" onclick="returnToHub()">返回主页</button></div>`, 'bg-modal');
+        openModal(`<div class="hub-modal-title"><h3 style="margin:0">${item.label}</h3></div><p style="color:rgba(241,239,232,0.7)">「${item.label}」功能正在开发中，敬请期待！</p><button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button></div>`);
     }
   }
 
@@ -117,10 +117,9 @@ function initHub() {
   function showSettingsModal() {
     refreshHub();
     const r = CULTIVATION.realmFromXp(player.xp);
-    openModal(`<div class="bg-panel-a">
-      <div class="bg-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06A1.65 1.65 0 0015 18.96a1.65 1.65 0 00-1.82.33V19a2 2 0 01-2.82 0v-.08A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82-.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-.33-1.82V13a2 2 0 012.82 0v.08A1.65 1.65 0 0010.6 13a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 13v2z"/></svg>
-      <span>设置</span></div>
-      <p class="bg-sub"><b>${esc(player.name)}</b> · <b>${esc(r.label)}</b></p>
+    openModal(`<div class="scroll-panel"><div class="scroll-rod"></div><div class="scroll-silk"></div><div class="scroll-painting"></div><div class="scroll-paper"><div class="scroll-inner">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06A1.65 1.65 0 0015 18.96a1.65 1.65 0 00-1.82.33V19a2 2 0 01-2.82 0v-.08A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82-.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-.33-1.82V13a2 2 0 012.82 0v.08A1.65 1.65 0 0010.6 13a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 13v2z"/></svg><h3 style="margin:0">设置</h3></div>
+      <p style="color:rgba(241,239,232,0.7)"><b>${esc(player.name)}</b> · <b>${esc(r.label)}</b></p>
 
       <div style="display:flex;flex-direction:column;gap:10px">
         <button class="btn-full" onclick="openChestInfo()">
@@ -144,8 +143,7 @@ function initHub() {
         </div>
       </div>
 
-      <button class="bg-back" onclick="returnToHub()">返回主页</button>
-    </div>`, 'bg-modal');
+      <button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
   }
   window.showSettingsModal = showSettingsModal;
 
@@ -245,7 +243,7 @@ function initHub() {
       <div class="attr-panel-a">
         <div class="p-title-a">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2L4 7l8 5 8-5-8-5zM4 12l8 5 8-5M4 17l8 5 8-5" stroke="#c9972f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <span>角色属性</span>
+          <h3 style="margin:0">角色属性</h3>
         </div>
         ${xpHtml}
         <div class="sec-head-a">— 可分配点数 —</div>
@@ -334,20 +332,18 @@ function initHub() {
     }).join('');
     // 已习得功法库：由 renderSkillLib() 动态渲染（分主动/被动两栏 + 品阶筛选/排序）
 
-    openModal(`<div class="bg-panel-a">
-      <div class="bg-title"><svg viewBox="0 0 24 24" fill="none"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-      <span>功法</span></div>
-      <p class="bg-sub">最多同时装备 <b>${MAX_EQUIPPED}</b> 种功法；战斗中每回合自行点选施展。普攻恒为物理（0 灵力）。</p>
-      <div class="bg-sec">已装备（${equipped.length}/${MAX_EQUIPPED}）</div>
+    openModal(`<div class="scroll-panel"><div class="scroll-rod"></div><div class="scroll-silk"></div><div class="scroll-painting"></div><div class="scroll-paper"><div class="scroll-inner">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg><h3 style="margin:0">功法</h3></div>
+      <p style="color:rgba(241,239,232,0.7);margin:0 0 10px">最多同时装备 <b>${MAX_EQUIPPED}</b> 种功法；战斗中每回合自行点选施展。普攻恒为物理（0 灵力）。</p>
+      <div class="equip-sec-title">已装备（${equipped.length}/${MAX_EQUIPPED}）</div>
       <div class="bag-list">${slotHtml}</div>
-      <hr class="bg-hr">
+      <hr>
       <div style="display:flex;gap:10px;margin:6px 0;flex-wrap:wrap">
         <label>品阶 <select id="skillTierFilter" onchange="renderSkillLib()">${SKILL_TIER_OPTS}</select></label>
         <label>排序 <select id="skillSortBy" onchange="renderSkillLib()"><option value="tier">按品阶</option><option value="school">按类型</option></select></label>
       </div>
       <div id="skillLibBox"></div>
-      <button class="bg-back" onclick="returnToHub()">返回主页</button>
-    </div>`, 'bg-modal');
+      <button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
     renderSkillLib();
   }
 
@@ -707,17 +703,16 @@ function initHub() {
     }).join('')
       : `<div class="empty-tip">背包无装备 — 击败江湖敌人可掉落装备宝箱，或去商店购买。</div>`;
 
-    openModal(`<div class="bg-panel-a">
-      <div class="bg-title"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2L4 7l8 5 8-5-8-5zM4 12l8 5 8-5M4 17l8 5 8-5"/></svg>
-      <span>装备</span></div>
-      <p class="bg-sub">灵石 <b>${gold}</b> · 战力 <b style="color:#e87b7b">${formatNum(calcCombatPower(player))}</b></p>
-      <div class="bg-sec">已穿戴</div>
+    openModal(`
+      <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2L4 7l8 5 8-5-8-5zM4 12l8 5 8-5M4 17l8 5 8-5"/></svg>
+      <h3 style="margin:0">装备</h3></div>
+      <p style="color:rgba(241,239,232,0.7)">灵石 <b>${gold}</b> · 战力 <b style="color:#e87b7b">${formatNum(calcCombatPower(player))}</b></p>
+      <div class="equip-sec-title">已穿戴</div>
       <div class="inv2-grid">${EQUIP_SLOT_KEYS.map(slotCell).join('')}</div>
-      <hr class="bg-hr">
-      <div class="bg-sec">背包装备（${bagEquips.length}）</div>
+      <hr>
+      <div class="equip-sec-title">背包装备（${bagEquips.length}）</div>
       <div class="inv2-grid">${bagCells}</div>
-      <button class="bg-back" onclick="returnToHub()">返回主页</button>
-    </div>`, 'bg-modal');
+      <button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
   }
 
   // 穿戴：从背包取出装备到对应部位，旧装备退回背包
@@ -801,18 +796,17 @@ function initHub() {
     }).join('') : `<div class="empty-tip">暂无丹药 — 可在商店「丹药专区」购买。</div>`;
 
     const pillTotal = pills.reduce((s, x) => s + x.qty, 0);
-    openModal(`<div class="bg-panel-a">
-      <div class="bg-title"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6V4a2 0 012-2h4a2 0 012 2v2"/></svg>
-      <span>背包</span></div>
-      <p class="bg-sub">灵石 <b>${gold}</b> · 装备 <b>${equips.length}</b> · 宝箱 <b>${chests.length}</b> · 丹药 <b>${pillTotal}</b></p>
-      <div class="bg-sec">宝箱（${chests.length}）</div>
+    openModal(`
+      <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6V4a2 0 012-2h4a2 0 012 2v2"/></svg>
+      <h3 style="margin:0">背包</h3></div>
+      <p style="color:rgba(241,239,232,0.7)">灵石 <b>${gold}</b> · 装备 <b>${equips.length}</b> · 宝箱 <b>${chests.length}</b> · 丹药 <b>${pillTotal}</b></p>
+      <div class="equip-sec-title">宝箱（${chests.length}）</div>
       <div class="inv2-grid">${chCells}</div>
-      <div class="bg-sec">丹药（${pillTotal}）</div>
+      <div class="equip-sec-title">丹药（${pillTotal}）</div>
       <div class="inv2-grid">${pillCells}</div>
-      <div class="bg-sec">背包装备（${equips.length}）</div>
+      <div class="equip-sec-title">背包装备（${equips.length}）</div>
       <div class="inv2-grid">${eqCells}</div>
-      <button class="bg-back" onclick="returnToHub()">返回主页</button>
-    </div>`, 'bg-modal');
+      <button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
   }
 
   // 商店弹窗：4 部位各一件随机在售装备，灵石足够可购买；不足则禁用
@@ -886,17 +880,17 @@ function initHub() {
     } else {
       refreshBtn = `<span style="font-size:11px;color:rgba(241,239,232,0.35);padding:4px 10px;border:1px dashed rgba(255,255,255,0.15);border-radius:6px">今日刷新次数已用完（${shopRefreshTotal}/${shopRefreshTotal}）</span>`;
     }
-    openModal(`<div class="bg-panel-a">
-      <div class="bg-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
-      <span>商店</span></div>
-      <p class="bg-sub">灵石 <b>${gold}</b> ｜ 钻石 <b style="color:#7db8ff">${player.diamond || 0}</b></p>
+    openModal(`
+      <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+      <h3 style="margin:0">商店</h3></div>
+      <p style="color:rgba(241,239,232,0.7)">灵石 <b>${gold}</b> ｜ 钻石 <b style="color:#7db8ff">${player.diamond || 0}</b></p>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
         <div class="bg-sec" style="margin:0">灵石专区（灵石消费）</div>
         ${refreshBtn}
       </div>
       <div class="bag-list">${rows}${pillRows}</div>
-      <hr class="bg-hr">
-      <div class="bg-sec">钻石专区（钻石消费）</div>
+      <hr>
+      <div class="equip-sec-title">钻石专区（钻石消费）</div>
       <div class="bag-list">
         <div class="bag-item"><div class="bag-info"><span class="bag-name">功法抽奖宝箱</span><span class="equip-bonus">随机习得未拥有功法</span></div>${diamondBuyBtn('skill', 200)}</div>
         <div class="bag-item"><div class="bag-info"><span class="bag-name">装备抽奖宝箱</span><span class="equip-bonus">随机品质装备</span></div>${diamondBuyBtn('equip', 200)}</div>
@@ -904,8 +898,7 @@ function initHub() {
         <div class="bag-item"><div class="bag-info"><span class="bag-name">经验宝箱</span><span class="equip-bonus">+2000~10000 修为</span></div>${diamondBuyBtn('exp', 50)}</div>
       </div>
       <button class="btn-full" onclick="showBagModal()" style="margin-top:14px">背包 / 出售</button>
-      <button class="bg-back" onclick="returnToHub()">返回主页</button>
-    </div>`, 'bg-modal');
+      <button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
   }
   // 刷新商店库存：每天前 10 次免费；第 11~20 次每次消耗 SHOP_REFRESH_PAID_COST 灵石；共 20 次/天
   // 必须挂到 window：onclick="doRefreshShop()" 在浏览器中查全局作用域

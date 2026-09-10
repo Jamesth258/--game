@@ -67,7 +67,7 @@ function openCodex() {
   const skillLeft = Math.max(0, Math.ceil(gotSkills / 10) * 10 - gotSkills);
   const equipLeft = Math.max(0, Math.ceil(gotEquips / 10) * 10 - gotEquips);
 
-  let html = '<div class="bg-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg><span>图鉴</span></div>';
+  let html = '<div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg><h3 style="margin:0">图鉴</h3></div>';
   html += '<p style="font-size:12px;color:rgba(241,239,232,0.7);margin:4px 0 12px">收集功法与装备可解锁里程碑奖励：每满 <b style="color:#D4A843">10</b> 个奖励 <b style="color:#378ADD">1000 钻石</b>（功法、装备分别计数）。</p>';
 
   // 功法区
@@ -137,8 +137,8 @@ function openCodex() {
       '</div>';
   });
 
-  html += '<button class="bg-back" onclick="returnToHub()">返回主页</button>';
-  openModal('<div class="bg-panel-a">' + html + '</div>', 'bg-modal');
+  html += '<button class="btn-full" onclick="returnToHub()" style="margin-top:16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>';
+  openModal(html);
 }
 
 function sectionHeader(title, got, total, pct, left, rewardTxt, color) {

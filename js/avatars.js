@@ -162,12 +162,16 @@ function showAvatarModal() {
       </div>`;
   }).join('');
 
-  openModal(`<div class="bg-panel-a">
-    <div class="bg-title"><span>🎭 头像图鉴</span></div>
-    <p class="bg-sub">已解锁 ${player.unlockedAvatars.length} / ${AVATAR_DB.length} · 击败对手解锁对应头像</p>
+  openModal(`
+    <div style="text-align:center">
+      <h3 style="margin:0 0 4px;color:#D4A843">🎭 头像图鉴</h3>
+      <p style="margin:0 0 12px;font-size:12px;color:rgba(241,239,232,0.5)">
+        已解锁 ${player.unlockedAvatars.length} / ${AVATAR_DB.length} · 击败对手解锁对应头像
+      </p>
+    </div>
     <div class="avatar-grid">${avHtml}</div>
-    <button class="bg-back" onclick="returnToHub()">返回主页</button>
-  </div>`, 'bg-modal');
+    <button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>
+  `);
 }
 
 // 暴露全局接口
