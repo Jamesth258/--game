@@ -369,6 +369,8 @@
   border-radius: 12px;
   box-shadow: 0 0 50px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,245,220,.06), 0 0 1px rgba(201,151,47,.5);
   position: relative;
+  overflow: hidden;
+  padding: 20px 22px 18px;
   color: var(--s-ink);
 }
 .modal-box:not(.scroll):not(.attr-modal)::before {
