@@ -46,7 +46,7 @@
 }
 
 /* ── 木轴（黑金金属杆）── */
-.scroll-rod { height: 6px; border-radius: 7px; position: relative; z-index: 3;
+.scroll-rod { height: 0px; overflow:hidden; border-radius: 7px; position: relative; z-index: 3;
   background:
     repeating-linear-gradient(85deg, transparent 0, rgba(255,245,220,.05) 1px, transparent 2px, transparent 5px, rgba(0,0,0,.25) 7px, transparent 9px),
     linear-gradient(180deg, var(--s-wood-1), var(--s-wood-2) 40%, var(--s-wood-3));
@@ -63,7 +63,7 @@
 .scroll-rod.bot::before, .scroll-rod.bot::after { height: 28px; border-radius: 8px; }
 
 /* ── 绫边绢布（深墨 + 金色云气暗纹）── */
-.scroll-silk { position: relative; height: 8px; overflow: hidden;
+.scroll-silk { position: relative; height: 0px; overflow:hidden; overflow: hidden;
   background-color: var(--s-silk);
   background-image:url("data:image/svg+xml,%3Csvg width='80' height='80' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='20' cy='20' r='1.5' fill='%23c8af78' opacity='.15'/%3E%3Ccircle cx='55' cy='15' r='1' fill='%23c8af78' opacity='.1'/%3E%3Ccircle cx='40' cy='50' r='1.2' fill='%23c8af78' opacity='.12'/%3E%3Ccircle cx='65' cy='58' r='0.8' fill='%23c8af78' opacity='.08'/%3E%3Ccircle cx='12' cy='60' r='1' fill='%23c8af78' opacity='.1'/%3E%3Cpath d='M10 35 Q20 30 30 35 T50 35' stroke='%23c8af78' stroke-width='.5' fill='none' opacity='.08'/%3E%3C/svg%3E");
   border-left: 2px solid rgba(201,151,47,.3); border-right: 2px solid rgba(201,151,47,.3);
@@ -75,7 +75,7 @@
 .scroll-painting { position: relative; padding: 2px;
   background: linear-gradient(135deg, rgba(201,151,47,.18), rgba(201,151,47,.06) 30%, rgba(201,151,47,.06) 70%, rgba(201,151,47,.18));
 }
-.scroll-paper { position: relative; padding: 10px 20px 18px;
+.scroll-paper { position: relative; padding: 8px 20px 16px;
   background:
     radial-gradient(ellipse 110% 95% at 50% -5%, rgba(201,151,47,.05), transparent),
     linear-gradient(180deg, rgba(24,20,16,.55), rgba(16,13,10,.7));
@@ -361,6 +361,11 @@
   --s-kai:"KaiTi","STKaiti","楷体","Kaiti SC","华文楷体",serif;
   --s-song:"SimSun","STSong","宋体","Songti SC","华文宋体",serif;
 }
+
+
+/* 防止卷轴内图标/图片过大 */
+.scroll-panel svg { max-width: 24px; max-height: 24px; flex-shrink:0; }
+.scroll-panel img { max-width: 100%; height: auto; }
 
 /* ═══ 非卷轴面板黑金底纹（最小化：仅换背景/边框/文字色，不动布局/滚动） ═══ */
 .modal-box:not(.scroll):not(.attr-modal) {
