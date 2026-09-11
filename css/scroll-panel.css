@@ -393,6 +393,16 @@
   color: #e8dcc0;
 }
 
+/* ── 兜底：散装 .modal-box 里塞了 .scroll-panel 时，外层必须彻底让位 ──
+   场景：功法 / 设置面板的 innerHTML 最外层就是 .scroll-panel，若外层的 mode 丢失
+   （旧缓存 JS、或后续有人新增调用忘了带 'scroll'），.modal-box 自带的
+   padding:22px 28px + 黑金描边会与 .scroll-panel 自己的边框叠成"框中框"，
+   顶部留白也会变成 22+24=46px。此条直接让外层透明无内边距，保证只有一层边框。
+   注：:has() 若不被支持，整条规则会被浏览器丢弃，不影响 .modal-box.scroll 主路径。 */
+.modal-box:not(.scroll):not(.attr-modal):has(.scroll-panel) {
+  background: transparent; padding: 0; border: none; border-radius: 0; box-shadow: none;
+}
+
 /* 文字色微调（不碰布局） */
 .modal-box .hub-modal-title h3 { color: #e8dcc0; }
 .modal-box p { color: rgba(232,220,192,0.75); }
