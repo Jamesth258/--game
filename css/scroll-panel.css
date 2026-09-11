@@ -462,3 +462,14 @@
 /* 排行榜等简单列表 */
 .modal-box ol.board { color:var(--s-ink-mid); }
 .modal-box ol.board li b { color:var(--s-gold); }
+
+/* ═══ 功法面板专属：阶级移到名称左侧 + 装备/卸下按钮统一短宽 ═══ */
+/* 阶级(tier)与功法名同一行：左【帝】右【吞日真言】，简介紧随其后自然换行 */
+.scroll-panel.skill-panel .bag-info {
+  display:flex; flex-direction:row; flex-wrap:wrap; align-items:baseline; gap:2px 6px; min-width:0;
+}
+/* 重置全局 button{flex:1} 的"撑满"行为：两钮统一 56px 短宽，够点击即可 */
+.scroll-panel.skill-panel .equip-btn {
+  flex:0 0 auto; width:56px; min-width:56px; max-width:56px;
+  padding:0; box-sizing:border-box; text-align:center; justify-content:center;
+}

@@ -332,7 +332,7 @@ function initHub() {
     }).join('');
     // 已习得功法库：由 renderSkillLib() 动态渲染（分主动/被动两栏 + 品阶筛选/排序）
 
-    openModal(`<div class="scroll-panel"><div class="scroll-rod"></div><div class="scroll-silk"></div><div class="scroll-painting"></div><div class="scroll-paper"><div class="scroll-inner">
+    openModal(`<div class="scroll-panel skill-panel"><div class="scroll-rod"></div><div class="scroll-silk"></div><div class="scroll-painting"></div><div class="scroll-paper"><div class="scroll-inner">
             <svg viewBox="0 0 24 24" fill="none"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg><h3 style="margin:0">功法</h3></div>
       <p style="color:rgba(241,239,232,0.7);margin:0 0 10px">最多同时装备 <b>${MAX_EQUIPPED}</b> 种功法；战斗中每回合自行点选施展。普攻恒为物理（0 灵力）。</p>
       <div class="equip-sec-title">已装备（${equipped.length}/${MAX_EQUIPPED}）</div>
