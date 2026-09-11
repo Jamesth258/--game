@@ -49,8 +49,11 @@
 /* ── 古卷轴装饰层全部隐藏：木轴/绫边/画心包边不再渲染 ──
    改为「属性面板 A」式单一边框 + 黑金磨砂底纹（仅视觉层，DOM 结构原样保留） */
 .scroll-rod, .scroll-silk, .scroll-painting { display: none; }
-/* 内容纸透明化，四周留白对齐属性面板 padding:24px 22px 20px；去掉内层双描边 */
-.scroll-paper { padding: 24px 22px 20px; background: transparent; box-shadow: none; }
+/* 内容纸透明化【唯一来源】：黑金底纹只由 .scroll-panel 单层提供，不再套第二层深色纸
+   留白对齐「角色属性」基准 .attr-panel-a 的 padding:24px 22px 20px
+   ⚠ 选择器必须写 .scroll-panel .scroll-paper：文件下方原本还有一条同名的 .scroll-paper 规则且位置更靠后，
+     同优先级下会覆盖本条（padding/背景此前就是这样悄悄失效的），加一个类作用域把它压过去 */
+.scroll-panel .scroll-paper { padding: 24px 22px 20px; background: transparent; box-shadow: none; }
 .scroll-paper::before, .scroll-paper::after { display: none; }
 
 /* ── 木轴（黑金金属杆）── */
@@ -83,16 +86,20 @@
 .scroll-painting { position: relative; padding: 2px;
   background: linear-gradient(135deg, rgba(201,151,47,.18), rgba(201,151,47,.06) 30%, rgba(201,151,47,.06) 70%, rgba(201,151,47,.18));
 }
-.scroll-paper { position: relative; padding: 20px 22px 24px;
-  background:
-    radial-gradient(ellipse at 30% 0%, rgba(201,151,47,.06) 0%, transparent 50%),
-    linear-gradient(180deg, rgba(20,17,13,.97), rgba(14,11,9,.98));
-  box-shadow: inset 0 0 40px rgba(0,0,0,.4);
-  color: var(--s-ink);
-}
+/* 瘦身：padding / 底纹 / 内阴影统一交由上方 .scroll-panel .scroll-paper 接管，此处不再重复声明 */
+.scroll-paper { position: relative; color: var(--s-ink); }
 .scroll-paper::before { content:""; position:absolute; inset:8px; border:1px solid rgba(201,151,47,.16); pointer-events:none; }
 .scroll-paper::after { content:""; position:absolute; inset:12px; border:1px solid rgba(201,151,47,.07); pointer-events:none; }
-.scroll-inner { position: relative; z-index: 2; }
+/* ── 标题行（功法 / 设置）：对齐「角色属性」基准 .p-title-a ──
+   根因：原结构 <svg> 是 inline 元素、<h3> 是 block 元素，两者被各排一行，
+        标题上方凭空多出一整行空行（实测 27px）；叠加内容纸 24px 上留白后，
+        「面板顶 → 标题顶」合计 48px，即用户圈出的那片空白。
+   改为 flex 单行布局即可把 27px 收回，顶部间距回到属性面板基准的 25px（1px 边框 + 24px 留白）。 */
+.scroll-inner { position: relative; z-index: 2; display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+/* 功法标题的 svg 原本缺 stroke 属性（只有 fill:none，无描边）→ 像素完全不可见却仍占位；
+   补金色描边（尺寸/描边对齐属性面板 .p-title-a 的 20x20 / 1.8） */
+.scroll-panel .scroll-inner > svg { width: 20px; height: 20px; flex: 0 0 auto; stroke: var(--s-gold); stroke-width: 1.8; }
+.scroll-panel .scroll-inner > h3 { margin: 0; font-family: var(--s-kai); font-size: 18px; font-weight: 700; color: var(--s-ink); letter-spacing: 2px; }
 
 /* ── 头部（圆形头像 + 名号 + 战力）── */
 .scroll-head { display:flex; align-items:center; gap:14px; padding-bottom:14px;
