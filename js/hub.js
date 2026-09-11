@@ -850,19 +850,16 @@ function initHub() {
       const price = SHOP_PRICE[it.rarity] || 500;
       const can = gold >= price;
       const owned = isEquipOwned(it.entryId);
-      const nameHtml = `<span class="bag-name" style="color:${it.rarityColor}">${esc(it.name)}</span>` +
-        (owned ? ` <span class="owned-badge">已拥有</span>` : '');
+      const statText = esc(equipBonusText(it)) + (equipEffectText(it) ? esc(' · ' + equipEffectText(it)) : '');
       const btn = owned
-        ? `<button class="equip-btn" disabled style="background:rgba(255,255,255,0.06);color:rgba(241,239,232,0.3);cursor:default">已拥有</button>`
+        ? `<button class="shop-buy" disabled>已拥有</button>`
         : (can
-          ? `<button class="equip-btn" onclick="buyShopItem('${it.uid}')">购买·${price}灵石</button>`
-          : `<button class="equip-btn" disabled style="background:rgba(255,255,255,0.06);color:rgba(241,239,232,0.3);cursor:default">${price}灵石</button>`);
-      return `<div class="bag-item">
-        <div class="bag-info">
-          <span class="equip-icon">${EQUIP_SLOTS[it.slot].icon}</span>
-          ${nameHtml}
-          <span class="equip-bonus">${esc(equipBonusText(it))}${equipEffectText(it) ? esc(' · ' + equipEffectText(it)) : ''}</span>
-        </div>
+          ? `<button class="shop-buy" onclick="buyShopItem('${it.uid}')">${price}灵石</button>`
+          : `<button class="shop-buy" disabled>${price}灵石</button>`);
+      return `<div class="shop-cell" style="--rc:${it.rarityColor}">
+        <div class="tile">${invIconSVG('equip', it.slot, it.rarityColor, it.name)}</div>
+        <div class="nm" style="color:${it.rarityColor}">${esc(it.name)}</div>
+        <div class="st">${statText}</div>
         ${btn}
       </div>`;
     }).join('');
@@ -888,7 +885,9 @@ function initHub() {
         <div class="bg-sec" style="margin:0">灵石专区（灵石消费）</div>
         ${refreshBtn}
       </div>
-      <div class="bag-list">${rows}${pillRows}</div>
+      <div class="shop-grid">${rows}</div>
+      <div class="equip-sec-title">丹药</div>
+      <div class="bag-list">${pillRows}</div>
       <hr>
       <div class="equip-sec-title">钻石专区（钻石消费）</div>
       <div class="bag-list">

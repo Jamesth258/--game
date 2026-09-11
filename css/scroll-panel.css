@@ -21,16 +21,17 @@
   --s-kai:"KaiTi","STKaiti","楷体","Kaiti SC","华文楷体",serif;
   --s-song:"SimSun","STSong","宋体","Songti SC","华文宋体",serif;
   position: relative;
-  filter: drop-shadow(0 24px 50px rgba(0,0,0,.6));
+  box-sizing: border-box;
+  overflow: hidden;
   font-family: var(--s-song);
   color: var(--s-ink);
-  /* 黑金磨砂底 */
+  /* 黑金磨砂底（与属性面板 A 鎏金玄铁同款） */
   background:
     radial-gradient(ellipse at 30% 0%, rgba(201,151,47,.08) 0%, transparent 50%),
-    linear-gradient(180deg, rgba(22,18,14,.96), rgba(12,10,8,.98));
+    linear-gradient(180deg, rgba(18,16,14,.94), rgba(12,10,8,.97));
   border: 1.5px solid rgba(201,151,47,.4);
-  border-radius: 12px;
-  box-shadow: 0 0 50px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,245,220,.06), 0 0 1px rgba(201,151,47,.5);
+  border-radius: 10px;
+  box-shadow: 0 0 50px rgba(0,0,0,.75), inset 0 1px 0 rgba(255,245,220,.08), 0 0 1px rgba(201,151,47,.5);
 }
 /* 磨砂噪点 */
 .scroll-panel::before {
@@ -44,6 +45,13 @@
   content:''; position:absolute; top:0; left:1px; right:1px; height:2px; z-index:2; border-radius:2px;
   background:linear-gradient(90deg,transparent,#f0d678,#c9972f,#f0d678,transparent);
 }
+
+/* ── 古卷轴装饰层全部隐藏：木轴/绫边/画心包边不再渲染 ──
+   改为「属性面板 A」式单一边框 + 黑金磨砂底纹（仅视觉层，DOM 结构原样保留） */
+.scroll-rod, .scroll-silk, .scroll-painting { display: none; }
+/* 内容纸透明化，四周留白对齐属性面板 padding:24px 22px 20px；去掉内层双描边 */
+.scroll-paper { padding: 24px 22px 20px; background: transparent; box-shadow: none; }
+.scroll-paper::before, .scroll-paper::after { display: none; }
 
 /* ── 木轴（黑金金属杆）── */
 .scroll-rod { height: 18px; border-radius: 9px; position: relative; z-index: 3;
@@ -155,7 +163,7 @@
 /* ════════════════════════════════════════════════════════════
    既有弹窗类在卷轴作用域下的黑金重定向（功法/装备/背包复用）
    ════════════════════════════════════════════════════════════ */
-.scroll-panel .hub-modal-title { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+.scroll-panel .hub-modal-title { display:flex; align-items:center; gap:10px; padding-bottom:12px; margin-bottom:14px; border-bottom:1px solid rgba(201,151,47,.2); }
 .scroll-panel .hub-modal-title svg { width:22px; height:22px; flex-shrink:0; stroke:var(--s-gold); }
 .scroll-panel .hub-modal-title h3 { margin:0; font-size:18px; font-weight:700; color:var(--s-ink); font-family:var(--s-kai); letter-spacing:2px; }
 .scroll-panel p { color:var(--s-ink-mid); font-size:12.5px; line-height:1.7; }
@@ -473,3 +481,25 @@
   flex:0 0 auto; width:56px; min-width:56px; max-width:56px;
   padding:0; box-sizing:border-box; text-align:center; justify-content:center;
 }
+
+/* ═══ 商店商品格子（参考物品栏：手绘装备图案 + 名称 + 属性 + 购买钮）═══ */
+.modal-box .shop-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(88px,1fr)); gap:10px; margin:8px 0 6px; }
+.modal-box .shop-cell {
+  position:relative; display:flex; flex-direction:column; align-items:center; gap:3px;
+  padding:8px 6px 7px; border-radius:9px; box-sizing:border-box;
+  border:1.5px solid var(--rc,#c9972f);
+  background:linear-gradient(180deg,rgba(255,245,220,.05),rgba(255,245,220,.02));
+  box-shadow:inset 0 1px 2px rgba(255,245,220,.06),0 1px 3px rgba(0,0,0,.3);
+}
+.modal-box .shop-cell .tile { width:100%; max-width:78px; height:78px; display:flex; align-items:center; justify-content:center; }
+.modal-box .shop-cell .tile .ii { width:88%; height:88%; display:block; filter:drop-shadow(0 1px 1px rgba(0,0,0,.45)); }
+.modal-box .shop-cell .nm { font-size:11.5px; font-weight:700; font-family:var(--s-kai); line-height:1.2; max-width:100%;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.modal-box .shop-cell .st { font-size:9.5px; line-height:1.35; color:var(--s-ink-light); text-align:center; max-width:100%;
+  display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; }
+/* 重置全局 button{flex:1}：否则在纵向 flex 里被拉高 */
+.modal-box .shop-cell .shop-buy { flex:0 0 auto; width:100%; margin-top:auto; padding:5px 0; border:none; border-radius:5px;
+  cursor:pointer; font-family:var(--s-song); font-size:11px; font-weight:600; white-space:nowrap; overflow:hidden;
+  background:linear-gradient(180deg,rgba(201,151,47,.26),rgba(201,151,47,.1)); color:var(--s-gold-light); }
+.modal-box .shop-cell .shop-buy:hover:not(:disabled) { background:linear-gradient(180deg,rgba(201,151,47,.4),rgba(201,151,47,.18)); }
+.modal-box .shop-cell .shop-buy:disabled { background:rgba(255,255,255,.05); color:rgba(232,220,192,.32); cursor:default; }
