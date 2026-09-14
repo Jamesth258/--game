@@ -272,7 +272,7 @@ function recalcStats(p) {
   // 基础 = 15% + 等级×0.2% + 天命×0.2%（属性点来源，与命中率同源但比例更低）
   // 仅统计「常驻」来源：基础 + 装备锐利·会心 + 套装常驻项（含 4 件套 +15% 暴击）
   // 战斗内「条件触发」的（濒锋·血<30%、积威·每回合累加、功法暴击buff）不计入面板常驻值
-  let cr = 0.15 + (p.level || 0) * 0.002 + (p.des || 0) * 0.002, cd = 1.5;
+  let cr = 0.15 + ((typeof CULTIVATION !== 'undefined') ? CULTIVATION.realmFromXp(p.xp).globalIndex + 1 : 1) * 0.002 + (p.des || 0) * 0.002, cd = 1.5; // 境界等级贡献(原 p.level 从未定义/持久化，恒为0，漏算此档)
   const _eq2 = p.equipment || {};
   const _setCnt = {};
   for (const slot of EQUIP_SLOT_KEYS) {

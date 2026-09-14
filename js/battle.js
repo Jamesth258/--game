@@ -347,7 +347,10 @@ function damage(attacker, target, mult, type) {
   let base = atkStat * mult - defStat * 0.5;
   // 暴击：基础 15% + 等级×0.2% + 天命×0.2% + 增益·暴击 buff + 装备暴击率 + 濒锋(血<30%) + 积威(每回合累加，上限40%)
   let baseCrit = 0.15;
-  if (attacker.level) baseCrit += attacker.level * 0.002;
+  if (typeof CULTIVATION !== 'undefined') {
+    const _ax = attacker.isEnemy ? null : (typeof player !== 'undefined' && player.xp != null ? player.xp : null);
+    if (_ax != null) baseCrit += (CULTIVATION.realmFromXp(_ax).globalIndex + 1) * 0.002;
+  }
   if (attacker.des)   baseCrit += attacker.des * 0.002;
   let critChance = baseCrit + Math.max(0, buffMul(attacker, 'crit') - 1);
   if (aMods) {
