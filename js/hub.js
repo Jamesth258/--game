@@ -371,7 +371,7 @@ function initHub() {
   //   ref:  equip→slot(weapon/armor/accessory/boots), chest→kind(skill/equip/exp/stone), pill→kind(hp/mp)
   //   rc:   品质描边色
   //   name: 物品名称（可选，用于区分武器子类：剑/刀/枪/戟）
-  function invIconSVG(type, ref, rc, name) {
+  function buildIconSVG(type, ref, rc, name) {
     const wrap = inner => `<svg viewBox="0 0 48 48" class="ii" preserveAspectRatio="xMidYMid meet">${inner}</svg>`;
     const c = rc || '#9a7b3f';
     // ── 武器：按名称后缀区分子类 ──
@@ -587,6 +587,40 @@ function initHub() {
     }
     return wrap(`<rect x="14" y="14" width="20" height="20" rx="3" fill="${c}"/>`);
   }
+
+  // 装备图标改用写实 PNG（凡品 fan 运行时映射灵品 ling 底图）；加载失败回退原 SVG
+  function invRarityKey(rc) {
+    if (typeof RARITY !== 'undefined' && rc) {
+      var r = RARITY.find(function (x) { return (x.color || '').toLowerCase() === String(rc).toLowerCase(); });
+      if (r) return r.key;
+    }
+    return null;
+  }
+  function equipIconPng(type, ref, rc, name) {
+    var map = { fan: 'ling', ling: 'ling', bao: 'bao', xian: 'xian', shen: 'shen' };
+    var key = invRarityKey(rc);
+    var tier = (key && map[key]) ? map[key] : 'ling';
+    var slot;
+    if (ref === 'weapon') {
+      var wt = (name || '').indexOf('刀') >= 0 ? 'dao'
+             : (name || '').indexOf('枪') >= 0 ? 'qiang'
+             : (name || '').indexOf('戟') >= 0 ? 'ji' : 'jian';
+      slot = 'weapon_' + wt;
+    } else { slot = ref; }
+    var suf = tier === 'ling' ? '' : '_' + tier;
+    return 'assets/items/item_' + slot + suf + '.png?v=3';
+  }
+  function invIconSVG(type, ref, rc, name) {
+    if (type === 'equip' && name) {
+      var src = equipIconPng(type, ref, rc, name);
+      return "<img class=\"ii\" src=\"" + src + "\" alt=\"" + esc(name || '装备') + "\" onerror=\"" + "invIconImgErr(this,'equip','" + ref + "','" + rc + "')\">";
+    }
+    return buildIconSVG(type, ref, rc, name);
+  }
+  window.invIconImgErr = function (img, type, ref, rc, name) {
+    var s = buildIconSVG(type, ref, rc, name);
+    if (s) img.outerHTML = s;
+  };
 
   // ===== 悬浮提示系统（小格子物品栏）=====
   function invBuildTip(kind, key) {

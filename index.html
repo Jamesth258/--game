@@ -1,128 +1,128 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="zh-CN" data-page-node-id="yNwnB8P6JiKpXzfU7luDoD">
+<head data-page-node-id="4HLgSLu3zTm8nA13tUwEPt">
+<meta charset="UTF-8" data-page-node-id="Eh6pjeYNCcQgb6A8gL9xHz">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="z7N9iDHp8Y1vQrwLs6g4or">
 <title>逍遥仙 · 修仙武侠</title>
-<link rel="stylesheet" href="css/style.css?v=37">
-<link rel="stylesheet" href="css/scroll-panel.css?v=18">
+<link rel="stylesheet" href="css/style.css?v=37" data-page-node-id="5bFw2IMpRJ8muOAMgESEu9">
+<link rel="stylesheet" href="css/scroll-panel.css?v=18" data-page-node-id="5RjumvKcbpx52gfFVHCA0p">
 </head>
-<body>
+<body data-page-node-id="oCfNUBxkrXKVOHxDJClNNz">
 <!-- ===== 登录等待画面（游戏封面 + 进度条） ===== -->
-<div id="loading-screen">
-  <img class="loading-bg" src="assets/cover.png?v=21" alt="逍遥仙" onerror="this.style.display='none'">
-  <p class="loading-sub">修仙武侠 · 挂机放置</p>
-  <div class="loading-bar-wrap">
-    <p class="loading-tip" id="loading-tip">正在加载美术资源…</p>
-    <div class="loading-bar-track"><div class="loading-bar-fill" id="loading-fill"></div></div>
-    <div class="loading-pct" id="loading-pct">0%</div>
-    <p class="loading-hint" id="loading-hint" hidden>点击进入江湖</p>
+<div id="loading-screen" data-page-node-id="ohCIFcRD5smbfgKJtIloGs">
+  <img class="loading-bg" src="assets/cover.png?v=21" alt="逍遥仙" onerror="this.style.display='none'" data-page-node-id="3zDKgYAx33D05TZPatrfPP">
+  <p class="loading-sub" data-page-node-id="7wP1lqQosVpenSldj7Acvu">修仙武侠 · 挂机放置</p>
+  <div class="loading-bar-wrap" data-page-node-id="c8dD4ZG5cRG3gaty86FSlR">
+    <p class="loading-tip" id="loading-tip" data-page-node-id="nNMBYvQMaipNrGM3tSLj4c">正在加载美术资源…</p>
+    <div class="loading-bar-track" data-page-node-id="mdJ5wsULBUBvw8ieeUA43Y"><div class="loading-bar-fill" id="loading-fill" data-page-node-id="CDLDaIau9tm61lw5e3LiO1"></div></div>
+    <div class="loading-pct" id="loading-pct" data-page-node-id="SntrukEMN0JnMtrgvUEPSI">0%</div>
+    <p class="loading-hint" id="loading-hint" hidden data-page-node-id="1aibr4h9v6hm4qsmLrQUD1">点击进入江湖</p>
   </div>
 </div>
 
-<div class="wrap">
-  <div id="online-root"></div>
-  <h1>逍遥仙 · 修仙武侠</h1>
-  <p class="sub">挂机修仙 · 回合制战斗 · 百章剧情 · 世界BOSS · 图鉴收集</p>
+<div class="wrap" data-page-node-id="78dwVQP6stekyMQrZl2CwH">
+  <div id="online-root" data-page-node-id="BYbWqvIeQJPKQFAixbqTlo"></div>
+  <h1 data-page-node-id="S117GDfJo0V0qe8vNBxk3z">逍遥仙 · 修仙武侠</h1>
+  <p class="sub" data-page-node-id="5GF1gN5Ir8WPXxHXhAJN7b">挂机修仙 · 回合制战斗 · 百章剧情 · 世界BOSS · 图鉴收集</p>
 
-  <div class="stage">
-    <canvas id="game" width="640" height="360"></canvas>
+  <div class="stage" data-page-node-id="mI1NEIggubPXSCabrd1RVe">
+    <canvas id="game" width="640" height="360" data-page-node-id="wqgPNphLBd2swrMn1COFip"></canvas>
   </div>
 
-  <div class="bar" id="cmd">
-    <button data-act="attack">攻击</button>
-    <button data-act="skill">武功</button>
-    <button data-act="item">道具</button>
+  <div class="bar" id="cmd" data-page-node-id="O0Pv2wyS1kuzDBbeHTIiZl">
+    <button data-act="attack" data-page-node-id="PX6cvfLVyVHHfKlBfhBYtl">攻击</button>
+    <button data-act="skill" data-page-node-id="wwa4rSvIT5htWNYudhTb5O">武功</button>
+    <button data-act="item" data-page-node-id="8t8iVe9QiJFMr3vom3NSD6">道具</button>
   </div>
 </div>
 
 <!-- ===== 角色创建界面 ===== -->
-<div id="create-screen">
-  <div id="create-bg"></div>
-  <div id="create-panel">
-    <h2>✦ 逍遥仙 ✦</h2>
-    <p class="create-sub">踏入仙途，开启你的修真之旅</p>
+<div id="create-screen" data-page-node-id="4DKHLmoI24llnZUi2MLkzl">
+  <div id="create-bg" data-page-node-id="lbsVRbvhLw0Ulxz1Qwj2hR"></div>
+  <div id="create-panel" data-page-node-id="3MCR0dPeOm9bzlDcER5E9E">
+    <h2 data-page-node-id="O88CIoaP4wArNlWEDLJzAx">✦ 逍遥仙 ✦</h2>
+    <p class="create-sub" data-page-node-id="H4ez3dFAfNbcr0rqIRfx4h">踏入仙途，开启你的修真之旅</p>
 
-    <div class="step-dots">
-      <div class="step-dot active" data-s="0"></div>
-      <div class="step-dot" data-s="1"></div>
-      <div class="step-dot" data-s="2"></div>
+    <div class="step-dots" data-page-node-id="xNcDO3Pp8O0TEKOVNYDgal">
+      <div class="step-dot active" data-s="0" data-page-node-id="WY5IGLwp4GlB7GYNiiGgBB"></div>
+      <div class="step-dot" data-s="1" data-page-node-id="ywryYJv8mFcUDIc2HuuQnO"></div>
+      <div class="step-dot" data-s="2" data-page-node-id="lOiGy5queHEyeiIQL4j71o"></div>
     </div>
 
     <!-- Step 1: 名字 -->
-    <div class="create-step active" id="step-name">
-      <p style="text-align:center;font-size:14px;color:rgba(241,239,232,0.75);margin-bottom:4px;">为你的侠客起一个名号</p>
-      <div class="name-input-wrap">
-        <input type="text" id="char-name" placeholder="输入角色名（仅限汉字或字母）" maxlength="12" autocomplete="off">
-        <div class="name-err" id="name-err"></div>
+    <div class="create-step active" id="step-name" data-page-node-id="hlPayk1XpoquCneuoCzERJ">
+      <p style="text-align:center;font-size:14px;color:rgba(241,239,232,0.75);margin-bottom:4px;" data-page-node-id="Olq0kgqdcbdmeCguxV6q27">为你的侠客起一个名号</p>
+      <div class="name-input-wrap" data-page-node-id="31Jg6QuqXUDsp7rCZRvEk9">
+        <input type="text" id="char-name" placeholder="输入角色名（仅限汉字或字母）" maxlength="12" autocomplete="off" data-page-node-id="Lwf7IqV5pTYiTJOXFKqwRH">
+        <div class="name-err" id="name-err" data-page-node-id="Ix8vkHycSCBqVg15qXC1KL"></div>
       </div>
-      <p class="name-hint">名号将伴随你的整个江湖旅程，不可更改</p>
-      <div class="create-btn-row"><button class="btn-primary" id="name-next" disabled>下一步</button></div>
+      <p class="name-hint" data-page-node-id="ouBYPtvmsJJWOZUKpwm8vX">名号将伴随你的整个江湖旅程，不可更改</p>
+      <div class="create-btn-row" data-page-node-id="OdTCedwBcAXeTIR8TzAmcJ"><button class="btn-primary" id="name-next" disabled data-page-node-id="v9mgOilAGDtCuytT5gj4Tl">下一步</button></div>
     </div>
 
     <!-- Step 2: 性别 -->
-    <div class="create-step" id="step-gender">
-      <p style="text-align:center;font-size:14px;color:rgba(241,239,232,0.75);margin-bottom:4px;">选择性别</p>
-      <div class="gender-row">
-        <div class="gender-card" data-g="male">
-          <div class="gender-icon">♂</div>
-          <div class="gender-label">男</div>
+    <div class="create-step" id="step-gender" data-page-node-id="2uZkhUpiFF8snjG2s8iZrz">
+      <p style="text-align:center;font-size:14px;color:rgba(241,239,232,0.75);margin-bottom:4px;" data-page-node-id="kP9iUDBhBIEOPScvt7G4Ai">选择性别</p>
+      <div class="gender-row" data-page-node-id="DrwavdKolMOHCNYhWOfsN9">
+        <div class="gender-card" data-g="male" data-page-node-id="5tFyLHF29OtcJyoquaM7u9">
+          <div class="gender-icon" data-page-node-id="LcGckNEqgCEhptFCFIjC3B">♂</div>
+          <div class="gender-label" data-page-node-id="ihyxmsKrumkTG40FIXaSD4">男</div>
         </div>
-        <div class="gender-card" data-g="female">
-          <div class="gender-icon">♀</div>
-          <div class="gender-label">女</div>
+        <div class="gender-card" data-g="female" data-page-node-id="l7r72StCfREEBlytWmSO3k">
+          <div class="gender-icon" data-page-node-id="08mf7mHBDDcJQ9UB9IOcKL">♀</div>
+          <div class="gender-label" data-page-node-id="DXERo2OjghNQC4ENKM1osj">女</div>
         </div>
       </div>
-      <div class="create-btn-row">
-        <button class="btn-secondary" id="gender-back">上一步</button>
-        <button class="btn-primary" id="gender-next" disabled>下一步</button>
+      <div class="create-btn-row" data-page-node-id="LhiGxtAo3anRcM6CQAOouz">
+        <button class="btn-secondary" id="gender-back" data-page-node-id="kJqEnS8PeZIpG6w54E0R2i">上一步</button>
+        <button class="btn-primary" id="gender-next" disabled data-page-node-id="PUS68EGItR9BG1iXVwEiHY">下一步</button>
       </div>
     </div>
 
     <!-- Step 3: 形象 -->
-    <div class="create-step" id="step-avatar">
-      <p style="text-align:center;font-size:14px;color:rgba(241,239,232,0.75);margin-bottom:4px;" id="avatar-hint">选择你的形象</p>
-      <div class="char-grid" id="char-grid"></div>
-      <div class="create-btn-row">
-        <button class="btn-secondary" id="avatar-back">上一步</button>
-        <button class="btn-primary" id="avatar-confirm" disabled>开始闯荡</button>
+    <div class="create-step" id="step-avatar" data-page-node-id="iiUeSy9Olh9OpYXIef5Mav">
+      <p style="text-align:center;font-size:14px;color:rgba(241,239,232,0.75);margin-bottom:4px;" id="avatar-hint" data-page-node-id="MPwKJmdDD2VYuTiyOFe9FG">选择你的形象</p>
+      <div class="char-grid" id="char-grid" data-page-node-id="wO55Am4yQ6ZimFk8ssGQMY"></div>
+      <div class="create-btn-row" data-page-node-id="7RqT7IeHS3wV6ShB39oFt9">
+        <button class="btn-secondary" id="avatar-back" data-page-node-id="kzSBkmWsEcPLY6Idg2T3GP">上一步</button>
+        <button class="btn-primary" id="avatar-confirm" disabled data-page-node-id="hpk9wFH7Qv7g9lhblQGC9V">开始闯荡</button>
       </div>
     </div>
   </div>
 </div>
 
 <!-- ===== 游戏主页（全屏打坐背景 + 顶栏信息 + 悬浮菜单） ===== -->
-<div id="hub-screen" hidden>
+<div id="hub-screen" hidden data-page-node-id="aW0HJAuYGtFo0Z8b4icGFc">
   <!-- 中央打坐画面区（黑底 + 居中视频容器） -->
-  <div class="hub-char-area" id="hub-char-area">
+  <div class="hub-char-area" id="hub-char-area" data-page-node-id="9sMDuo9IbJe9qDA6xyzesh">
     <!-- 视频等大定位参照容器：顶栏/底栏相对此层定位，确保浮在视频画面上而非黑边上 -->
-    <div class="hub-video-wrap" id="hub-video-wrap">
-      <video id="hub-char-video" class="hub-char-video" autoplay loop muted playsinline preload="auto"></video>
+    <div class="hub-video-wrap" id="hub-video-wrap" data-page-node-id="zNmmQs9ixebB8WCnuhADqg">
+      <video id="hub-char-video" class="hub-char-video" autoplay loop muted playsinline preload="auto" data-page-node-id="pPaWfiPhSpbKe87EYHxBNC"></video>
       <!-- 顶部悬浮信息栏（头像+战力+境界+经验条，浮在视频左上方） -->
-      <div class="hub-top-float" id="hub-top-float">
-        <div class="hub-avatar-wrap">
-          <div class="hub-avatar-frame"></div>
-          <img class="hub-avatar-img" id="hub-avatar" src="" alt="">
+      <div class="hub-top-float" id="hub-top-float" data-page-node-id="HcIkY8Gp7eG9B8fnJBcCP6">
+        <div class="hub-avatar-wrap" data-page-node-id="BE6VungGHi9ocU5VWWcOmC">
+          <div class="hub-avatar-frame" data-page-node-id="IJz3rgt0VHLWRroOHTYVcD"></div>
+          <img class="hub-avatar-img" id="hub-avatar" src="" alt="" data-page-node-id="DKOBh0gMXO4SDhpzIuknVy">
         </div>
-        <div class="hub-power">战力<span class="hub-power-num" id="hub-power-num">1,234</span></div>
-        <div class="hub-realm" id="hub-realm"></div>
-        <div class="xp-bar-wrap" id="hub-xp-bar">
-          <div class="xp-bar-track"><div class="xp-bar-fill" id="hub-xp-fill" style="width:0%"></div></div>
-          <div class="xp-bar-info">
-            <span class="cur-realm" id="hub-xp-realm"></span>
-            <span class="xp-nums" id="hub-xp-nums"></span>
+        <div class="hub-power" data-page-node-id="ksRLAOmE9wUZXwH73lApFX">战力<span class="hub-power-num" id="hub-power-num" data-page-node-id="uZaU1WTmm1GGbJzob1dfHU">1,234</span></div>
+        <div class="hub-realm" id="hub-realm" data-page-node-id="XrAVwET5LIwcQouAaVCPdj"></div>
+        <div class="xp-bar-wrap" id="hub-xp-bar" data-page-node-id="rmZP3vAFE1rTByylSl4Brz">
+          <div class="xp-bar-track" data-page-node-id="KHgmfOADDVpFuiKrENcAYv"><div class="xp-bar-fill" id="hub-xp-fill" style="width:0%" data-page-node-id="BlWHNRO76guJrxf2hV968c"></div></div>
+          <div class="xp-bar-info" data-page-node-id="rhAuG5rLzNcwxyGh1pU5AB">
+            <span class="cur-realm" id="hub-xp-realm" data-page-node-id="PuRdEBavXh2ttHgDwRrxok"></span>
+            <span class="xp-nums" id="hub-xp-nums" data-page-node-id="u6kpty9Xd1AajKbIh7wieo"></span>
           </div>
         </div>
       </div>
       <!-- 底部悬浮菜单栏（11个图标） -->
-      <div class="hub-float-bar" id="hub-float-icons"></div>
+      <div class="hub-float-bar" id="hub-float-icons" data-page-node-id="pYvr0SH5W4kB17NnQtkMBd"></div>
     </div>
   </div>
 </div>
 
 <!-- 全局弹窗（离线/在线通用） -->
-<div class="modal" id="modal" hidden>
-  <div class="modal-box" id="modal-box"></div>
+<div class="modal" id="modal" hidden data-page-node-id="0iGAcOcoVPyLZGNzlGZHal">
+  <div class="modal-box" id="modal-box" data-page-node-id="WFw4U6xnpaSW5PVljH3C9T"></div>
 </div>
 
 <script src="assets/vendor/tcb.js?v=19"></script>
@@ -134,14 +134,14 @@
 <script src="js/skills-data.js?v=19"></script>
 <script src="js/story-data.js?v=19"></script>
 <script src="js/battle.js?v=24"></script>
-<script src="js/hub.js?v=42"></script>
+<script src="js/hub.js?v=43"></script>
 <script src="js/avatars.js?v=36"></script>
 <script src="js/create.js?v=33"></script>
 <script src="js/story.js?v=22"></script>
 <script src="js/worldboss.js?v=20"></script>
 <script src="js/daily.js?v=20"></script>
 <script src="js/codex.js?v=21"></script>
-<script src="js/main.js?v=34"></script>
+<script src="js/main.js?v=35"></script>
 <script src="online.js?v=19"></script>
 </body>
 </html>

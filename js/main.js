@@ -88,6 +88,36 @@ const LOADING_ASSETS = [
   // 注：角色选择立绘(6) 仅 create.js 创建/选人界面使用，已移出首屏预载
   // （创建界面按需加载，回档玩家直进主页不浪费这 7MB）。
   // 战斗立绘(21)+战斗背景(15)共约 45MB，主页用不到，也已移出。
+  // 装备图标 28 张写实 PNG（灵品7 + 宝/仙/神21；凡品 fan 运行时映射灵品 ling 底图）
+  // 登录预载，避免打开装备面板瞬间裂图
+  'assets/items/item_weapon_jian.png?v=3',
+  'assets/items/item_weapon_jian_bao.png?v=3',
+  'assets/items/item_weapon_jian_xian.png?v=3',
+  'assets/items/item_weapon_jian_shen.png?v=3',
+  'assets/items/item_weapon_dao.png?v=3',
+  'assets/items/item_weapon_dao_bao.png?v=3',
+  'assets/items/item_weapon_dao_xian.png?v=3',
+  'assets/items/item_weapon_dao_shen.png?v=3',
+  'assets/items/item_weapon_qiang.png?v=3',
+  'assets/items/item_weapon_qiang_bao.png?v=3',
+  'assets/items/item_weapon_qiang_xian.png?v=3',
+  'assets/items/item_weapon_qiang_shen.png?v=3',
+  'assets/items/item_weapon_ji.png?v=3',
+  'assets/items/item_weapon_ji_bao.png?v=3',
+  'assets/items/item_weapon_ji_xian.png?v=3',
+  'assets/items/item_weapon_ji_shen.png?v=3',
+  'assets/items/item_armor.png?v=3',
+  'assets/items/item_armor_bao.png?v=3',
+  'assets/items/item_armor_xian.png?v=3',
+  'assets/items/item_armor_shen.png?v=3',
+  'assets/items/item_accessory.png?v=3',
+  'assets/items/item_accessory_bao.png?v=3',
+  'assets/items/item_accessory_xian.png?v=3',
+  'assets/items/item_accessory_shen.png?v=3',
+  'assets/items/item_boots.png?v=3',
+  'assets/items/item_boots_bao.png?v=3',
+  'assets/items/item_boots_xian.png?v=3',
+  'assets/items/item_boots_shen.png?v=3',
   // 改由 prefetchBattleAssets() 在玩家进入游戏后空闲预载（requestIdleCallback），
   // 进战斗时 loadImg 动态加载、ready() 未就绪自动回退占位图，不阻塞首屏、不空白。
 ];
