@@ -874,14 +874,18 @@ function initHub() {
         : `<button class="equip-btn diamond-buy-btn" disabled style="background:rgba(255,255,255,0.06);color:rgba(241,239,232,0.3);cursor:default">${price}钻</button>`;
     };
     // 丹药商品（合并到灵石专区）
+    // 丹药按档位配色（初/中/高/神 = 灵绿 / 宝蓝 / 仙紫 / 神金），用于图标描边
+    const PILL_TIER_RC = { '1': '#639922', '2': '#378ADD', '3': '#9B6BCC', '4': '#D4A843' };
     const pillRows = ITEM_SHOP_ORDER.map(tid => {
       const it = ITEM_DB[tid];
       const can = gold >= it.price;
       const kindCn = it.kind === 'hp' ? '回血' : '回蓝';
+      const rc = PILL_TIER_RC[String(tid).slice(-1)] || '#639922';
       const btn = can
         ? `<button class="equip-btn diamond-buy-btn" onclick="buyItem('${tid}')">${it.price}灵</button>`
         : `<button class="equip-btn diamond-buy-btn" disabled style="background:rgba(255,255,255,0.06);color:rgba(241,239,232,0.3);cursor:default">${it.price}灵</button>`;
-      return `<div class="bag-item">
+      return `<div class="bag-item shop-row" style="--rc:${rc}">
+        <span class="bag-ico">${invIconSVG('pill', it.kind, rc, it.name)}</span>
         <div class="bag-info">
           <span class="bag-name" style="color:${it.kind === 'hp' ? '#3B6D11' : '#378ADD'}">${esc(it.name)}</span>
           <span class="equip-bonus">${it.tierName}·${kindCn}${Math.round(it.pct * 100)}%</span>
@@ -934,10 +938,10 @@ function initHub() {
       <hr>
       <div class="equip-sec-title">钻石专区（钻石消费）</div>
       <div class="bag-list">
-        <div class="bag-item"><div class="bag-info"><span class="bag-name">功法抽奖宝箱</span><span class="equip-bonus">随机习得未拥有功法</span></div>${diamondBuyBtn('skill', 200)}</div>
-        <div class="bag-item"><div class="bag-info"><span class="bag-name">装备抽奖宝箱</span><span class="equip-bonus">随机品质装备</span></div>${diamondBuyBtn('equip', 200)}</div>
-        <div class="bag-item"><div class="bag-info"><span class="bag-name">灵石宝箱</span><span class="equip-bonus">+200~800 灵石</span></div>${diamondBuyBtn('stone', 50)}</div>
-        <div class="bag-item"><div class="bag-info"><span class="bag-name">经验宝箱</span><span class="equip-bonus">+2000~10000 修为</span></div>${diamondBuyBtn('exp', 50)}</div>
+        <div class="bag-item shop-row" style="--rc:#9B6BCC"><span class="bag-ico">${invIconSVG('chest', 'skill', '#9B6BCC', '功法抽奖宝箱')}</span><div class="bag-info"><span class="bag-name">功法抽奖宝箱</span><span class="equip-bonus">随机习得未拥有功法</span></div>${diamondBuyBtn('skill', 200)}</div>
+        <div class="bag-item shop-row" style="--rc:#378ADD"><span class="bag-ico">${invIconSVG('chest', 'equip', '#378ADD', '装备抽奖宝箱')}</span><div class="bag-info"><span class="bag-name">装备抽奖宝箱</span><span class="equip-bonus">随机品质装备</span></div>${diamondBuyBtn('equip', 200)}</div>
+        <div class="bag-item shop-row" style="--rc:#D4A843"><span class="bag-ico">${invIconSVG('chest', 'stone', '#D4A843', '灵石宝箱')}</span><div class="bag-info"><span class="bag-name">灵石宝箱</span><span class="equip-bonus">+200~800 灵石</span></div>${diamondBuyBtn('stone', 50)}</div>
+        <div class="bag-item shop-row" style="--rc:#639922"><span class="bag-ico">${invIconSVG('chest', 'exp', '#639922', '经验宝箱')}</span><div class="bag-info"><span class="bag-name">经验宝箱</span><span class="equip-bonus">+2000~10000 修为</span></div>${diamondBuyBtn('exp', 50)}</div>
       </div>
       <button class="btn-full" onclick="showBagModal()" style="margin-top:14px">背包 / 出售</button>
       <button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);

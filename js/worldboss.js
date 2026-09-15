@@ -308,13 +308,13 @@ function openChestInfo() {
 <p style="margin:6px 0 2px;color:rgba(241,239,232,0.7);font-size:13px">当前境界等级 <b style="color:#D4A843">${realmLv}</b>（品质概率随境界提升而变高）</p>
 
 <div style="margin-top:10px;padding:10px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;background:rgba(255,255,255,0.03)">
-  <div style="font-weight:700;color:#639922;margin-bottom:6px">🎁 装备宝箱 · 品质概率</div>
+  <div style="font-weight:700;color:#639922;margin-bottom:6px"><img src="assets/items/item_chest_equip.png?v=3" style="width:20px;height:20px;vertical-align:-4px;margin-right:5px">装备宝箱 · 品质概率</div>
   <table style="width:100%;border-collapse:collapse;font-size:13px;color:rgba(241,239,232,0.85)">${eqRows}</table>
   <p style="margin:6px 0 0;font-size:12px;color:rgba(241,239,232,0.55)">· 来源加成：世界BOSS 第1名 +2 阶、第2名 +1 阶（更高品质）；每日/在线/钻石商城为基准。</p>
 </div>
 
 <div style="margin-top:10px;padding:10px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;background:rgba(255,255,255,0.03)">
-  <div style="font-weight:700;color:#9B6BCC;margin-bottom:6px">📜 功法宝箱 · 各阶概率</div>
+  <div style="font-weight:700;color:#9B6BCC;margin-bottom:6px"><img src="assets/items/item_chest_skill.png?v=3" style="width:20px;height:20px;vertical-align:-4px;margin-right:5px">功法宝箱 · 各阶概率</div>
   <table style="width:100%;border-collapse:collapse;font-size:13px;color:rgba(241,239,232,0.85)">${skRowsHtml}</table>
   <p style="margin:6px 0 0;font-size:12px;color:rgba(241,239,232,0.55)">· 仅在「未拥有」功法中按阶加权抽取（已集齐的阶不再出现）。<br>· 来源加成：世界BOSS 第1名 +2 阶、第2/3名 +1 阶。<br>· <b style="color:#D4A843">保底</b>：连续开启满 ${SKILL_PITY_LIMIT} 次必出帝阶，抽到皇/帝阶即重置计数。</p>
 </div>
@@ -329,10 +329,10 @@ window.openChestInfo = openChestInfo;
 function makeChestItem(kind, bias) {
   bias = bias || 0;
   const META = {
-    skill: { name: '功法宝箱', icon: '📜', desc: '开启随机习得一件未拥有的功法（越高阶越稀有）' },
-    equip: { name: '装备宝箱', icon: '🛡️', desc: '开启获得随机品质装备（品质随境界提升）' },
-    exp:   { name: '经验宝箱', icon: '✨', desc: '开启获得 2000~10000 修为' },
-    stone: { name: '灵石宝箱', icon: '💰', desc: '开启获得 200~800 灵石' },
+    skill: { name: '功法宝箱', icon: 'assets/items/item_chest_skill.png?v=3', desc: '开启随机习得一件未拥有的功法（越高阶越稀有）' },
+    equip: { name: '装备宝箱', icon: 'assets/items/item_chest_equip.png?v=3', desc: '开启获得随机品质装备（品质随境界提升）' },
+    exp:   { name: '经验宝箱', icon: 'assets/items/item_chest_exp.png?v=3', desc: '开启获得 2000~10000 修为' },
+    stone: { name: '灵石宝箱', icon: 'assets/items/item_chest_stone.png?v=3', desc: '开启获得 200~800 灵石' },
   };
   const m = META[kind] || META.equip;
   const biasTxt = bias >= 2 ? '（极品）' : (bias === 1 ? '（精良）' : '');
@@ -367,21 +367,58 @@ function playChestOpenAnim(box, res) {
   try {
     const body = (typeof document !== 'undefined') && (document.body || document.documentElement);
     if (!body || typeof setTimeout !== 'function') { done(); return; }
-    const ICON = { skill: '📜', equip: '🛡️', exp: '✨', stone: '💰' };
-    const icon = ICON[box.chestKind] || '🎁';
-    let particles = '';
-    for (let p = 0; p < 8; p++) {
-      const ang = (Math.PI * 2 / 8) * p + Math.random() * 0.4;
-      const dist = 90 + Math.random() * 70;
-      const dx = Math.cos(ang) * dist, dy = Math.sin(ang) * dist;
-      particles += '<span class="chest-anim-particle" style="--dx:' + dx.toFixed(1) + 'px;--dy:' + dy.toFixed(1) + 'px"></span>';
+    // 写实宝箱立绘开箱动画（已弃用 emoji）。
+    // seam = 箱盖缝线在图内的纵向百分比，取自各宝箱图「最宽行」（实测：箱盖边缘为此处）。
+    // 宝箱分体为 body（下箱体，裁到缝线以下）+ lid（盖子，裁到缝线以上，绕缝线做 rotateX 掀盖）。
+    const CHEST_ANIM = {
+      skill: { cls: 'k-skill', seam: '56%', img: 'item_chest_skill', cn: '功法宝箱' },
+      equip: { cls: 'k-equip', seam: '44%', img: 'item_chest_equip', cn: '装备宝箱' },
+      stone: { cls: 'k-stone', seam: '53%', img: 'item_chest_stone', cn: '灵石宝箱' },
+      exp:   { cls: 'k-exp',   seam: '49%', img: 'item_chest_exp',   cn: '经验宝箱' },
+    };
+    const m = CHEST_ANIM[box.chestKind] || CHEST_ANIM.equip;
+    const src = 'assets/items/' + m.img + '.png?v=3';
+    // 火花：从箱口放射 + 轻微上抛
+    let sparks = '';
+    for (let p2 = 0; p2 < 18; p2++) {
+      const ang = (Math.PI * 2 / 18) * p2 + Math.random() * 0.5;
+      const dist = 84 + Math.random() * 76;
+      const dx = Math.cos(ang) * dist;
+      const dy = Math.sin(ang) * dist - 22;
+      const sz = (5 + Math.random() * 5).toFixed(1);
+      const dl = (1.02 + Math.random() * 0.12).toFixed(2);
+      sparks += '<span class="chest-anim-particle" style="--dx:' + dx.toFixed(1) + 'px;--dy:' + dy.toFixed(1) + 'px;--sz:' + sz + 'px;animation-delay:' + dl + 's"></span>';
+    }
+    // 纸屑/金屑：下落飘散
+    let dust = '';
+    for (let d = 0; d < 8; d++) {
+      const dx = ((Math.random() * 2 - 1) * 118).toFixed(1);
+      const dy = (58 + Math.random() * 62).toFixed(1);
+      const rz = Math.round(Math.random() * 540 - 270);
+      const dl = (1.06 + Math.random() * 0.22).toFixed(2);
+      dust += '<span class="chest-anim-dust" style="--dx:' + dx + 'px;--dy:' + dy + 'px;--rz:' + rz + 'deg;animation-delay:' + dl + 's"></span>';
     }
     const overlay = document.createElement('div');
     overlay.className = 'chest-anim-overlay';
-    overlay.innerHTML = '<div class="chest-anim-stage"><div class="chest-anim-glow"></div>' + particles +
-      '<div class="chest-anim-icon">' + icon + '</div><div class="chest-anim-label">开启中…</div></div>';
+    overlay.innerHTML =
+      '<div class="chest-anim-stage ' + m.cls + '" style="--seam:' + m.seam + '">' +
+        '<div class="chest-anim-flash"></div>' +
+        '<div class="chest-anim-floor"></div>' +
+        '<div class="chest-anim-halo"></div><div class="chest-anim-halo h2"></div>' +
+        '<div class="chest-anim-chest"><div class="chest-anim-shake">' +
+          '<div class="chest-anim-beam-broad"></div>' +
+          '<div class="chest-anim-beam"></div>' +
+          '<img class="chest-anim-body" src="' + src + '" alt="">' +
+          '<img class="chest-anim-lid" src="' + src + '" alt="">' +
+          '<div class="chest-anim-inner"></div>' +
+          '<div class="chest-anim-seamline"></div>' +
+        '</div></div>' +
+        sparks + dust +
+        '<div class="chest-anim-label">开启中…</div>' +
+        '<div class="chest-anim-sub">' + m.cn + '</div>' +
+      '</div>';
     body.appendChild(overlay);
-    setTimeout(() => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); done(); }, 1300);
+    setTimeout(() => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); done(); }, 1780);
   } catch (e) { done(); }
 }
 // 弹出开奖结果
