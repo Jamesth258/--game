@@ -610,10 +610,19 @@ function initHub() {
     var suf = tier === 'ling' ? '' : '_' + tier;
     return 'assets/items/item_' + slot + suf + '.png?v=3';
   }
+  function invIconImgTag(src, alt, type, ref, rc) {
+    return "<img class=\"ii\" src=\"" + src + "\" alt=\"" + esc(alt) + "\" onerror=\"" + "invIconImgErr(this,'" + type + "','" + ref + "','" + rc + "')\">";
+  }
   function invIconSVG(type, ref, rc, name) {
+    // 写实 PNG 覆盖：装备 / 宝箱 / 丹药（凡品 fan 运行时映射灵品 ling 底图）
     if (type === 'equip' && name) {
-      var src = equipIconPng(type, ref, rc, name);
-      return "<img class=\"ii\" src=\"" + src + "\" alt=\"" + esc(name || '装备') + "\" onerror=\"" + "invIconImgErr(this,'equip','" + ref + "','" + rc + "')\">";
+      return invIconImgTag(equipIconPng(type, ref, rc, name), name || '装备', 'equip', ref, rc);
+    }
+    if (type === 'chest') {
+      return invIconImgTag('assets/items/item_chest_' + ref + '.png?v=3', ref || '宝箱', 'chest', ref, rc);
+    }
+    if (type === 'pill') {
+      return invIconImgTag('assets/items/item_pill_' + ref + '.png?v=3', ref || '丹药', 'pill', ref, rc);
     }
     return buildIconSVG(type, ref, rc, name);
   }

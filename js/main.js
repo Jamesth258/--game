@@ -118,6 +118,13 @@ const LOADING_ASSETS = [
   'assets/items/item_boots_bao.png?v=3',
   'assets/items/item_boots_xian.png?v=3',
   'assets/items/item_boots_shen.png?v=3',
+  // 宝箱 / 丹药 写实 PNG（设计稿 13 款全览 + 背包面板；全 6 张已就位）
+  'assets/items/item_chest_skill.png?v=3',
+  'assets/items/item_chest_equip.png?v=3',
+  'assets/items/item_chest_exp.png?v=3',
+  'assets/items/item_chest_stone.png?v=3',
+  'assets/items/item_pill_hp.png?v=3',
+  'assets/items/item_pill_mp.png?v=3',
   // 改由 prefetchBattleAssets() 在玩家进入游戏后空闲预载（requestIdleCallback），
   // 进战斗时 loadImg 动态加载、ready() 未就绪自动回退占位图，不阻塞首屏、不空白。
 ];
