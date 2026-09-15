@@ -542,8 +542,49 @@ function battleUseItem(tid) {
 }
 
 function enemyAct(enemy) {
+  const p = battle.player;
+  // 世界BOSS：使用多技能组合（中毒/灼烧/减益/僵直/护盾/大招），按战况择优施放
+  if (battle.mode === 'worldboss' && enemy.skills && enemy.skills.length) {
+    enemy._turn = (enemy._turn || 0) + 1;
+    enemy._cd = enemy._cd || {};
+    for (const k in enemy._cd) enemy._cd[k] = Math.max(0, enemy._cd[k] - 1);
+    const has = {
+      poison: !!p.poison,
+      burn: (p.debuffs || []).some(d => d.stat === 'burn'),
+      stun: (p.stun || 0) > 0,
+      def: (p.debuffs || []).some(d => d.stat === 'def'),
+      init: (p.debuffs || []).some(d => d.stat === 'init'),
+      atk: (p.debuffs || []).some(d => d.stat === 'atk'),
+    };
+    const ok = s => {
+      if (enemy.mp < s.cost) return false;
+      if (s.cond === 'noPoison' && has.poison) return false;
+      if (s.cond === 'noBurn' && has.burn) return false;
+      if (s.cond === 'noStun' && has.stun) return false;
+      if (s.cond === 'noDef' && has.def) return false;
+      if (s.cond === 'noInit' && has.init) return false;
+      if (s.cond === 'noAtk' && has.atk) return false;
+      if (s.ult && (enemy._cd.ult || 0) > 0) return false;
+      return true;
+    };
+    // 优先级：大招（约每3回合）→ 条件绝学（未挂的状态先补）→ 无条件的辅助/填充 → 兜底普攻
+    const cUlt = enemy.skills.find(s => s.ult && ok(s));
+    const cCond = enemy.skills.filter(s => s.cond && ok(s));
+    const cAny = enemy.skills.filter(s => ok(s) && !s.cond && !s.ult);
+    let chosen = null;
+    if (cUlt) chosen = cUlt;
+    else if (cCond.length) chosen = cCond[Math.floor(Math.random() * cCond.length)];
+    else if (cAny.length) chosen = cAny[Math.floor(Math.random() * cAny.length)];
+    else if (enemy.skills.some(ok)) chosen = enemy.skills.find(ok);
+    if (!chosen) { applyAction(enemy, p, 'attack'); nextTurn(); return; }
+    if (chosen.ult) enemy._cd.ult = 3;   // 大招冷却 3 回合
+    applySkill(enemy, p, chosen);
+    nextTurn();
+    return;
+  }
+  // 普通剧情敌人：维持原有「50% 功法 / 50% 普攻」行为
   const act = (enemy.mp >= enemy.skill.cost && Math.random() < 0.5) ? 'skill' : 'attack';
-  applyAction(enemy, battle.player, act);
+  applyAction(enemy, p, act);
   nextTurn();
 }
 
