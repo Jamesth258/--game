@@ -34,36 +34,30 @@
     background: #000;
     box-shadow: 0 14px 50px rgba(0,0,0,0.65);
   }
-  /* 战斗指令栏紧跟画布下方，与画布同宽 */
-  body.battle-mode .bar.battle-cmd-bar {
-    position: static;
+  /* 战斗指令栏紧跟画布下方，与画布同宽 —— 黑漆描金「案几」托底 */
+  .bar.battle-cmd-bar {
+    position: relative;
     transform: none;
     z-index: 10;
     width: 100%;
     margin-top: 12px;
-    padding: 6px 14px;
-    background: rgba(18,18,22,0.85);
+    padding: 9px 12px;
+    background:
+      radial-gradient(ellipse at 50% -20%, rgba(201,151,47,.14) 0%, rgba(201,151,47,0) 70%),
+      linear-gradient(180deg, rgba(32,26,18,.94), rgba(13,10,7,.96));
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 14px;
+    border: 1px solid rgba(201,151,47,.30);
+    border-radius: 10px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,245,220,.08),
+      inset 0 -3px 6px rgba(0,0,0,.45),
+      0 10px 30px rgba(0,0,0,.6);
   }
-  body.battle-mode .bar.battle-cmd-bar .battle-cmd {
-    background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
-    border-color: rgba(255,255,255,0.15);
-    color: #F1EFE8;
-    box-shadow: none;
-  }
-  body.battle-mode .bar.battle-cmd-bar .battle-cmd:hover:not(:disabled) {
-    border-color: rgba(240,199,90,0.6);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(240,199,90,0.15);
-  }
-  body.battle-mode .bar.battle-cmd-bar .battle-cmd:disabled {
-    opacity: 0.3;
-  }
-  body.battle-mode .bar.battle-cmd-bar .cmd-cost {
-    color: #f0c75a;
+  /* 案几上沿 · 一线描金 */
+  .bar.battle-cmd-bar::after {
+    content:''; position:absolute; left:8%; right:8%; top:0; height:1.5px; pointer-events:none;
+    background: linear-gradient(90deg, transparent, rgba(201,151,47,.7) 18%, #f0d678 50%, rgba(201,151,47,.7) 82%, transparent);
   }
   .wrap { max-width: 680px; margin: 0 auto; transition: max-width .25s; }
   h1 { font-size: 18px; font-weight: 500; margin: 0 0 4px; }
@@ -83,26 +77,138 @@
   button:hover:not(:disabled) { border-color: var(--blue); }
   button:disabled { opacity: 0.4; cursor: default; }
 
-  /* ===== 战斗指令按钮 ===== */
-  .bar.battle-cmd-bar { gap: 6px; margin-top: 10px; }
+  /* ===== 战斗指令按钮 · 黑金玄铁令符（写实古风） =====
+     配方：黑铁底 + 顶部描金光晕 + 竖向锻纹 + 磨砂噪点(::before)
+           + 左上/右下描金折角(::after) + 楷体金字 + 灵力珠。
+     全部 CSS / 内联 SVG，无 emoji、无外链图片，配色与「黑金磨砂」面板同源。 */
+  .bar.battle-cmd-bar { gap: 7px; margin-top: 10px; flex-wrap: wrap; }
   .battle-cmd {
+    position: relative;
     flex: 1 1 0;
-    min-width: 54px; max-width: 120px;
+    min-width: 62px; max-width: 132px;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 2px; padding: 8px 4px;
-    font-size: 13px; font-weight: 600; color: #2C2C2A;
-    background: linear-gradient(180deg, #fff, #f5f5f3);
-    border: 0.5px solid var(--line); border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.06);
-    transition: transform .08s, border-color .12s, box-shadow .12s;
+    gap: 3px; padding: 9px 6px 8px;
+    font-family: "KaiTi","STKaiti","楷体","SimKai",serif;
+    font-size: 13px; font-weight: 700; letter-spacing: 1px;
+    color: #f3e7ca;
+    text-align: center; word-break: break-word;
+    text-shadow: 0 1px 2px rgba(0,0,0,.9), 0 0 12px rgba(201,151,47,.22);
+    background-color: #120e09;
+    background-image:
+      radial-gradient(ellipse at 50% -4%, rgba(201,151,47,.20) 0%, rgba(201,151,47,0) 62%),
+      repeating-linear-gradient(92deg, rgba(255,245,220,.035) 0 1px, rgba(0,0,0,0) 1px 4px),
+      linear-gradient(180deg, #2d2519 0%, #1d1710 52%, #110d08 100%);
+    background-repeat: no-repeat, repeat, no-repeat;
+    border: 1px solid rgba(201,151,47,.42);
+    border-radius: 6px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,245,220,.15),
+      inset 0 -2px 4px rgba(0,0,0,.55),
+      inset 0 0 0 1px rgba(0,0,0,.35),
+      0 3px 9px rgba(0,0,0,.5);
+    overflow: hidden;
+    transition: transform .1s, color .15s, border-color .15s, box-shadow .15s;
   }
-  .battle-cmd:hover:not(:disabled) { border-color: var(--blue); box-shadow: 0 3px 8px rgba(24,95,165,0.14); transform: translateY(-1px); }
-  .battle-cmd:disabled { opacity: 0.35; cursor: default; transform: none; box-shadow: none; }
-  .battle-cmd .cmd-cost { font-size: 10px; font-weight: 500; color: var(--blue); }
-  .battle-cmd.skill { background: linear-gradient(180deg, #fff, #f2f8ff); border-color: rgba(24,95,165,0.35); }
-  .battle-cmd.item { background: linear-gradient(180deg, #fff, #f5fbf0); border-color: rgba(99,157,34,0.35); }
-  .battle-cmd.back { background: linear-gradient(180deg, #fff, #f5f5f5); border-color: rgba(44,44,42,0.25); }
-  .battle-cmd.pill { background: linear-gradient(180deg, #fff, #f5fbf0); border-color: rgba(99,157,34,0.35); font-size: 11px; }
+  /* 磨砂噪点（与黑金磨砂面板同源配方） */
+  .battle-cmd::before {
+    content:''; position:absolute; inset:0; pointer-events:none; opacity:.075; border-radius:inherit;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 128 128' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size:72px 72px;
+  }
+  /* 角饰：左上 / 右下 两道描金折角（云雷纹简形） */
+  .battle-cmd::after {
+    content:''; position:absolute; inset:0; pointer-events:none; border-radius:inherit; opacity:.85;
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Cpath d='M1.7 12.3V5.3A3.6 3.6 0 0 1 5.3 1.7h7' fill='none' stroke='%23d8ac48' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E"),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Cpath d='M12.3 1.7v7a3.6 3.6 0 0 1-3.6 3.6h-7' fill='none' stroke='%23d8ac48' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat, no-repeat;
+    background-position: 3px 3px, right 3px bottom 3px;
+    background-size: 14px 14px, 14px 14px;
+  }
+  .battle-cmd > * { position: relative; z-index: 1; }
+  .battle-cmd .cmd-name { line-height: 1.2; }
+  .battle-cmd .cmd-cost {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 11px; font-weight: 700; letter-spacing: .5px;
+    color: #e8c96a; text-shadow: 0 1px 2px rgba(0,0,0,.85);
+  }
+  /* 灵力珠（替代原来单调的蓝色数字） */
+  .battle-cmd .cmd-cost::before {
+    content:''; width: 5px; height: 5px; border-radius: 50%; flex: 0 0 auto;
+    background: radial-gradient(circle at 35% 30%, #fff3c4, #e8c96a 45%, #a8801f 100%);
+    box-shadow: 0 0 5px rgba(240,214,120,.85);
+  }
+  /* 攻击 / 道具：图标 + 文字 横排 */
+  .battle-cmd.attack, .battle-cmd.item {
+    flex-direction: row; gap: 5px; letter-spacing: 2px;
+    font-size: 14px; padding: 9px 8px 8px;
+  }
+  .battle-cmd .cmd-ico {
+    display: inline-flex; width: 17px; height: 17px; flex: 0 0 auto;
+    color: #e8c96a; filter: drop-shadow(0 1px 2px rgba(0,0,0,.85));
+  }
+  .battle-cmd .cmd-ico svg { width: 100%; height: 100%; display: block; }
+  /* 功法：右上角补一枚暗云纹，与「攻击/道具」区分 */
+  .battle-cmd.skill {
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='34' viewBox='0 0 34 34'%3E%3Cpath d='M7 24c-2.9 0-4.9-1.8-4.9-4 0-2.1 1.7-3.8 3.9-3.8.5-2.9 3-5 6.1-5 2.5 0 4.6 1.3 5.6 3.3.4-.1.9-.2 1.4-.2 2.7 0 4.8 2 4.8 4.5S21 24 18.3 24H7z' fill='none' stroke='%23c9972f' stroke-opacity='.14' stroke-width='1.1'/%3E%3C/svg%3E"),
+      radial-gradient(ellipse at 50% -4%, rgba(201,151,47,.20) 0%, rgba(201,151,47,0) 62%),
+      repeating-linear-gradient(92deg, rgba(255,245,220,.035) 0 1px, rgba(0,0,0,0) 1px 4px),
+      linear-gradient(180deg, #2d2519 0%, #1d1710 52%, #110d08 100%);
+    background-repeat: no-repeat, no-repeat, repeat, no-repeat;
+    background-position: right 2px top 2px, 0 0, 0 0, 0 0;
+    background-size: 34px 34px, auto, auto, auto;
+  }
+  /* 背包「返回」 */
+  .battle-cmd.back {
+    flex-direction: row; gap: 5px; letter-spacing: 1px;
+    background-image:
+      radial-gradient(ellipse at 50% -4%, rgba(201,151,47,.18) 0%, rgba(201,151,47,0) 62%),
+      repeating-linear-gradient(92deg, rgba(255,245,220,.035) 0 1px, rgba(0,0,0,0) 1px 4px),
+      linear-gradient(180deg, #2a2118 0%, #1a150e 100%);
+  }
+  .battle-cmd.back .cmd-ico { color: #c9a05a; }
+  /* 战斗内丹药列表 */
+  .battle-cmd.pill {
+    gap: 1px; padding: 8px 5px;
+    font-size: 11.5px; letter-spacing: .5px; line-height: 1.25;
+    background-image:
+      radial-gradient(ellipse at 50% -4%, rgba(201,151,47,.16) 0%, rgba(201,151,47,0) 62%),
+      repeating-linear-gradient(92deg, rgba(255,245,220,.035) 0 1px, rgba(0,0,0,0) 1px 4px),
+      linear-gradient(180deg, #26241a 0%, #171409 100%);
+  }
+  /* 交互态：金边燃亮 + 上浮 */
+  .battle-cmd:hover:not(:disabled) {
+    color: #fff8e2;
+    border-color: rgba(240,214,120,.85);
+    transform: translateY(-2px);
+    box-shadow:
+      inset 0 1px 0 rgba(255,245,220,.22),
+      inset 0 0 0 1px rgba(201,151,47,.20),
+      0 7px 18px rgba(0,0,0,.55),
+      0 0 16px rgba(201,151,47,.35);
+  }
+  .battle-cmd:active:not(:disabled) { transform: translateY(0) scale(.975); }
+  /* 灵力不足 / 非我方回合：玄铁蒙尘 + 朱红灵力珠（不再用透明度糊弄） */
+  .battle-cmd:disabled {
+    opacity: 1; cursor: default; transform: none;
+    color: rgba(232,220,192,.36);
+    text-shadow: none;
+    background-color: #141009;
+    background-image:
+      radial-gradient(ellipse at 50% -4%, rgba(201,151,47,.05) 0%, rgba(201,151,47,0) 62%),
+      repeating-linear-gradient(92deg, rgba(255,245,220,.02) 0 1px, rgba(0,0,0,0) 1px 4px),
+      linear-gradient(180deg, #1b1712 0%, #100d08 100%);
+    border-color: rgba(201,151,47,.16);
+    box-shadow: inset 0 1px 0 rgba(255,245,220,.04), 0 2px 5px rgba(0,0,0,.35);
+  }
+  .battle-cmd:disabled::after { opacity: .18; }
+  .battle-cmd:disabled .cmd-ico { color: rgba(201,151,47,.35); filter: none; }
+  .battle-cmd:disabled .cmd-cost { color: rgba(196,86,68,.9); }
+  .battle-cmd:disabled .cmd-cost::before {
+    background: radial-gradient(circle at 35% 30%, #e0806c, #a83828 60%, #5c1d14 100%);
+    box-shadow: none;
+  }
   .hint { font-size: 12px; color: var(--mut); margin-top: 12px; line-height: 1.6; }
   .hint b { color: var(--ink); font-weight: 500; }
   /* 在线层 UI */

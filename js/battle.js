@@ -65,14 +65,31 @@ function makeEnemy(node) {
   };
 }
 
+// 指令按钮古风图标（内联 SVG，stroke=currentColor 随按钮金色变化；全站不再用 emoji）
+const CMD_ICONS = {
+  // 普攻：交叉双刀（剑格 + 加粗刀柄）
+  attack: '<span class="cmd-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">'
+        + '<path d="M4.4 3.2Q9.4 6.6 13.8 12.4"/><path d="M13.8 12.4 17.2 17" stroke-width="3.4"/>'
+        + '<circle cx="18.8" cy="19.2" r="1.7" fill="currentColor" stroke="none"/>'
+        + '<path d="M19.6 3.2Q14.6 6.6 10.2 12.4"/><path d="M10.2 12.4 6.8 17" stroke-width="3.4"/>'
+        + '<circle cx="5.2" cy="19.2" r="1.7" fill="currentColor" stroke="none"/></svg></span>',
+  // 道具：丹药葫芦（腰束金带）
+  item:   '<span class="cmd-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round" stroke-linecap="round">'
+        + '<path d="M12 2.9c-.86 0-1.52.6-1.52 1.36 0 .5.25.94.62 1.21-1.88.86-3.1 2.64-3.1 4.56 0 1.32.5 2.44 1.37 3.25-1.73 1.02-2.85 2.9-2.85 5.03 0 2.13 1.93 3.45 5.48 3.45s5.48-1.32 5.48-3.45c0-2.13-1.12-4.01-2.85-5.03.87-.81 1.37-1.93 1.37-3.25 0-1.92-1.22-3.7-3.1-4.56.37-.27.62-.71.62-1.21 0-.76-.66-1.36-1.52-1.36z"/>'
+        + '<path d="M9.1 15.6h5.8"/></svg></span>',
+  // 返回：回旋箭
+  back:   '<span class="cmd-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'
+        + '<path d="M9.5 5.6 4.1 11l5.4 5.4"/><path d="M4.1 11h9.1a6.3 6.3 0 0 1 6.3 6.3v1.1"/></svg></span>'
+};
+
 // 构建战斗指令栏：普攻 + 已装备功法（≤6）+ 道具
 function buildSkillBar() {
   const skills = (player.equippedSkills || []).map(id => SKILLS_DB_MAP[id]).filter(s => s && s.kind !== 'passive');
-  let html = '<button class="battle-cmd" data-act="attack">⚔️ 攻击</button>';
+  let html = '<button class="battle-cmd attack" data-act="attack">' + CMD_ICONS.attack + '<span class="cmd-name">攻击</span></button>';
   skills.forEach(s => {
     html += `<button class="battle-cmd skill" data-act="skill" data-skill="${s.id}" data-cost="${s.cost}" title="${esc(s.desc)}"><span class="cmd-name">${esc(s.name)}</span><span class="cmd-cost">${s.cost}灵</span></button>`;
   });
-  html += '<button class="battle-cmd item" data-act="item">🎒 道具</button>';
+  html += '<button class="battle-cmd item" data-act="item">' + CMD_ICONS.item + '<span class="cmd-name">道具</span></button>';
   cmdBar.innerHTML = html;
 }
 
@@ -306,7 +323,7 @@ function setButtons(on) {
     }
     if (act === 'item' && (player.items || []).reduce((s, x) => s + x.qty, 0) <= 0) enabled = false;
     b.disabled = !enabled;
-    b.style.opacity = enabled ? '1' : '0.4';
+    b.style.opacity = '';   // 置灰视觉统一交给 CSS（.battle-cmd:disabled），不再用内联透明度盖掉黑金样式
   });
 }
 
@@ -517,7 +534,7 @@ function applyAction(actor, target, act) {
 function openBattleItemPanel() {
   const inv = (player.items || []).filter(x => x.qty > 0);
   if (inv.length === 0) { battle.msg = '背包中没有可用丹药'; return; }
-  let html = '<button class="battle-cmd back" data-act="cancelitem">↩ 返回</button>';
+  let html = '<button class="battle-cmd back" data-act="cancelitem">' + CMD_ICONS.back + '<span class="cmd-name">返回</span></button>';
   inv.forEach(x => {
     const it = ITEM_DB[x.tid];
     const label = it.name + '·' + it.tierName + '（' + (it.kind === 'hp' ? '回血' : '回蓝') + Math.round(it.pct * 100) + '%×' + x.qty + '）';
