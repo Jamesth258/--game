@@ -83,63 +83,80 @@ function bossBaseStats() {
 function buildBossSkills(idx, atk, spi) {
   const r = Math.round;
   if (idx === 1) { // 幽冥魔尊 — 剧毒侵蚀 · 削减防御/身法
-    return [
-      { name: '噬魂毒雾', type: 'spirit', mult: 1.0, cost: 12, effect: { kind: 'poison', dmg: r(spi * 0.22), dur: 3 }, cond: 'noPoison' },
-      { name: '幽冥诅咒', type: 'spirit', mult: 0.7, cost: 10, effect: { kind: 'debuff', stat: 'def', amt: 0.22, dur: 3 }, cond: 'noDef' },
-      { name: '蚀骨阴风', type: 'spirit', mult: 0.7, cost: 10, effect: { kind: 'debuff', stat: 'init', amt: 0.28, dur: 3 }, cond: 'noInit' },
-      { name: '灭世一击', type: 'phys', mult: 2.2, cost: 20, effect: { kind: 'dmg', type: 'phys', mult: 2.2 }, ult: true },
-    ];
+    return {
+      skills: [
+        { name: '噬魂毒雾', type: 'spirit', mult: 1.0, cost: 12, effect: { kind: 'poison', dmg: r(spi * 2.2), dur: 5 } },
+        { name: '幽冥诅咒', type: 'spirit', mult: 0.7, cost: 10, effect: { kind: 'debuff', stat: 'def', amt: 0.50, dur: 3 } },
+        { name: '蚀骨阴风', type: 'spirit', mult: 0.7, cost: 10, effect: { kind: 'debuff', stat: 'init', amt: 1.0, dur: 3 } },
+        { name: '灭世一击', type: 'phys', mult: 15, cost: 20, effect: { kind: 'dmg', type: 'phys', mult: 15 }, ult: true },
+      ],
+      script: ['噬魂毒雾','灭世一击','灭世一击','灭世一击','蚀骨阴风','灭世一击','幽冥诅咒','灭世一击','灭世一击','灭世一击'],
+    };
   }
   if (idx === 2) { // 焚天炎帝 — 烈焰灼烧 · 蓄力焚天爆炎
-    return [
-      { name: '烈焰焚身', type: 'phys', mult: 1.0, cost: 12, effect: { kind: 'debuff', stat: 'burn', amt: r(atk * 0.25), dur: 2 }, cond: 'noBurn' },
-      { name: '炽炎附魔', type: 'phys', mult: 0.6, cost: 8, effect: { kind: 'buff', stat: 'atk', amt: 0.30, dur: 2 } },
-      { name: '焚天爆炎', type: 'phys', mult: 2.6, cost: 22, effect: { kind: 'dmg', type: 'phys', mult: 2.6 }, ult: true },
-    ];
+    return {
+      skills: [
+        { name: '烈焰焚身', type: 'phys', mult: 1.0, cost: 12, effect: { kind: 'debuff', stat: 'burn', amt: r(atk * 2.5), dur: 5 } },
+        { name: '炽炎附魔', type: 'phys', mult: 0.6, cost: 8, effect: { kind: 'buff', stat: 'atk', amt: 1.0, dur: 3 } },
+        { name: '焚天爆炎', type: 'phys', mult: 14, cost: 22, effect: { kind: 'dmg', type: 'phys', mult: 14 }, ult: true },
+      ],
+      script: ['烈焰焚身','焚天爆炎','焚天爆炎','焚天爆炎','炽炎附魔','焚天爆炎','焚天爆炎','焚天爆炎','焚天爆炎','焚天爆炎'],
+    };
   }
   if (idx === 3) { // 九幽冥皇 — 寒霜禁锢 · 僵直减速重击
-    return [
-      { name: '寒霜禁锢', type: 'spirit', mult: 0.8, cost: 12, effect: { kind: 'stun', dur: 1 }, cond: 'noStun' },
-      { name: '阴潮蚀骨', type: 'spirit', mult: 0.9, cost: 10, effect: { kind: 'debuff', stat: 'init', amt: 0.30, dur: 3 }, cond: 'noInit' },
-      { name: '九幽冥爆', type: 'phys', mult: 2.4, cost: 20, effect: { kind: 'dmg', type: 'phys', mult: 2.4 }, ult: true },
-    ];
+    return {
+      skills: [
+        { name: '寒霜禁锢', type: 'spirit', mult: 0.8, cost: 12, effect: { kind: 'stun', dur: 2 } },
+        { name: '阴潮蚀骨', type: 'spirit', mult: 0.9, cost: 10, effect: { kind: 'debuff', stat: 'init', amt: 1.0, dur: 3 } },
+        { name: '九幽冥爆', type: 'phys', mult: 16, cost: 20, effect: { kind: 'dmg', type: 'phys', mult: 16 }, ult: true },
+      ],
+      script: ['寒霜禁锢','九幽冥爆','九幽冥爆','九幽冥爆','阴潮蚀骨','九幽冥爆','九幽冥爆','九幽冥爆','九幽冥爆','九幽冥爆'],
+    };
   }
   if (idx === 4) { // 血河神祖 — 嗜血狂化 · 吸血与蚀血之咒
-    return [
-      { name: '血河噬魂', type: 'phys', mult: 1.3, cost: 12, effect: { kind: 'dmg', type: 'phys', mult: 1.3, lifesteal: 0.55 } },
-      { name: '蚀血之咒', type: 'spirit', mult: 0.6, cost: 10, effect: { kind: 'poison', dmg: r(atk * 0.18), dur: 3 }, cond: 'noPoison' },
-      { name: '血祭狂化', type: 'phys', mult: 0.5, cost: 8, effect: { kind: 'buff', stat: 'atk', amt: 0.25, dur: 3 } },
-      { name: '血海滔天', type: 'phys', mult: 2.3, cost: 20, effect: { kind: 'dmg', type: 'phys', mult: 2.3, lifesteal: 0.6 }, ult: true },
-    ];
+    return {
+      skills: [
+        { name: '血河噬魂', type: 'phys', mult: 20, cost: 12, effect: { kind: 'dmg', type: 'phys', mult: 20, lifesteal: 2.0 } },
+        { name: '蚀血之咒', type: 'spirit', mult: 0.6, cost: 10, effect: { kind: 'poison', dmg: r(atk * 1.8), dur: 5 } },
+        { name: '血祭狂化', type: 'phys', mult: 0.5, cost: 8, effect: { kind: 'buff', stat: 'atk', amt: 1.0, dur: 3 } },
+        { name: '血海滔天', type: 'phys', mult: 13, cost: 20, effect: { kind: 'dmg', type: 'phys', mult: 13, lifesteal: 0.6 }, ult: true },
+      ],
+      script: ['蚀血之咒','血海滔天','血海滔天','血海滔天','血河噬魂','血祭狂化','血海滔天','血海滔天','血海滔天','血海滔天'],
+    };
   }
-  // 5 / 默认：太虚帝尊 — 综合最强 · 太虚镇魂 + 虚空壁垒 + 寂灭星陨
-  return [
-    { name: '太虚镇魂', type: 'spirit', mult: 1.0, cost: 12, effect: { kind: 'debuff', stat: 'atk', amt: 0.22, dur: 3 }, cond: 'noAtk' },
-    { name: '九天裂魂', type: 'spirit', mult: 0.8, cost: 10, effect: { kind: 'debuff', stat: 'def', amt: 0.25, dur: 3 }, cond: 'noDef' },
-    { name: '虚空壁垒', type: 'phys', mult: 0.4, cost: 10, effect: { kind: 'shield', pct: 0.35, dur: 2 } },
-    { name: '寂灭星陨', type: 'phys', mult: 2.8, cost: 24, effect: { kind: 'dmg', type: 'phys', mult: 2.8 }, ult: true },
-  ];
+  // 5 / 默认：太虚帝尊 — 综合最强 · 太虚镇魂 + 九天裂魂 + 虚空壁垒 + 寂灭星陨
+  return {
+    skills: [
+      { name: '太虚镇魂', type: 'spirit', mult: 1.0, cost: 12, effect: { kind: 'debuff', stat: 'atk', amt: 0.50, dur: 3 } },
+      { name: '九天裂魂', type: 'spirit', mult: 0.8, cost: 10, effect: { kind: 'debuff', stat: 'def', amt: 0.50, dur: 3 } },
+      { name: '虚空壁垒', type: 'phys', mult: 0.4, cost: 10, effect: { kind: 'shield', pct: 0.40, dur: 2 } },
+      { name: '寂灭星陨', type: 'phys', mult: 30, cost: 24, effect: { kind: 'dmg', type: 'phys', mult: 30 }, ult: true },
+    ],
+    script: ['太虚镇魂','寂灭星陨','寂灭星陨','寂灭星陨','九天裂魂','寂灭星陨','寂灭星陨','虚空壁垒','寂灭星陨','寂灭星陨'],
+  };
 }
 
 function makeWorldBoss(slotIdx) {
   const B = bossBaseStats();
   const slot = WB_SLOTS.find(s => s.idx === slotIdx) || WB_SLOTS[0];
   const hp = Math.round(B.maxHp * 100);   // 100 倍血量
-  const bAtk = Math.round(B.atk * 0.5);    // 基础攻击/精神攻击减半（肉度拉满、保留玩家输出空间）
-  const bSpi = Math.round(B.spiAtk * 0.5);
-  const skills = buildBossSkills(slotIdx, bAtk, bSpi);
+  const bAtk = 2000;                        // 世界BOSS 攻击基底（用户指定 2000）
+  const bSpi = 2200;                        // 世界BOSS 精神攻击基底（用户指定 2200）
+  const built = buildBossSkills(slotIdx, bAtk, bSpi);
+  const skills = built.skills;
   const ult = skills.find(s => s.ult) || skills[0];
   return {
     name: slot.name, isEnemy: true,
     maxHp: hp, hp: hp, maxMp: B.maxMp, mp: B.maxMp,
-    // 攻击/精神攻击减半，保证玩家有 10 回合输出空间；防御/先攻/闪避维持满值（肉度拉满）
+    // 攻击/精神攻击用指定基底（玩家靠回血丹顶住高频大招）；防御/先攻/闪避维持满值（肉度拉满）
     atk: bAtk, def: B.def, spd: B.spd,
     init: B.init, eva: B.eva, spiAtk: bSpi, spiDef: B.spiDef,
     luck: 0, potions: 0, defending: false, extraActions: 0,
     buffs: [], debuffs: [], shield: null, stun: 0, poison: null,
     skills: skills,                       // 绝学组合（中毒/灼烧/减益/僵直/护盾/大招）
     skill: ult,                           // 兜底单体大招（普攻回退时可用）
-    _turn: 0, _cd: { ult: 3 },            // 大招冷却：约每 3 个 BOSS 回合一次
+    _script: built.script,                // 固定 10 回合出手脚本（用户逐回合指定）
+    _turn: 0,                             // enemyAct 按 _script[_turn-1] 精确施放
     _x: 490, _y: 160,
   };
 }
