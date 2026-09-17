@@ -107,6 +107,10 @@ function startBattle(node, mode) {
   }
   // 重置玩家本场战斗的临时状态（buff/debuff/护盾/僵直），避免跨场残留
   player.buffs = []; player.debuffs = []; player.shield = null; player.stun = 0; player.poison = null;
+  // 每场战斗满血满灵开局：battle.player 直接引用全局 player（非副本），
+  // 上一场若阵亡 player.hp 会残留在 0，若不在此回满，下一场开场即被 checkEnd 判负，
+  // 表现为「死亡后无法再挑战任何副本」（刷新页面从旧存档恢复满血才正常）。
+  player.hp = player.maxHp; player.mp = player.maxMp;
   // 聚合装备特效；若带「罡气」类特效则开局获得护盾
   const mods = (typeof computeEquipMods === 'function') ? computeEquipMods(player) : null;
   if (mods && mods.shieldPct > 0) player.shield = { pct: mods.shieldPct, dur: 999 };
@@ -682,6 +686,9 @@ function endBattle(win) {
     }
   } else {
     state = 'lose';
+    // 阵亡后满血满灵复活（游戏无永久死亡惩罚），避免返回副本/主页后 HUD 仍显示 0 血，
+    // 同时与开局满血逻辑一致，确保可立即重新挑战。
+    player.hp = player.maxHp; player.mp = player.maxMp;
     toast = battle.mode === 'story' ? '你倒下了…点击重新挑战。' : '你倒下了…点击重新挑战。';
     // 副本失败：也显示返回按钮
     if (battle.mode === 'story') {
