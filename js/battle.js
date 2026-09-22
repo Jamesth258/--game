@@ -95,7 +95,8 @@ function buildSkillBar() {
 
 function startBattle(node, mode) {
   const isWB = mode === 'worldboss';
-  const enemy = isWB ? makeWorldBoss(node._wb) : makeEnemy(node);
+  const isArena = mode === 'arena';
+  const enemy = isWB ? makeWorldBoss(node._wb) : (isArena ? makeArenaEnemy(node._arenaRank) : makeEnemy(node));
   // 根据场景切换战斗背景
   if (isWB) {
     const slot = WB_SLOTS.find(s => s.idx === node._wb) || WB_SLOTS[0];
@@ -130,6 +131,8 @@ function startBattle(node, mode) {
   if (isWB) {
     const _slot = WB_SLOTS.find(s => s.idx === node._wb) || WB_SLOTS[0];
     _enemySrc = BOSS_SPRITES[_slot.idx] || BOSS_SPRITES[1];
+  } else if (isArena) {
+    _enemySrc = HERO_SPRITES[enemy.avatarId] || HERO_SPRITES.m1;
   } else if (node && node._story && node._story.ch && typeof STORY_BY_CH !== 'undefined') {
     const _vol = (STORY_BY_CH[node._story.ch] || {}).volume || 1;
     _enemySrc = ENEMY_SPRITES[_vol] || ENEMY_SPRITES[1];
@@ -142,6 +145,8 @@ function startBattle(node, mode) {
   if (isWB) {
     const _slot2 = WB_SLOTS.find(s => s.idx === node._wb) || WB_SLOTS[0];
     _eAid = 'boss_' + (_slot2.idx || 1);
+  } else if (isArena) {
+    _eAid = enemy.avatarId;
   } else {
     const _vol2 = (node && node._story && typeof STORY_BY_CH !== 'undefined') ? ((STORY_BY_CH[node._story.ch] || {}).volume || 1) : 1;
     _eAid = 'enemy_v' + _vol2;
@@ -565,7 +570,7 @@ function battleUseItem(tid) {
 function enemyAct(enemy) {
   const p = battle.player;
   // 世界BOSS：使用多技能组合（中毒/灼烧/减益/僵直/护盾/大招），按战况择优施放
-  if (battle.mode === 'worldboss' && enemy.skills && enemy.skills.length) {
+  if ((battle.mode === 'worldboss' || battle.mode === 'arena') && enemy.skills && enemy.skills.length) {
     enemy._turn = (enemy._turn || 0) + 1;
     // 固定 10 回合出手脚本（用户逐回合指定），按 _script[_turn-1] 精确施放：确定性、无随机、无冷却
     const name = (enemy._script && enemy._script[enemy._turn - 1]) || null;
@@ -611,6 +616,11 @@ function checkEnd() {
   if (battle.mode === 'worldboss') {
     if (battle.enemy.hp <= 0) { endWorldBossBattle(true); return true; }
     if (battle.player.hp <= 0) { endWorldBossBattle(false); return true; }
+    return false;
+  }
+  if (battle.mode === 'arena') {
+    if (battle.enemy.hp <= 0) { endArenaBattle(true); return true; }
+    if (battle.player.hp <= 0) { endArenaBattle(false); return true; }
     return false;
   }
   if (battle.enemy.hp <= 0) {
@@ -734,6 +744,8 @@ canvas.addEventListener('click', e => {
       storyAfterBattle();   // 抽到 story.js：章节通关弹三选一，否则回本章
     } else if (battle && battle.mode === 'worldboss') {
       openWorldBossResult(battle.node._wb);
+    } else if (battle && battle.mode === 'arena') {
+      openArenaResult();
     } else if (window.HUB) { window.HUB.refresh(); window.HUB.show(); }
     else { document.body.classList.remove('battle-mode'); state = 'hub'; toast = ''; }
   }

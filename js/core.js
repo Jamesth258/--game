@@ -97,6 +97,7 @@ function saveGame() {
       storyCleared: player.storyCleared, storyRewardClaimed: player.storyRewardClaimed,
       storyLevelFirstClear: player.storyLevelFirstClear,
       worldBoss: player.worldBoss,
+      arena: player.arena,
       daily: player.daily, diamond: player.diamond,
       items: player.items,
       equipCollected: player.equipCollected,

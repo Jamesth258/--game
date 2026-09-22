@@ -185,6 +185,7 @@ const player = {
   storyRewardClaimed: {},                                   // 已领取章节通关奖励的章节号集合
   storyLevelFirstClear: {},                                  // 各关首通标记：'ch_lv' -> true（重战不再发奖励）
   worldBoss: null,                                          // 世界BOSS进度：{date, slots:{idx->{attempts,dmg,claimed,rank}}}
+  arena: null,                                              // 神魔竞技场进度：{date, startDate, attempts, rank, settledDate, lastReward, lastSwap}
   daily: null,                                              // 每日奖励进度：{date, month, signedToday, monthSignCount, monthClaimed, onlineSecToday, onlineClaimed}
   diamond: 0,                                               // 钻石：专用于商城消费的货币（签到/在线奖励产出）
   lastSeen: Date.now(),                                      // 离线时间戳（挂机结算）
