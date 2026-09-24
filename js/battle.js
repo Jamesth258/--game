@@ -358,7 +358,7 @@ function damage(attacker, target, mult, type) {
   battle._anim = { phase: 'lunge', progress: 0, attacker: isP ? 'player' : 'enemy', target: isP ? 'enemy' : 'player', dist: 52 };
 
   // 命中判定：实际命中率 = 攻击方命中率 − 目标闪避率
-  const attackerHR = attacker.hitRate || 0.80;
+  const attackerHR = (attacker.hitRate || 0.80) * buffMul(attacker, 'hit');
   const targetEva = target.eva || 0;
   // 装备命中率已永久并入 player.hitRate（recalcStats 处理）；此处仅叠加功法临时命中率buff
   const accBuff = (battle._tempHitRateBuff || 0); // 功法临时命中率buff（单次生效，攻击后消费）
@@ -401,7 +401,7 @@ function damage(attacker, target, mult, type) {
     if (battle._stackCrit) critChance += battle._stackCrit;
   }
   const crit = Math.random() < Math.min(1.0, critChance);
-  let critMul = 1.5 + (aMods ? aMods.critDmg : 0); // 会心：装备暴伤加成
+  let critMul = 1.5 + (aMods ? aMods.critDmg : 0) + Math.max(0, buffMul(attacker, 'critdmg') - 1); // 会心：装备暴伤 + 功法暴伤buff
   if (crit) base *= critMul;
   if (target.defending) base *= 0.5;
   // 增伤（装备）/ 死战（血<30%）
@@ -466,7 +466,7 @@ function applySkill(actor, target, sk) {
           if (pMods.lowHpCrit && actor.hp / actor.maxHp < 0.3) pCrit += pMods.lowHpCrit;
         }
         const crit = Math.random() < Math.min(1.0, pCrit);
-        let pMul = 1.5 + (pMods ? pMods.critDmg : 0);
+        let pMul = 1.5 + (pMods ? pMods.critDmg : 0) + Math.max(0, buffMul(actor, 'critdmg') - 1);
         if (crit) base *= pMul;
         if (target.defending) base *= 0.5;
         d = Math.max(1, Math.round(base));
@@ -521,11 +521,11 @@ function applySkill(actor, target, sk) {
       break;
     }
     case 'debuff': {
-      const dstats = e.stats || [e.stat];
+      const dstats = (e.stats && e.stats.length) ? e.stats : (e.stat ? [e.stat] : []);
       dstats.forEach(st => applyDebuff(target, { stat: st, amt: e.amt, dur: e.dur, noStack: e.noStack }));
       if (e.dot) target.dot = { pct: e.dot.pct, dur: e.dot.dur, name: e.dot.name || '持续' };
-      const dcn = st => (st === 'def' ? '物理防御' : st === 'spiDef' ? '精神防御' : statCn(st));
-      battle.msg = actor.name + ' 施展「' + sk.name + '」削弱 ' + target.name + (e.dot ? '（持续伤害）' : '') + ' 的 ' + dstats.map(dcn).join('与');
+      const dcn = st => (st === 'atk' ? '物理攻击' : st === 'spiAtk' ? '精神攻击' : st === 'def' ? '物理防御' : st === 'spiDef' ? '精神防御' : statCn(st));
+      let msg = actor.name + ' 施展「' + sk.name + '」'; if (dstats.length) msg += '削弱 ' + target.name + ' 的 ' + dstats.map(dcn).join('与'); if (e.dot) msg += (dstats.length ? '，并令其陷入' : '令 ' + target.name + ' 陷入') + (e.dot.name || '持续') + '（持续伤害）'; battle.msg = msg;
       break;
     }
     case 'stun': {
@@ -554,7 +554,7 @@ function applySkill(actor, target, sk) {
 }
 
 function statCn(stat) {
-  return ({ atk: '攻击', def: '防御', init: '速度', spiAtk: '精神攻击', spiDef: '精神防御', crit: '暴击' })[stat] || stat;
+  return ({ atk: '攻击', def: '防御', init: '速度', spiAtk: '精神攻击', spiDef: '精神防御', crit: '暴击', hit: '命中', critdmg: '暴击伤害' })[stat] || stat;
 }
 
 function applyAction(actor, target, act) {
