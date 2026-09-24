@@ -59,7 +59,7 @@ function makeEnemy(node) {
     atk: e.atk, def: e.def, spd: e.spd,
     init: Math.round(10 + e.spd * 2), eva: 0.05, spiAtk: 0, spiDef: e.def, luck: 0,
     potions: 0, defending: false, extraActions: 0,
-    buffs: [], debuffs: [], shield: null, stun: 0, poison: null,
+    buffs: [], debuffs: [], shield: null, stun: 0, poison: null, dot: null,
     skill: { name: '敌袭', type: 'phys', mult: 1.8, cost: 10 },
     _x: 490, _y: 160,
   };
@@ -107,7 +107,7 @@ function startBattle(node, mode) {
     loadBattleBg(null);
   }
   // 重置玩家本场战斗的临时状态（buff/debuff/护盾/僵直），避免跨场残留
-  player.buffs = []; player.debuffs = []; player.shield = null; player.stun = 0; player.poison = null;
+  player.buffs = []; player.debuffs = []; player.shield = null; player.stun = 0; player.poison = null; player.dot = null;
   // 每场战斗满血满灵开局：battle.player 直接引用全局 player（非副本），
   // 上一场若阵亡 player.hp 会残留在 0，若不在此回满，下一场开场即被 checkEnd 判负，
   // 表现为「死亡后无法再挑战任何副本」（刷新页面从旧存档恢复满血才正常）。
@@ -169,6 +169,14 @@ function startBattle(node, mode) {
 // 状态乘区：buff 加成（amt 为比例，1 即 +0%）、debuff 削减（下限 0）
 function buffMul(u, stat) { let m = 1; (u.buffs || []).forEach(b => { if (b.stat === stat) m += b.amt; }); return m; }
 function debuffMul(u, stat) { let m = 1; (u.debuffs || []).forEach(b => { if (b.stat === stat) m -= b.amt; }); return Math.max(0, m); }
+// 施加减益；noStack 时若同名（同 stat）减益已存在则刷新而非叠加
+function applyDebuff(target, d) {
+  if (d.noStack) {
+    const ex = (target.debuffs || []).find(x => x.stat === d.stat && x.noStack);
+    if (ex) { ex.amt = Math.max(ex.amt, d.amt); ex.dur = Math.max(ex.dur, d.dur); return; }
+  }
+  target.debuffs.push({ stat: d.stat, amt: d.amt, dur: d.dur, noStack: !!d.noStack });
+}
 
 // 聚合玩家已穿戴装备 + 套装的战斗特效，返回统一的 mods 对象（battle.mods 使用）
 // 注：recalcStats(player) 也算 critRate/critDmg/套装 面板值（player.js:195-216），
@@ -273,6 +281,14 @@ function beginRound() {
     u.hp = Math.max(0, u.hp - dmg);
     floats.push({ x: u._x, y: u._y, text: '中毒-' + dmg, color: '#7FBF4D', ttl: 60 });
     if ((u.poison.dur -= 1) <= 0) u.poison = null;
+  });
+  // 持续伤害（DoT）：每回合开始按血量上限百分比扣血，持续 e.dur 回合后清除
+  [p, e].forEach(u => {
+    if (!u.dot) return;
+    const dmg = Math.round(u.maxHp * (u.dot.pct || 0));
+    u.hp = Math.max(0, u.hp - dmg);
+    floats.push({ x: u._x, y: u._y, text: (u.dot.name || '持续') + '-' + dmg, color: '#E8B23B', ttl: 60 });
+    if ((u.dot.dur -= 1) <= 0) u.dot = null;
   });
   // 僵直（stun）：本回合无法行动，并递减
   const pStun = (p.stun || 0) > 0, eStun = (e.stun || 0) > 0;
@@ -464,6 +480,7 @@ function applySkill(actor, target, sk) {
       }
       battle.msg = actor.name + ' 施展「' + sk.name + '」造成 ' + d + ' 伤害';
       if (e.lifesteal) { const h = Math.round(d * e.lifesteal); actor.hp = Math.min(actor.maxHp, actor.hp + h); floatAt(actor, '+' + h, '#3B6D11'); }
+      if (e.debuff) { applyDebuff(target, e.debuff); battle.msg += '，并削弱 ' + target.name + ' 的 ' + statCn(e.debuff.stat); }
       break;
     }
     case 'heal_hp': {
@@ -494,9 +511,10 @@ function applySkill(actor, target, sk) {
     }
     case 'debuff': {
       const dstats = e.stats || [e.stat];
-      dstats.forEach(st => target.debuffs.push({ stat: st, amt: e.amt, dur: e.dur }));
+      dstats.forEach(st => applyDebuff(target, { stat: st, amt: e.amt, dur: e.dur, noStack: e.noStack }));
+      if (e.dot) target.dot = { pct: e.dot.pct, dur: e.dot.dur, name: e.dot.name || '持续' };
       const dcn = st => (st === 'def' ? '物理防御' : st === 'spiDef' ? '精神防御' : statCn(st));
-      battle.msg = actor.name + ' 施展「' + sk.name + '」削弱 ' + target.name + ' 的 ' + dstats.map(dcn).join('与');
+      battle.msg = actor.name + ' 施展「' + sk.name + '」削弱 ' + target.name + (e.dot ? '（持续伤害）' : '') + ' 的 ' + dstats.map(dcn).join('与');
       break;
     }
     case 'stun': {
