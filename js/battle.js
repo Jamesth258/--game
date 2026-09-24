@@ -433,9 +433,10 @@ function applySkill(actor, target, sk) {
   switch (e.kind) {
     case 'dmg': {
       let d;
-      if (e.pierce) { // 穿透：无视部分护甲
+      if (e.pierce) { // 穿透：无视部分防御（比例由 effect.piercePct 决定，缺省 0.75）
         const atkStat = (e.type === 'spirit' ? actor.spiAtk : actor.atk) * buffMul(actor, e.type === 'spirit' ? 'spiAtk' : 'atk');
-        const defStat = (e.type === 'spirit' ? target.spiDef : target.def) * 0.25;
+        const piercePct = (e.piercePct != null) ? e.piercePct : 0.75; // 数据驱动；缺省沿用原硬编码 75%
+        const defStat = (e.type === 'spirit' ? target.spiDef : target.def) * (1 - piercePct);
         let base = atkStat * e.mult - defStat;
         // 暴击：与普通攻击(damage)同源——基础15% + 等级/天命 + 装备/被动暴击率 + 积威 + 濒锋
         let pBase = 0.15;
