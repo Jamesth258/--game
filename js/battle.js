@@ -486,13 +486,17 @@ function applySkill(actor, target, sk) {
       break;
     }
     case 'buff': {
-      actor.buffs.push({ stat: e.stat, amt: e.amt, dur: e.dur });
-      battle.msg = actor.name + ' 施展「' + sk.name + '」' + statCn(e.stat) + '提升';
+      const bstats = e.stats || [e.stat];
+      bstats.forEach(st => actor.buffs.push({ stat: st, amt: e.amt, dur: e.dur }));
+      const bcn = st => (st === 'atk' ? '物理攻击' : st === 'spiAtk' ? '精神攻击' : statCn(st));
+      battle.msg = actor.name + ' 施展「' + sk.name + '」' + bstats.map(bcn).join('与') + '提升';
       break;
     }
     case 'debuff': {
-      target.debuffs.push({ stat: e.stat, amt: e.amt, dur: e.dur });
-      battle.msg = actor.name + ' 施展「' + sk.name + '」削弱 ' + target.name;
+      const dstats = e.stats || [e.stat];
+      dstats.forEach(st => target.debuffs.push({ stat: st, amt: e.amt, dur: e.dur }));
+      const dcn = st => (st === 'def' ? '物理防御' : st === 'spiDef' ? '精神防御' : statCn(st));
+      battle.msg = actor.name + ' 施展「' + sk.name + '」削弱 ' + target.name + ' 的 ' + dstats.map(dcn).join('与');
       break;
     }
     case 'stun': {
