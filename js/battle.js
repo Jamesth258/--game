@@ -481,6 +481,7 @@ function applySkill(actor, target, sk) {
       battle.msg = actor.name + ' 施展「' + sk.name + '」造成 ' + d + ' 伤害';
       if (e.lifesteal) { const h = Math.round(d * e.lifesteal); actor.hp = Math.min(actor.maxHp, actor.hp + h); floatAt(actor, '+' + h, '#3B6D11'); }
       if (e.debuff) { applyDebuff(target, e.debuff); battle.msg += '，并削弱 ' + target.name + ' 的 ' + statCn(e.debuff.stat); }
+      if (e.selfHpLoss) { const loss = Math.round(actor.maxHp * e.selfHpLoss); actor.hp = Math.max(1, actor.hp - loss); floatAt(actor, '-' + loss, '#B23B3B'); }
       break;
     }
     case 'heal_hp': {
@@ -504,9 +505,19 @@ function applySkill(actor, target, sk) {
     }
     case 'buff': {
       const bstats = e.stats || [e.stat];
-      bstats.forEach(st => actor.buffs.push({ stat: st, amt: e.amt, dur: e.dur }));
-      const bcn = st => (st === 'atk' ? '物理攻击' : st === 'spiAtk' ? '精神攻击' : statCn(st));
-      battle.msg = actor.name + ' 施展「' + sk.name + '」' + bstats.map(bcn).join('与') + '提升';
+      const bamts = e.amts || [e.amt];
+      const maxS = (e.maxStacks != null) ? e.maxStacks : 99;
+      const perStack = bstats.length;
+      // 至多叠加 maxS 次：超出则移除最早的一整层（按 sk.id 分组）
+      let owned = actor.buffs.filter(b => b.sid === sk.id).length;
+      while (owned >= maxS * perStack) {
+        const idx = actor.buffs.findIndex(b => b.sid === sk.id);
+        if (idx < 0) break;
+        actor.buffs.splice(idx, 1); owned--;
+      }
+      bstats.forEach((st, i) => actor.buffs.push({ sid: sk.id, stat: st, amt: (bamts[i] != null ? bamts[i] : e.amt), dur: e.dur }));
+      const bcn = st => (st === 'atk' ? '物理攻击' : st === 'spiAtk' ? '精神攻击' : st === 'init' ? '先攻' : statCn(st));
+      battle.msg = actor.name + ' 施展「' + sk.name + '」' + bstats.map(bcn).join('、') + '提升';
       break;
     }
     case 'debuff': {
