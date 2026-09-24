@@ -370,7 +370,7 @@ function damage(attacker, target, mult, type) {
   const atkStat = (isSpirit ? attacker.spiAtk : attacker.atk) * buffMul(attacker, isSpirit ? 'spiAtk' : 'atk');
   let defStat = (isSpirit ? target.spiDef : target.def) * debuffMul(target, isSpirit ? 'spiDef' : 'def');
   if (aMods && aMods.pierce) defStat *= (1 - aMods.pierce); // 破甲：无视部分防御
-  let base = atkStat * mult - defStat * 0.5;
+  let base = atkStat * mult - defStat; // 满额防御，不做 0.5 折算（穿透差异才明显）
   // 暴击：基础 15% + 等级×0.2% + 天命×0.2% + 增益·暴击 buff + 装备暴击率 + 濒锋(血<30%) + 积威(每回合累加，上限40%)
   let baseCrit = 0.15;
   if (typeof CULTIVATION !== 'undefined') {
