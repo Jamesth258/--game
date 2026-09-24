@@ -87,7 +87,8 @@ function buildSkillBar() {
   const skills = (player.equippedSkills || []).map(id => SKILLS_DB_MAP[id]).filter(s => s && s.kind !== 'passive');
   let html = '<button class="battle-cmd attack" data-act="attack">' + CMD_ICONS.attack + '<span class="cmd-name">攻击</span></button>';
   skills.forEach(s => {
-    html += `<button class="battle-cmd skill" data-act="skill" data-skill="${s.id}" data-cost="${s.cost}" title="${esc(s.desc)}"><span class="cmd-name">${esc(s.name)}</span><span class="cmd-cost">${s.cost}灵</span></button>`;
+    const _used = (s.oncePerBattle && battle._usedOnce && battle._usedOnce[s.id]);
+    html += `<button class="battle-cmd skill" data-act="skill" data-skill="${s.id}" data-cost="${s.cost}"${_used ? ' disabled' : ''} title="${esc(s.desc)}"><span class="cmd-name">${esc(s.name)}</span><span class="cmd-cost">${s.cost}灵</span>${_used ? '<span class=\'cmd-used\'>已用</span>' : ''}</button>`;
   });
   html += '<button class="battle-cmd item" data-act="item">' + CMD_ICONS.item + '<span class="cmd-name">道具</span></button>';
   cmdBar.innerHTML = html;
@@ -108,6 +109,7 @@ function startBattle(node, mode) {
   }
   // 重置玩家本场战斗的临时状态（buff/debuff/护盾/僵直），避免跨场残留
   player.buffs = []; player.debuffs = []; player.shield = null; player.stun = 0; player.poison = null; player.dot = null;
+  battle._usedOnce = {}; // 每场战斗重置「限一次」功法
   // 每场战斗满血满灵开局：battle.player 直接引用全局 player（非副本），
   // 上一场若阵亡 player.hp 会残留在 0，若不在此回满，下一场开场即被 checkEnd 判负，
   // 表现为「死亡后无法再挑战任何副本」（刷新页面从旧存档恢复满血才正常）。
@@ -169,8 +171,10 @@ function startBattle(node, mode) {
 // 状态乘区：buff 加成（amt 为比例，1 即 +0%）、debuff 削减（下限 0）
 function buffMul(u, stat) { let m = 1; (u.buffs || []).forEach(b => { if (b.stat === stat) m += b.amt; }); return m; }
 function debuffMul(u, stat) { let m = 1; (u.debuffs || []).forEach(b => { if (b.stat === stat) m -= b.amt; }); return Math.max(0, m); }
+function isImmune(u) { return (u.buffs || []).some(b => b.stat === 'invinc'); }
 // 施加减益；noStack 时若同名（同 stat）减益已存在则刷新而非叠加
 function applyDebuff(target, d) {
+  if (isImmune(target)) return; // 无敌：免疫一切不良效果
   if (d.noStack) {
     const ex = (target.debuffs || []).find(x => x.stat === d.stat && x.noStack);
     if (ex) { ex.amt = Math.max(ex.amt, d.amt); ex.dur = Math.max(ex.dur, d.dur); return; }
@@ -343,7 +347,7 @@ function setButtons(on) {
     const act = b.dataset.act;
     let enabled = on;
     if (act === 'skill') {
-      const c = +b.dataset.cost;
+      const c = +b.dataset.cost; const _sk = SKILLS_DB_MAP[b.dataset.skill]; if (_sk && _sk.oncePerBattle && battle._usedOnce && battle._usedOnce[_sk.id]) enabled = false; // 每场限一次已用
       if (player.mp < c) enabled = false; // 灵力不足置灰
     }
     if (act === 'item' && (player.items || []).reduce((s, x) => s + x.qty, 0) <= 0) enabled = false;
@@ -394,7 +398,8 @@ function damage(attacker, target, mult, type) {
     if (_ax != null) baseCrit += (CULTIVATION.realmFromXp(_ax).globalIndex + 1) * 0.002;
   }
   if (attacker.des)   baseCrit += attacker.des * 0.002;
-  let critChance = baseCrit + Math.max(0, buffMul(attacker, 'crit') - 1);
+  let critDebuffAmt = 0; (attacker.debuffs || []).forEach(b => { if (b.stat === 'crit') critDebuffAmt += b.amt; });
+  let critChance = baseCrit + Math.max(0, buffMul(attacker, 'crit') - 1) - critDebuffAmt;
   if (aMods) {
     critChance += aMods.critRate;
     if (aMods.lowHpCrit && attacker.hp / attacker.maxHp < 0.3) critChance += aMods.lowHpCrit;
@@ -413,11 +418,25 @@ function damage(attacker, target, mult, type) {
   if (tMods && tMods.reduceDmg) base *= (1 - tMods.reduceDmg);
   if (target.shield && target.shield.pct) base *= (1 - target.shield.pct);
   base = Math.max(1, Math.round(base));
-  target.hp = Math.max(0, target.hp - base);
-  if (!attacker.isEnemy && battle) battle.playerDmg = (battle.playerDmg || 0) + base; // 世界BOSS 累计玩家伤害
+  // 反弹（功法反弹buff）：将敌方来犯伤害按比率弹回攻击者（先于无敌判定，确保反弹照常生效）
+  let reflectPct = 0;
+  (target.buffs || []).forEach(b => { if (b.stat === 'reflect') reflectPct += b.amt; });
+  if (reflectPct > 0 && base > 0) {
+    const r = Math.round(base * Math.min(1, reflectPct));
+    attacker.hp = Math.max(0, attacker.hp - r);
+    floats.push({ x: attacker._x, y: attacker._y, text: '反弹-' + r, color: '#A32D2D', ttl: 60 });
+  }
+  // 无敌：我方免疫一切伤害（反弹仍照常生效）
+  const invinc = (target.buffs || []).some(b => b.stat === 'invinc');
+  if (invinc) {
+    floats.push({ x: target._x, y: target._y, text: '无敌', color: '#FFD86B', ttl: 60 });
+    base = 0;
+  }
+  if (base > 0) target.hp = Math.max(0, target.hp - base);
+  if (base > 0 && !attacker.isEnemy && battle) battle.playerDmg = (battle.playerDmg || 0) + base; // 世界BOSS 累计玩家伤害
   const col = crit ? '#A32D2D' : '#2C2C2A';
   const txt = (crit ? '暴击 ' : '') + '-' + base;
-  floats.push({ x: target._x, y: target._y, text: txt, color: col, ttl: 60 });
+  if (base > 0) floats.push({ x: target._x, y: target._y, text: txt, color: col, ttl: 60 });
   // 吸血（玩家攻击触发）
   if (aMods && aMods.lifesteal && base > 0) {
     const h = Math.round(base * aMods.lifesteal);
@@ -459,7 +478,7 @@ function applySkill(actor, target, sk) {
         if (actor.level) pBase += actor.level * 0.002;
         if (actor.des)   pBase += actor.des * 0.002;
         const pMods = (!actor.isEnemy && battle && battle.mods) ? battle.mods : null;
-        let pCrit = pBase + Math.max(0, buffMul(actor, 'crit') - 1);
+        let pCrit = pBase + Math.max(0, buffMul(actor, 'crit') - 1) - (actor.debuffs || []).reduce((s, b) => s + (b.stat === 'crit' ? b.amt : 0), 0);
         if (pMods) {
           pCrit += pMods.critRate;
           if (battle._stackCrit) pCrit += battle._stackCrit;
@@ -523,12 +542,30 @@ function applySkill(actor, target, sk) {
     case 'debuff': {
       const dstats = (e.stats && e.stats.length) ? e.stats : (e.stat ? [e.stat] : []);
       dstats.forEach(st => applyDebuff(target, { stat: st, amt: e.amt, dur: e.dur, noStack: e.noStack }));
-      if (e.dot) target.dot = { pct: e.dot.pct, dur: e.dot.dur, name: e.dot.name || '持续' };
+      if (e.dot && !isImmune(target)) target.dot = { pct: e.dot.pct, dur: e.dot.dur, name: e.dot.name || '持续' };
       const dcn = st => (st === 'atk' ? '物理攻击' : st === 'spiAtk' ? '精神攻击' : st === 'def' ? '物理防御' : st === 'spiDef' ? '精神防御' : statCn(st));
       let msg = actor.name + ' 施展「' + sk.name + '」'; if (dstats.length) msg += '削弱 ' + target.name + ' 的 ' + dstats.map(dcn).join('与'); if (e.dot) msg += (dstats.length ? '，并令其陷入' : '令 ' + target.name + ' 陷入') + (e.dot.name || '持续') + '（持续伤害）'; battle.msg = msg;
       break;
     }
+    case 'critTrade': {
+      // 自身暴击提升 + 削弱敌方暴击（不可叠加：同 id 刷新）
+      actor.buffs = actor.buffs.filter(b => !(b.sid === sk.id && b.stat === 'crit'));
+      actor.buffs.push({ sid: sk.id, stat: 'crit', amt: e.selfAmt, dur: e.dur });
+      applyDebuff(target, { stat: 'crit', amt: e.enemyAmt, dur: e.dur, noStack: !!e.noStack });
+      battle.msg = actor.name + ' 施展「' + sk.name + '」暴击提升，并削弱 ' + target.name + ' 的暴击';
+      break;
+    }
+    case 'invinc_reflect': {
+      // 反弹：下一回合敌方伤害全额弹回（buff stat:'reflect', amt 1.0）
+      actor.buffs.push({ sid: sk.id, stat: 'reflect', amt: 1.0, dur: e.dur || 2 });
+      // 无敌+免疫不良：我方 2 回合内免伤免控
+      actor.buffs.push({ sid: sk.id, stat: 'invinc', amt: 1, dur: e.dur || 2 });
+      battle._usedOnce[sk.id] = true; // 每场战斗只限一次
+      battle.msg = actor.name + ' 施展「' + sk.name + '」化无相劫，反弹来犯、自身无敌！';
+      break;
+    }
     case 'stun': {
+      if (isImmune(target)) { battle.msg = actor.name + ' 施展「' + sk.name + '」但 ' + target.name + ' 处于无敌，无效'; break; }
       target.stun = (target.stun || 0) + e.dur;
       battle.msg = actor.name + ' 施展「' + sk.name + '」令 ' + target.name + ' 僵直';
       break;
@@ -544,6 +581,7 @@ function applySkill(actor, target, sk) {
       break;
     }
     case 'poison': {
+      if (isImmune(target)) { battle.msg = actor.name + ' 施展「' + sk.name + '」但 ' + target.name + ' 处于无敌，无效'; break; }
       target.poison = { dmg: e.dmg, dur: e.dur }; // 每回合开始扣 e.dmg 点血，持续 e.dur 回合
       battle.msg = actor.name + ' 施展「' + sk.name + '」令 ' + target.name + ' 中毒';
       break;
@@ -629,10 +667,12 @@ function playerAct(act, skillId) {
   setButtons(false);
   if (act === 'skill') {
     const sk = skillId ? SKILLS_DB_MAP[skillId] : null;
-    if (sk && player.mp >= sk.cost) {
+    if (sk && player.mp >= sk.cost && !(sk.oncePerBattle && battle._usedOnce && battle._usedOnce[sk.id])) {
+      battle._usedOnce[sk.id] = true; // 每场战斗只限一次
       applySkill(battle.player, battle.enemy, sk);
     } else {
-      applyAction(battle.player, battle.enemy, 'attack'); // 灵力不足回退普攻
+      if (sk && sk.oncePerBattle && battle._usedOnce && battle._usedOnce[sk.id]) battle.msg = sk.name + ' 本场已用过';
+      applyAction(battle.player, battle.enemy, 'attack'); // 不可用（已用过/灵力不足）回退普攻
     }
   } else {
     applyAction(battle.player, battle.enemy, act);
