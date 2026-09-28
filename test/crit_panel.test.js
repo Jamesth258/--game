@@ -48,7 +48,7 @@ const sandbox = {
     setItem: (k, v) => { localStore[k] = String(v); },
     removeItem: k => { delete localStore[k]; },
   },
-  document: { getElementById: getEl, createElement: () => makeEl('dyn'), querySelectorAll: () => [], body: makeEl('body'), documentElement: makeEl('html'), addEventListener() {} },
+  document: { getElementById: getEl, createElement: () => makeEl('dyn'), querySelectorAll: () => [], querySelector: () => null, body: makeEl('body'), documentElement: makeEl('html'), addEventListener() {} },
   window: { addEventListener() {} },
 };
 sandbox.globalThis = sandbox;
@@ -66,6 +66,9 @@ code += `
   try {
     initHub();
 
+    // 暴击率「等级」贡献 = 境界 globalIndex+1（recalcStats 已改用境界驱动，原 player.level 从未持久化、恒为0，是旧 bug 的修复）
+    const realmIdx = (typeof CULTIVATION !== 'undefined') ? (CULTIVATION.realmFromXp(player.xp).globalIndex + 1) : 1;
+
     // 覆盖 openModal 以捕获属性面板 HTML
     openModal = function(html){ globalThis.__MODAL = html; };
 
@@ -75,7 +78,7 @@ code += `
     // A) 无装备：基础 15% 暴击 / 150% 暴伤
     player.equipment = empty;
     recalcStats(player);
-    assert('无装备 暴击率=基础15%+等级×0.2%+天命×0.2% (实际=' + player.critRate + ')', Math.abs(player.critRate - (0.15 + (Number(player.level)||0)*0.002 + (Number(player.des)||0)*0.002)) < 1e-9);
+    assert('无装备 暴击率=基础15%+境界×0.2%+天命×0.2% (实际=' + player.critRate + ')', Math.abs(player.critRate - (0.15 + realmIdx*0.002 + (Number(player.des)||0)*0.002)) < 1e-9);
     assert('无装备 暴伤倍率=1.5 (实际=' + player.critDmg + ')', Math.abs(player.critDmg - 1.5) < 1e-9);
 
     // B) 单件精准：寒铁剑(w1_1, 灵品武器模板命中+5% + accuracy 5%) → 命中率较无装备 +10%（命中率系统：装备精准永久进面板）
@@ -92,7 +95,7 @@ code += `
       boots: null
     };
     recalcStats(player);
-    assert('诛仙2件 → 暴击率=34%+等级/天命加成 (实际=' + player.critRate + ')', Math.abs(player.critRate - (0.34 + (Number(player.level)||0)*0.002 + (Number(player.des)||0)*0.002)) < 1e-9);
+    assert('诛仙2件 → 暴击率=34%+境界/天命加成 (实际=' + player.critRate + ')', Math.abs(player.critRate - (0.34 + realmIdx*0.002 + (Number(player.des)||0)*0.002)) < 1e-9);
 
     // D) 2 件贪狼：贪狼刃(w4_2 critdmg45%) + 贪狼佩(c4_2 critdmg35%) → 2件套 critDmg+20% → 1.5+0.45+0.35+0.20=2.5
     player.equipment = {
@@ -112,7 +115,7 @@ code += `
       boots: null
     };
     recalcStats(player);
-    assert('紫薇2件 → 面板暴击率=23%+等级/天命加成(条件lowHpCrit不计入) (实际=' + player.critRate + ')', Math.abs(player.critRate - (0.23 + (Number(player.level)||0)*0.002 + (Number(player.des)||0)*0.002)) < 1e-9);
+    assert('紫薇2件 → 面板暴击率=23%+境界/天命加成(条件lowHpCrit不计入) (实际=' + player.critRate + ')', Math.abs(player.critRate - (0.23 + realmIdx*0.002 + (Number(player.des)||0)*0.002)) < 1e-9);
 
     // F) 面板 HTML 含「暴击率 / 暴击伤害」标签并渲染数值
     player.equipment = { weapon: makeItemFromDb(byId('w1_1'), 0), armor: null, accessory: null, boots: null };
@@ -121,7 +124,8 @@ code += `
     const html = globalThis.__MODAL || '';
     assert('属性面板含「暴击率」', html.indexOf('暴击率') !== -1);
     assert('属性面板含「暴击伤害」', html.indexOf('暴击伤害') !== -1);
-    assert('面板渲染了暴击率数值(含%)', /暴击率<\\/td><td[^>]*>\\d+%/.test(html));
+    const _ci = html.indexOf('暴击率</span><span class="dc-val">');
+    assert('面板渲染了暴击率数值(含%)', _ci !== -1 && html.slice(_ci, _ci + 60).indexOf('%') !== -1);
 
     // G) 被动心法暴击率/暴伤必须进入战斗 computeEquipMods（修复：面板满暴击、实战却不暴击）
     player.equipment = { weapon: null, armor: null, accessory: null, boots: null };

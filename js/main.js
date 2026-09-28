@@ -36,6 +36,7 @@ function checkSavedCharacter() {
       player.storyRewardClaimed = (saved.storyRewardClaimed && typeof saved.storyRewardClaimed === 'object') ? saved.storyRewardClaimed : {};
       player.storyLevelFirstClear = (saved.storyLevelFirstClear && typeof saved.storyLevelFirstClear === 'object') ? saved.storyLevelFirstClear : {};
       player.worldBoss = (saved.worldBoss && typeof saved.worldBoss === 'object') ? saved.worldBoss : null;
+      player.arena = (saved.arena && typeof saved.arena === 'object') ? saved.arena : null;  // [FIX 竞技场] 读档必须恢复竞技场进度，否则次日重载 player.arena=null → ensureArenaDaily 兜底回 1001
       player.diamond = (saved.diamond != null) ? saved.diamond : 0;
       player.daily = (saved.daily && typeof saved.daily === 'object') ? saved.daily : null;
       // 图鉴收集集合与里程碑档位（旧存档可能缺字段，补默认）

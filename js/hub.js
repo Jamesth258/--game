@@ -827,6 +827,7 @@ function initHub() {
         ${qty > 1 ? `<span class="qty">${qty}</span>` : ''}
         <div class="tile">${invIconSVG('chest', rep.chestKind, rc)}</div>
         <span class="nm" style="color:${rc}">${esc(rep.name)}</span>
+        <button class="tt-btn go" onclick="openChestItem('${rep.uid}')">开启</button>
       </div>`;
     }).join('') : `<div class="empty-tip">暂无宝箱 — 挑战世界BOSS、每日签到或商城可获宝箱。</div>`;
 

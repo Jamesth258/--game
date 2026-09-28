@@ -41,7 +41,7 @@ const sandbox = {
   requestAnimationFrame: () => 0,
   Image: class { constructor() { this.onerror = null; this.complete = false; this.naturalWidth = 0; } set src(v) { this._src = v; } get src() { return this._src; } },
   localStorage: { getItem: k => (k in localStore ? localStore[k] : null), setItem: (k, v) => { localStore[k] = String(v); }, removeItem: k => { delete localStore[k]; } },
-  document: { getElementById: getEl, createElement: () => makeEl('dyn'), querySelectorAll: () => [], body: makeEl('body'), documentElement: makeEl('html'), addEventListener() {} },
+  document: { getElementById: getEl, createElement: () => makeEl('dyn'), querySelectorAll: () => [], querySelector: () => null, body: makeEl('body'), documentElement: makeEl('html'), addEventListener() {} },
   window: { addEventListener() {} },
 };
 sandbox.globalThis = sandbox;

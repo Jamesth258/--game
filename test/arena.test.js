@@ -215,6 +215,25 @@ code += `
     assert('battle.js 含 endArenaBattle 调用', __c.indexOf('endArenaBattle') !== -1);
     assert('hub.js 含 go_arena 分发', __c.indexOf('go_arena') !== -1);
     assert('core.js 存档白名单含 arena', __c.indexOf('arena: player.arena') !== -1);
+    // ===== 8) 回归：竞技场名次跨天持久化（bug: 重载后 arena 未恢复 → 名次被重置回 1001）=====
+    (function(){
+      const _saved = {
+        name:'回归侠', avatarId:'m2', xp:5000, gold:100, diamond:30,
+        equipment:{}, bag:[], items:[],
+        arena: { date:'2026-09-21', startDate:'2026-09-20', attempts:0, rank:333, settledDate:'2026-09-21', lastReward:null, lastSwap:null, _lastOpp:null }
+      };
+      localStorage.setItem('wuxia_save', JSON.stringify(_saved));
+      player.arena = null;            // 模拟次日重开（读档前 arena 尚未恢复）
+      const _r = checkSavedCharacter();
+      assert('[回归] 读档恢复竞技场进度对象', !!player.arena && typeof player.arena === 'object');
+      assert('[回归] 读档恢复 名次 rank=333 (未被重置为1001)', !!player.arena && player.arena.rank === 333);
+      // 次日进入竞技场：跨天只重置次数、名次应继续保留（用户原诉求）
+      window.__ARENA_TEST_DATE = '2026-09-22'; window.__ARENA_TEST_MINUTES = 9 * 60;
+      ensureArenaDaily();
+      assert('[回归] 跨天进入 名次继续=333', player.arena.rank === 333);
+      assert('[回归] 跨天进入 次数重置=10', player.arena.attempts === 10);
+    })();
+
   } catch (e) {
     results.push('ERROR | ' + (e && e.stack ? e.stack : e));
   }
