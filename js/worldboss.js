@@ -429,9 +429,38 @@ function openChestItem(uid) {
   saveGame();
   playChestOpenAnim(box, res);
 }
+// 批量开启：一次性开启背包中「同种类 + 同 bias」的所有宝箱，汇总奖励展示（修为/灵石求和、功法去重列表、装备按品质计数）
+function openAllChestItems(kind, bias) {
+  bias = Number(bias) || 0;
+  const targets = player.bag.filter(it => it && it.type === 'chest' && it.chestKind === kind && ((it.bias || 0) === bias));
+  if (!targets.length) return;
+  const uids = {};
+  targets.forEach(t => { uids[t.uid] = 1; });
+  player.bag = player.bag.filter(it => !(it && it.type === 'chest' && uids[it.uid]));
+  const n = targets.length;
+  let res = '';
+  if (kind === 'exp') {
+    let total = 0; targets.forEach(b => { total += openExpChest(); });
+    res = '共开启 ' + n + ' 个经验宝箱，合计获得 <b style="color:#D4A843">' + total + '</b> 修为';
+  } else if (kind === 'stone') {
+    let total = 0; targets.forEach(b => { total += openStoneChest(); });
+    res = '共开启 ' + n + ' 个灵石宝箱，合计获得 <b style="color:#D4A843">' + total + '</b> 灵石';
+  } else if (kind === 'skill') {
+    const names = [];
+    targets.forEach(b => { const s = openSkillChest(b.bias); names.push('《' + (s.name || '?') + '》' + (s.tierName ? '（' + s.tierName + '）' : '')); });
+    const uniq = names.filter((v, i) => names.indexOf(v) === i);
+    res = '共开启 ' + n + ' 个功法宝箱，习得：' + esc(uniq.slice(0, 8).join('、')) + (uniq.length > 8 ? ' 等共 ' + uniq.length + ' 种' : '');
+  } else {
+    const byR = {};
+    targets.forEach(b => { const it2 = openEquipChest(b.bias); const k = it2.rarityName || '?'; byR[k] = (byR[k] || 0) + 1; });
+    res = '共开启 ' + n + ' 个装备宝箱，装备已入背包：' + esc(Object.keys(byR).map(k => k + '×' + byR[k]).join('、'));
+  }
+  saveGame();
+  playChestOpenAnim(targets[0], res, n);
+}
 // 播放开启动画（纯 CSS）。动画结束回调 showChestResult 弹出结果；环境缺 body/setTimeout 时降级同步展示
-function playChestOpenAnim(box, res) {
-  const done = () => showChestResult(box, res);
+function playChestOpenAnim(box, res, batchN) {
+  const done = () => showChestResult(box, res, batchN);
   try {
     const body = (typeof document !== 'undefined') && (document.body || document.documentElement);
     if (!body || typeof setTimeout !== 'function') { done(); return; }
@@ -482,7 +511,7 @@ function playChestOpenAnim(box, res) {
           '<div class="chest-anim-seamline"></div>' +
         '</div></div>' +
         sparks + dust +
-        '<div class="chest-anim-label">开启中…</div>' +
+        '<div class="chest-anim-label">开启中…' + (batchN > 1 ? ' ×' + batchN : '') + '</div>' +
         '<div class="chest-anim-sub">' + m.cn + '</div>' +
       '</div>';
     body.appendChild(overlay);
@@ -490,14 +519,16 @@ function playChestOpenAnim(box, res) {
   } catch (e) { done(); }
 }
 // 弹出开奖结果
-function showChestResult(box, res) {
-  openModal(`<div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg><h3 style="margin:0">开启${esc(box.name)}</h3></div>
-    <p class="chest-result-pop" style="margin:6px 0;color:rgba(241,239,232,0.9);font-size:15px;font-weight:600">${esc(res)}</p>
+function showChestResult(box, res, batchN) {
+  const _title = batchN ? ('批量开启' + esc(box.name) + ' ×' + batchN) : ('开启' + esc(box.name));
+  openModal(`<div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg><h3 style="margin:0">${_title}</h3></div>
+    <p class="chest-result-pop" style="margin:6px 0;color:rgba(241,239,232,0.9);font-size:15px;font-weight:600">${batchN ? res : esc(res)}</p>
     <button class="btn-full" onclick="showBagModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回背包</button>
     <button class="btn-full" onclick="returnToHub()" style="margin-top:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`);
 }
 window.makeChestItem = makeChestItem;
 window.openChestItem = openChestItem;
+window.openAllChestItems = openAllChestItems;
 
 window.openWorldBossScreen = openWorldBossScreen;
 window.startWorldBossBattle = startWorldBossBattle;

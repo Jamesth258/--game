@@ -656,11 +656,12 @@ function initHub() {
     }
     if (kind === 'chest') {
       const it = (player.bag || []).find(x => x.uid === key); if (!it) return '';
+      const sameQty = (player.bag || []).filter(x => x && x.type === 'chest' && x.chestKind === it.chestKind && ((x.bias || 0) === (it.bias || 0))).length;
       const rc = it.rarityColor || '#9a7b3f';
       return `<div class="tt-name" style="color:${rc}">${esc(it.name)}</div>
         <div class="tt-meta">宝箱 · 点击开启</div>
         <div class="tt-stat">${esc(it.desc || '')}</div>
-        <div class="tt-acts"><button class="tt-btn go" onclick="invAct(function(){openChestItem('${it.uid}')})">开启</button></div>`;
+        <div class="tt-acts"><button class="tt-btn go" onclick="invAct(function(){openChestItem('${it.uid}')})">开启</button>${sameQty > 1 ? `<button class="tt-btn go" onclick="invAct(function(){openAllChestItems('${it.chestKind}',${it.bias || 0})})">全部开启</button>` : ''}</div>`;
     }
     if (kind === 'pill') {
       const db = ITEM_DB[key]; if (!db) return '';
@@ -827,7 +828,10 @@ function initHub() {
         ${qty > 1 ? `<span class="qty">${qty}</span>` : ''}
         <div class="tile">${invIconSVG('chest', rep.chestKind, rc)}</div>
         <span class="nm" style="color:${rc}">${esc(rep.name)}</span>
-        <button class="tt-btn go" onclick="openChestItem('${rep.uid}')">开启</button>
+        <div class="cell-btns">
+          <button class="tt-btn go" onclick="openChestItem('${rep.uid}')">开启</button>
+          ${qty > 1 ? `<button class="tt-btn go" onclick="openAllChestItems('${rep.chestKind}',${rep.bias || 0})">全部×${qty}</button>` : ''}
+        </div>
       </div>`;
     }).join('') : `<div class="empty-tip">暂无宝箱 — 挑战世界BOSS、每日签到或商城可获宝箱。</div>`;
 

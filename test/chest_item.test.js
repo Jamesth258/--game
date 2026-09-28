@@ -127,6 +127,43 @@ code += `
       results.push('FAIL | 动画路径异常: ' + (e7 && e7.stack ? e7.stack : e7));
     }
 
+    // 8. 批量开启 openAllChestItems：同种类同 bias 一次性开奖
+    try {
+      const _rand = Math.random;
+      globalThis.setTimeout = (fn) => { fn(); return 0; };
+      player.bag = [ makeChestItem('exp',0), makeChestItem('exp',0), makeChestItem('exp',0), makeChestItem('exp',1), makeChestItem('stone',0) ];  // 先建箱：uid 依赖真实随机
+      Math.random = () => 0.5;  // 开奖确定性：exp每箱6000 / stone每箱500
+      const xpB = player.xp, goldB = player.gold;
+      globalThis.__MODAL = null;
+      openAllChestItems('exp', 0);
+      assert('批量exp：bias0 三箱全部移除', player.bag.filter(x=>x&&x.type==='chest'&&x.chestKind==='exp'&&(x.bias||0)===0).length === 0);
+      assert('批量exp：bias1 宝箱保留', player.bag.filter(x=>x&&x.type==='chest'&&x.chestKind==='exp').length === 1);
+      assert('批量exp：stone 宝箱不受影响', player.bag.filter(x=>x&&x.type==='chest'&&x.chestKind==='stone').length === 1);
+      assert('批量exp：修为合计 18000', player.xp - xpB === 18000);
+      const hb = globalThis.__MODAL || '';
+      assert('批量exp：弹窗标题含 ×3', hb.indexOf('×3') >= 0);
+      assert('批量exp：弹窗含合计 18000', hb.indexOf('18000') >= 0);
+      globalThis.__MODAL = null;
+      openAllChestItems('stone', 0);
+      assert('批量stone：灵石合计 500', player.gold - goldB === 500);
+      player.bag = [ makeChestItem('equip',0), makeChestItem('equip',0), makeChestItem('equip',0) ];
+      globalThis.__MODAL = null;
+      openAllChestItems('equip', 0);
+      assert('批量equip：3 箱换 3 件装备、无残留宝箱', player.bag.filter(x=>x&&x.type==='chest').length === 0 && player.bag.length === 3);
+      assert('批量equip：弹窗含品质汇总', (globalThis.__MODAL||'').indexOf('装备已入背包') >= 0);
+      player.bag = [ makeChestItem('skill',0), makeChestItem('skill',0) ];
+      player.learned = [];
+      openAllChestItems('skill', 0);
+      assert('批量skill：功法入 learned', player.learned.length >= 2);
+      player.bag = [ makeChestItem('exp',0), makeChestItem('exp',0), makeChestItem('exp',0) ];
+      window.showBagModal();
+      const h3 = globalThis.__MODAL || '';
+      assert('背包格渲染「全部×3」按钮', h3.indexOf('全部×3') >= 0);
+      assert('背包格含 openAllChestItems 调用', h3.indexOf('openAllChestItems') >= 0);
+      Math.random = _rand;
+    } catch (e8) {
+      results.push('FAIL | 批量开启异常: ' + (e8 && e8.stack ? e8.stack : e8));
+    }
   } catch (e) {
     results.push('FAIL | 异常: ' + (e && e.stack ? e.stack : e));
   }
