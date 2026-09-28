@@ -109,7 +109,6 @@ function startBattle(node, mode) {
   }
   // 重置玩家本场战斗的临时状态（buff/debuff/护盾/僵直），避免跨场残留
   player.buffs = []; player.debuffs = []; player.shield = null; player.stun = 0; player.poison = null; player.dot = null;
-  battle._usedOnce = {}; // 每场战斗重置「限一次」功法
   // 每场战斗满血满灵开局：battle.player 直接引用全局 player（非副本），
   // 上一场若阵亡 player.hp 会残留在 0，若不在此回满，下一场开场即被 checkEnd 判负，
   // 表现为「死亡后无法再挑战任何副本」（刷新页面从旧存档恢复满血才正常）。
@@ -122,6 +121,7 @@ function startBattle(node, mode) {
     mode: mode || 'story',         // 'story' = 剧情副本；'worldboss' = 世界BOSS
     queue: [], turn: 0, roundCount: 0, playerDmg: 0, mods,
     _stackCrit: 0, _reviveUsed: false,
+    _usedOnce: {},               // 每场战斗重置「限一次」功法（必须在对象字面量内初始化：battle 仍为 null 时解引用会抛 TypeError 导致无法进入战斗）
     msg: (isWB ? '世界BOSS · ' : '遭遇 ') + enemy.name + '！',
   };
   // 立绘（方案A）：按 avatarId / 卷 / BOSS 动态加载写实古风立绘，挂到 battle 上（不污染 art.hero / art.enemy）
