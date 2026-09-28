@@ -362,7 +362,7 @@ function damage(attacker, target, mult, type) {
   battle._anim = { phase: 'lunge', progress: 0, attacker: isP ? 'player' : 'enemy', target: isP ? 'enemy' : 'player', dist: 52 };
 
   // 命中判定：实际命中率 = 攻击方命中率 − 目标闪避率
-  const attackerHR = (attacker.hitRate || 0.80) * buffMul(attacker, 'hit');
+  const attackerHR = (attacker.hitRate || 0.80) * buffMul(attacker, 'hit') * debuffMul(attacker, 'hit');
   const targetEva = target.eva || 0;
   // 装备命中率已永久并入 player.hitRate（recalcStats 处理）；此处仅叠加功法临时命中率buff
   const accBuff = (battle._tempHitRateBuff || 0); // 功法临时命中率buff（单次生效，攻击后消费）
@@ -388,7 +388,7 @@ function damage(attacker, target, mult, type) {
   const aMods = (!attacker.isEnemy && battle && battle.mods) ? battle.mods : null; // 攻击者=玩家时的装备特效
   const tMods = (!target.isEnemy && battle && battle.mods)  ? battle.mods : null; // 受击者=玩家时的装备特效
   const atkStat = (isSpirit ? attacker.spiAtk : attacker.atk) * buffMul(attacker, isSpirit ? 'spiAtk' : 'atk');
-  let defStat = (isSpirit ? target.spiDef : target.def) * debuffMul(target, isSpirit ? 'spiDef' : 'def');
+  let defStat = (isSpirit ? target.spiDef : target.def) * debuffMul(target, isSpirit ? 'spiDef' : 'def') * buffMul(target, isSpirit ? 'spiDef' : 'def');
   if (aMods && aMods.pierce) defStat *= (1 - aMods.pierce); // 破甲：无视部分防御
   let base = atkStat * mult - defStat; // 满额防御，不做 0.5 折算（穿透差异才明显）
   // 暴击：基础 15% + 等级×0.2% + 天命×0.2% + 增益·暴击 buff + 装备暴击率 + 濒锋(血<30%) + 积威(每回合累加，上限40%)
@@ -535,7 +535,7 @@ function applySkill(actor, target, sk) {
         actor.buffs.splice(idx, 1); owned--;
       }
       bstats.forEach((st, i) => actor.buffs.push({ sid: sk.id, stat: st, amt: (bamts[i] != null ? bamts[i] : e.amt), dur: e.dur }));
-      const bcn = st => (st === 'atk' ? '物理攻击' : st === 'spiAtk' ? '精神攻击' : st === 'init' ? '先攻' : statCn(st));
+      const bcn = st => (st === 'atk' ? '物理攻击' : st === 'spiAtk' ? '精神攻击' : st === 'init' ? '先攻' : st === 'def' ? '物理防御' : st === 'spiDef' ? '精神防御' : statCn(st));
       battle.msg = actor.name + ' 施展「' + sk.name + '」' + bstats.map(bcn).join('、') + '提升';
       break;
     }
