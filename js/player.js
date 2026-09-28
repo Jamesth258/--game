@@ -246,7 +246,9 @@ function recalcStats(p) {
       if (pa.pasAtk)    atk    += pa.pasAtk;        // 攻击
       if (pa.pasSpiAtk) spiAtk += pa.pasSpiAtk;     // 精神攻击
       if (pa.pasDef)    def    += pa.pasDef;        // 防御
+      if (pa.pasSpiDef) spiDef += pa.pasSpiDef;     // 精神防御
       if (pa.pasInit)   init   += pa.pasInit;       // 先攻
+      if (pa.pasEva)    eva    += pa.pasEva;        // 闪避率
       if (pa.pasHp)     maxHp  += pa.pasHp;         // 生命上限
       if (pa.pasMp)     maxMp  += pa.pasMp;         // 灵力上限
       if (pa.pasHit)    hitR   += pa.pasHit;        // 命中率（永久，进面板，随命中率封顶100%）
