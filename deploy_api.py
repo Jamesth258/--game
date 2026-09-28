@@ -41,15 +41,20 @@ DEFAULT_CHANGED = [
     "js/skills-data.js",
     "gen_skills.py",
 ]
-COMMIT_MSG = (
-    "chore: 部署自动化自含 GH_PAT 恢复 + 修复 equip 回归测试(吸血/反伤随机未命中)\n\n"
-    "- deploy_api.py: 新增 resolve_token()，按序 环境变量→扫描 WorkBuddy 会话轨迹提取\n"
-    "  github_pat_ token→GET /user 鉴权，命中即采用；新会话直接 `python deploy_api.py --push`\n"
-    "  即可上线，无需手动设置/向用户索要 token（8/24 复盘：此前曾误判需问用户，绕远路）\n"
-    "- test/equip.test.js: 吸血/反伤两处 damage() 调用用确定性随机值包裹，避免 damage() 内置\n"
-    "  命中判定随机未命中导致断言不稳定失败（历史欠账 16/2 → 18/0）\n"
-    "- 框架文档新增『部署与同步流程(新会话必读)』章节，明确部署铁律"
-)
+COMMIT_MSG = """
+chore: 迁移归档体系重建 + 全量体检修复（2026-09-29）
+
+- [严重·迁移级] DEPLOY_MANIFEST.txt 漏 45 个运行时文件（js/arena.js、css/scroll-panel.css、
+  assets/vendor/tcb.js、assets/icons/icon_arena.png、assets/items/ 下 34 个装备/宝箱/丹药图标）。
+  按旧清单迁移会得到「竞技场消失+面板样式丢失+图标全裂」的残版游戏。
+  -> 新增 build_manifest.py 从真实引用关系自动派生清单（152 项）并自检，杜绝手工漂移。
+- [中等] js/main.js 竞技场修复改了内容但未 bump 版本号（v37 未动），违反项目铁律，
+  用户浏览器会缓存旧文件导致修复不可见 -> bump 至 v38。
+- [轻微] core.js 预载 3 个已废弃路径（assets/hero.png 等）产生 404 -> loadImg 空 src 不发起请求。
+- 归档：新增 ARCHIVE_INDEX.md（迁移 SOP/设计文档地图/代码模块地图/铁律/体检结果），
+  更新 MIGRATION.md，补齐线上缺失的 7 个设计与工具文件。
+- 回归：12 套件 329 PASS / 0 FAIL。
+"""
 
 
 # ---------------------------------------------------------------------------
@@ -75,6 +80,20 @@ def _validate_token(tok):
         os.environ["GH_PAT"] = prev
     if st == 200 and res.get("login"):
         return res["login"]
+    return None
+
+
+def _read_token_file():
+    """从本地 .deploy_token 读取 GH_PAT（用户 2026-09-28 明确授权持久保存；已加入 .gitignore 与部署排除）"""
+    for cand in (os.path.join(os.getcwd(), ".deploy_token"),
+                 os.path.join(_WB_ROOT, ".deploy_token")):
+        try:
+            if os.path.isfile(cand):
+                t = open(cand, "r", encoding="utf-8").read().strip()
+                if t.startswith("github_pat_") and len(t) >= 40:
+                    return t
+        except Exception:
+            pass
     return None
 
 
@@ -110,6 +129,11 @@ def resolve_token():
     env_tok = os.environ.get("GH_PAT")
     if env_tok and _validate_token(env_tok):
         return env_tok
+    ftok = _read_token_file()
+    if ftok and _validate_token(ftok):
+        os.environ["GH_PAT"] = ftok
+        print("  [token] 已从 .deploy_token 恢复 GH_PAT")
+        return ftok
     for tok in _scan_tokens():
         login = _validate_token(tok)
         if login:
@@ -180,10 +204,83 @@ def check(changed):
     return diff
 
 
-def push(changed):
+def local_files(root="."):
+    """返回本地应部署文件相对路径集合（排除 .git/.workbuddy/node_modules 等）。"""
+    skip_dirs = {".git", ".workbuddy", "node_modules", "__pycache__"}
+    out = set()
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d not in skip_dirs]
+        for fn in filenames:
+            if fn == ".deploy_token":
+                continue
+            full = os.path.join(dirpath, fn)
+            out.add(os.path.relpath(full, root).replace(os.sep, "/"))
+    return out
+
+
+def list_orphans(exclude_prefixes=("assets/_wm_backup/",)):
+    """远端有、本地无的文件（即本地已删除的孤儿）。可选排除特定前缀。"""
+    parent = get_master_sha()
+    remote = get_tree(parent)
+    orphans = sorted(set(remote.keys()) - local_files("."))
+    if exclude_prefixes:
+        orphans = [p for p in orphans
+                   if not any(p.startswith(x) for x in exclude_prefixes)]
+    return orphans
+
+
+DELETE_MSG = (
+    "chore: 删除服务器上的废弃旧图（本地已删除的孤儿文件）\n\n"
+    "- deploy_api.py 新增 --delete / --list-orphans 能力，push() 构建 tree 时跳过待删文件\n"
+    "- 仅删除本地已不存在、且未被代码引用的历史草稿图，不影响线上游戏资源"
+)
+
+
+MAX_TREE_ENTRIES = 90  # GitHub tree API 限制约 100~120，留安全余量
+
+def _build_tree(entries):
+    """创建 Git tree，若条目超限则按顶层目录自动拆分为子树"""
+    if len(entries) <= MAX_TREE_ENTRIES:
+        st, res = api("POST", f"{API}/repos/{REPO}/git/trees", {"tree": entries})
+        if st != 201:
+            raise RuntimeError(f"tree failed: {st} {res}")
+        return res["sha"]
+
+    # 按顶层目录分组
+    from collections import defaultdict
+    groups = defaultdict(list)
+    root_entries = []
+    for e in entries:
+        parts = e["path"].split("/", 1)
+        if len(parts) == 1:
+            root_entries.append(e)  # 根目录文件
+        else:
+            groups[parts[0]].append({**e, "path": parts[1]})
+
+    tree_entries = []
+    # 根目录文件直接加入
+    for e in root_entries:
+        tree_entries.append(e)
+
+    # 每个子目录创建子树
+    for dir_name, dir_entries in groups.items():
+        sub_tree_sha = _build_tree(dir_entries)  # 递归
+        tree_entries.append({"path": dir_name, "mode": "040000", "type": "tree", "sha": sub_tree_sha})
+
+    st, res = api("POST", f"{API}/repos/{REPO}/git/trees", {"tree": tree_entries})
+    if st != 201:
+        raise RuntimeError(f"tree failed (nested): {st} {res}")
+    return res["sha"]
+
+
+def push(changed, deleted=(), msg=None):
     parent = get_master_sha()
     remote_blobs = get_tree(parent)
     print(f"remote master = {parent[:12]}, 复用 blob = {len(remote_blobs)}")
+
+    del_set = set(deleted)
+    if del_set:
+        print(f"将删除远端文件数: {len(del_set)}")
 
     entries = []
     for p in changed:
@@ -192,17 +289,17 @@ def push(changed):
         print(f"  blob ok {p} ({size}B)")
 
     for p, sha in remote_blobs.items():
+        if p in del_set:
+            print(f"  DELETE {p}")
+            continue
         if p not in changed:
             entries.append({"path": p, "mode": "100644", "type": "blob", "sha": sha})
 
-    st, res = api("POST", f"{API}/repos/{REPO}/git/trees", {"tree": entries})
-    if st != 201:
-        raise RuntimeError(f"tree failed: {st} {res}")
-    tree_sha = res["sha"]
+    tree_sha = _build_tree(entries)
     print(f"  tree ok {tree_sha[:12]}")
 
     st, res = api("POST", f"{API}/repos/{REPO}/git/commits", {
-        "message": COMMIT_MSG,
+        "message": msg or COMMIT_MSG,
         "tree": tree_sha,
         "parents": [parent],
         "author": {"name": "Jamesth258", "email": "jamesth258@users.noreply.github.com"},
@@ -225,21 +322,34 @@ def main():
     if not tok:
         print("ERROR: 无法获取 GH_PAT（环境变量未设置，且 WorkBuddy 会话轨迹中未找到有效 token）")
         return 2
-    mode = "--push"
-    files = list(DEFAULT_CHANGED)
     args = sys.argv[1:]
-    if args and args[0] in ("--check", "--push"):
+    if not args:
+        push(list(DEFAULT_CHANGED))
+        return 0
+    if args[0] == "--list-orphans":
+        orphans = list_orphans()
+        for p in orphans:
+            print("  ORPHAN", p)
+        print(f"孤儿文件数: {len(orphans)}")
+        return 0
+    if args[0] == "--delete":
+        deleted = args[1:]
+        if not deleted:
+            print("ERROR: --delete 需要至少一个文件路径参数")
+            return 2
+        push([], deleted=deleted, msg=DELETE_MSG)
+        return 0
+    if args[0] in ("--check", "--push"):
         mode = args[0]
         rest = args[1:]
-    else:
-        rest = args
-    if rest:
-        files = rest
-    if mode == "--check":
-        return 0 if check(files) == 0 else 1
-    else:
+        files = rest if rest else list(DEFAULT_CHANGED)
+        if mode == "--check":
+            return 0 if check(files) == 0 else 1
         push(files)
         return 0
+    # 位置参数：直接作为文件列表推送
+    push(args)
+    return 0
 
 
 if __name__ == "__main__":

@@ -11,15 +11,15 @@ const buttons = [...cmdBar.querySelectorAll('button')];
 // ---- 美术素材接口：优先用 assets 里的图，缺失则画占位图 ----
 function loadImg(src) {
   const i = new Image();
-  i.src = src;
+  if (src) { i.src = src; }  // [FIX 2026-09-29] 空 src 不发起请求：assets/hero.png 等废弃路径已不存在，避免每次启动产生 3 个 404
   i.failed = false;
   i.onerror = () => { i.failed = true; };
   return i;
 }
 const art = {
-  hero:  loadImg('assets/hero.png'),
-  enemy: loadImg('assets/enemy.png'),
-  bg:    loadImg('assets/bg_battle.png'),
+  hero:  loadImg(''),  // 立绘由 main.js 读档/create.js 建号时赋值；battle.js 用 ready() 判空后回退占位图
+  enemy: loadImg(''),
+  bg:    loadImg(''),  // 战斗背景由 loadBattleBg(name) 动态加载 assets/bg/<name>.png
 };
 function ready(img) { return img.complete && !img.failed && img.naturalWidth > 0; }
 
