@@ -43,7 +43,7 @@ const sandbox = {
   requestAnimationFrame: () => 0,
   Image: class { constructor() { this.onerror = null; this.complete = false; this.naturalWidth = 0; this.failed = false; } set src(v) { this._src = v; } get src() { return this._src; } },
   localStorage: { getItem: k => (k in localStore ? localStore[k] : null), setItem: (k, v) => { localStore[k] = String(v); }, removeItem: k => { delete localStore[k]; } },
-  document: { getElementById: getEl, createElement: () => makeEl('dyn'), querySelectorAll: () => [], body: makeEl('body'), documentElement: makeEl('html'), addEventListener() {} },
+  document: { getElementById: getEl, createElement: () => makeEl('dyn'), querySelectorAll: () => [], querySelector: () => null, body: makeEl('body'), documentElement: makeEl('html'), addEventListener() {} },
   window: { addEventListener() {} },
 };
 sandbox.globalThis = sandbox;
@@ -100,9 +100,20 @@ code += `
     assert('装备 bias2：神品占比>0 (实际=' + (d2[4] * 100).toFixed(1) + '%)', d2[4] > 0.2);
     // 抽样验证：bias2 平均品质 > bias0
     player.bag = [];
-    function avgRarity(bias, n){ let s = 0; for (let i = 0; i < n; i++) { const it = openEquipChest(bias); s += RARITY.findIndex(r => r.key === it.rarity); } return s / n; }
+    function avgRarity(bias, n){ let s = 0, c = 0; for (let i = 0; i < n; i++) { const it = openEquipChest(bias); if (it.rarity) { s += RARITY.findIndex(r => r.key === it.rarity); c++; } } return s / c; }
     const m0 = avgRarity(0, 2000), m2 = avgRarity(2, 2000);
     assert('装备抽样：bias2 平均品质 > bias0 (m2=' + m2.toFixed(2) + ' > m0=' + m0.toFixed(2) + ')', m2 > m0 + 1);
+
+    // ---- C2. 装备宝箱 20% 材料分支 ----
+    player.materials = [0, 0, 0, 0, 0];
+    player.bag = [];
+    let matCnt = 0, before = 0;
+    const NM = 4000;
+    for (let i = 0; i < NM; i++) { const r = openEquipChest(0); if (r._isMaterial) matCnt++; }
+    const matRate = matCnt / NM;
+    assert('装备宝箱：材料占比 ≈20% (实际=' + (matRate * 100).toFixed(1) + '%)', matRate > 0.16 && matRate < 0.24);
+    assert('装备宝箱：材料进 materials 计数（凡品>0）', player.materials[0] > 0);
+    assert('装备宝箱：材料不进背包（背包仅含非材料装备=' + (NM - matCnt) + '）', player.bag.length === NM - matCnt);
 
     // ---- B. 概率详情页渲染 ----
     player.xp = 0;

@@ -227,6 +227,12 @@ function openSkillChest(biasTier) {
 // 装备宝箱：部位随机 + 品质 = 常规 rollRarity 高 1 阶，再叠加来源 bias（世界BOSS名次越高越高），封顶神品
 function openEquipChest(bias) {
   bias = bias || 0;
+  // 20% 概率直接开出强化材料（材料阶 = rollRarity + bias，封顶神品）；其余 80% 开出装备（品质分布不变，仅被压缩到 80% 权重）
+  if (Math.random() < 0.20) {
+    const tier = Math.min(RARITY.length - 1, rollRarity() + bias);
+    player.materials[tier] = (player.materials[tier] || 0) + 1;
+    return { _isMaterial: true, matTier: tier, qty: 1, name: MATERIAL_DB[tier].name };
+  }
   const slot = EQUIP_SLOT_KEYS[Math.floor(Math.random() * EQUIP_SLOT_KEYS.length)];
   const r = Math.min(RARITY.length - 1, rollRarity() + 1 + bias);
   const it = genEquip(slot, r);
@@ -378,7 +384,7 @@ function openChestInfo() {
 <div style="margin-top:10px;padding:10px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;background:rgba(255,255,255,0.03)">
   <div style="font-weight:700;color:#639922;margin-bottom:6px"><img src="assets/items/item_chest_equip.png?v=3" style="width:20px;height:20px;vertical-align:-4px;margin-right:5px">装备宝箱 · 品质概率</div>
   <table style="width:100%;border-collapse:collapse;font-size:13px;color:rgba(241,239,232,0.85)">${eqRows}</table>
-  <p style="margin:6px 0 0;font-size:12px;color:rgba(241,239,232,0.55)">· 来源加成：世界BOSS 第1名 +2 阶、第2名 +1 阶（更高品质）；每日/在线/钻石商城为基准。</p>
+  <p style="margin:6px 0 0;font-size:12px;color:rgba(241,239,232,0.55)">· 来源加成：世界BOSS 第1名 +2 阶、第2名 +1 阶（更高品质）；每日/在线/钻石商城为基准。<br>· 装备宝箱另有 <b style="color:#D4A843">20%</b> 概率直接开出强化材料（材料阶随品质分布）。</p>
 </div>
 
 <div style="margin-top:10px;padding:10px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;background:rgba(255,255,255,0.03)">
@@ -419,8 +425,9 @@ function openChestItem(uid) {
     const s = openSkillChest(box.bias);
     res = '习得功法《' + (s.name || '?') + '》' + (s.tierName ? '（' + s.tierName + '·' + (s.schoolCn || '') + '）' : '');
   } else if (box.chestKind === 'equip') {
-    const it = openEquipChest(box.bias);
-    res = '获得 ' + (it.name || '?') + '（' + (it.rarityName || '') + '·' + ((it.slot && EQUIP_SLOTS[it.slot]) ? EQUIP_SLOTS[it.slot].name : '') + '）';
+    const r = openEquipChest(box.bias);
+    if (r && r._isMaterial) res = '获得 ' + r.name + ' ×' + r.qty;
+    else res = '获得 ' + (r.name || '?') + '（' + (r.rarityName || '') + '·' + ((r.slot && EQUIP_SLOTS[r.slot]) ? EQUIP_SLOTS[r.slot].name : '') + '）';
   } else if (box.chestKind === 'stone') {
     const g = openStoneChest(); res = '获得 ' + g + ' 灵石';
   } else if (box.chestKind === 'exp') {
@@ -452,8 +459,12 @@ function openAllChestItems(kind, bias) {
     res = '共开启 ' + n + ' 个功法宝箱，习得：' + esc(uniq.slice(0, 8).join('、')) + (uniq.length > 8 ? ' 等共 ' + uniq.length + ' 种' : '');
   } else {
     const byR = {};
-    targets.forEach(b => { const it2 = openEquipChest(b.bias); const k = it2.rarityName || '?'; byR[k] = (byR[k] || 0) + 1; });
-    res = '共开启 ' + n + ' 个装备宝箱，装备已入背包：' + esc(Object.keys(byR).map(k => k + '×' + byR[k]).join('、'));
+    targets.forEach(b => {
+      const it2 = openEquipChest(b.bias);
+      if (it2 && it2._isMaterial) { const k = it2.name; byR[k] = (byR[k] || 0) + (it2.qty || 1); }
+      else { const k = (it2 && it2.rarityName) || '?'; byR[k] = (byR[k] || 0) + 1; }
+    });
+    res = '共开启 ' + n + ' 个装备宝箱：' + esc(Object.keys(byR).map(k => k + '×' + byR[k]).join('、'));
   }
   saveGame();
   playChestOpenAnim(targets[0], res, n);

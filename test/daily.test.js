@@ -49,7 +49,7 @@ const sandbox = {
     setItem: (k, v) => { localStore[k] = String(v); },
     removeItem: k => { delete localStore[k]; },
   },
-  document: { getElementById: getEl, createElement: () => makeEl('dyn'), querySelectorAll: () => [], body: makeEl('body'), documentElement: makeEl('html'), addEventListener() {} },
+  document: { getElementById: getEl, createElement: () => makeEl('dyn'), querySelectorAll: () => [], querySelector: () => null, body: makeEl('body'), documentElement: makeEl('html'), addEventListener() {} },
   window: { addEventListener() {} },
 };
 sandbox.globalThis = sandbox;
@@ -128,8 +128,8 @@ code += `
     assert('在线5分钟 +10钻石', player.diamond === 10 && player.daily.onlineClaimed[5] === true);
     dailyTickSeconds(10 * 60); // 累计 15 分钟 → +20 钻石
     assert('在线15分钟 +20钻石(累计30)', player.diamond === 30 && player.daily.onlineClaimed[15] === true);
-    dailyTickSeconds(15 * 60); // 累计 30 分钟 → 装备宝箱
-    assert('在线30分钟 装备宝箱(bag+1)', player.bag.length === bagOB + 1 && player.daily.onlineClaimed[30] === true);
+    dailyTickSeconds(15 * 60); // 累计 30 分钟 → 经验宝箱
+    assert('在线30分钟 经验宝箱入背包(bag+1)', player.bag.length === bagOB + 1 && player.daily.onlineClaimed[30] === true);
     dailyTickSeconds(30 * 60); // 累计 60 分钟 → 经验+灵石×5+30钻石
     assert('在线60分钟 累计钻石=60', player.diamond === 60 && player.daily.onlineClaimed[60] === true);
     // 已达成的里程碑不会重复发放

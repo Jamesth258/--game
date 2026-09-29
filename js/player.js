@@ -110,6 +110,39 @@ const RARITY = [
   { key: 'shen', name: '神品', color: '#D4A843', mult: 4.6, ea: 0.40 },
 ];
 
+// ===== 装备强化系统（真 Sink：消耗材料把装备从 +0 强化到 +25）=====
+// 5 阶强化材料（名称/配色按品质体系对齐，tier 0~4 对应 凡/灵/宝/仙/神）
+//   获取：分解同品阶装备得 1 个对应阶材料；装备宝箱 20% 概率直接开出
+const MATERIAL_DB = [
+  { key: 'fan',  name: '淬铁砂', color: '#9aa0a6' },
+  { key: 'ling', name: '灵髓晶', color: '#639922' },
+  { key: 'bao',  name: '宝纹玉', color: '#378ADD' },
+  { key: 'xian', name: '仙灵露', color: '#9B6BCC' },
+  { key: 'shen', name: '神源髓', color: '#D4A843' },
+];
+const ENHANCE_MAX = 25;                        // 单件装备强化上限
+// 每个 5 档区间内「升第 N 档」的材料消耗（与用户规格一致：1/5/10/15/20）
+const ENHC_BY_STEP = [1, 5, 10, 15, 20];
+// 升到目标档所在 band 的成功率（band0=+1~+5 100%，band1=+6~+10 70%，band2=+11~+15 40%，band3=+16~+20 20%，band4=+21~+25 5%）
+const ENHANCE_RATE = [1.0, 0.7, 0.4, 0.2, 0.05];
+// 每件装备每 +1 级给基础加成的放大系数 [PLACEHOLDER · 待 playtest 验证，初值 8%/级]
+const ENHANCE_MULT_PER_LEVEL = 0.08;
+// 强化信息：从当前 level 推「目标 level / 材料阶 / 档内步序 / 材料消耗 / 成功率 / 失败是否掉档」
+function enhanceInfo(cur) {
+  cur = cur | 0;
+  const band = Math.floor(cur / 5);            // 材料阶 = 当前等级所在 band（凡/灵/宝/仙/神）
+  const step = cur % 5;                         // 该 band 内第几档（0~4）
+  return { target: cur + 1, tier: band, step: step, cost: ENHC_BY_STEP[step], rate: ENHANCE_RATE[band], drop: band >= 2 };
+}
+// 纯函数：给定随机 roll 决定强化结果（success + 新等级）；失败且 band>=2 掉一档
+function enhanceResolve(cur, roll) {
+  const info = enhanceInfo(cur);
+  if (roll < info.rate) return { success: true, newLevel: cur + 1 };
+  return { success: false, newLevel: info.drop ? Math.max(0, cur - 1) : cur };
+}
+// 装备强化加成倍率（仅缩放基础数值加成，不缩放特效）
+function enhanceMul(item) { return 1 + ENHANCE_MULT_PER_LEVEL * ((item && item.enhance) || 0); }
+
 // 各属性在「凡品 / 0 阶」时的单件基准值，后续按品质与境界缩放
 const EQUIP_BASE = { atk: 6, def: 5, maxHp: 45, maxMp: 35, spiAtk: 6, spiDef: 4, init: 5, eva: 0.02 };
 
@@ -127,7 +160,9 @@ function nextEquipUid() { return 'E' + Date.now().toString(36) + (_equipUid++); 
 // 生成一件装备（slot：部位；rarityIdx：品质序号）
 // 装备生成改为从固定数据库（equip_db.js）按 部位+品质 抽取，越高级越带特效
 function genEquip(slot, rarityIdx) {
-  return drawEquipFromDb(slot, rarityIdx);
+  const it = drawEquipFromDb(slot, rarityIdx);
+  if (it && typeof it.enhance !== 'number') it.enhance = 0;
+  return it;
 }
 
 // 品质随机（境界越高越容易出高品；宝箱/商店/战斗掉落共用）
@@ -195,7 +230,7 @@ const player = {
   hitRate: 0.25,                                              // 命中率（基础25%+等级*0.5%+悟性*0.2%+装备加成，上限100%）
   items: [], defending: false, sect: '', score: 0, xp: 0,
   equipment: { weapon: null, armor: null, accessory: null, boots: null }, // 已穿戴装备（部位→item）
-  bag: [], gold: 50, diamond: 0,                            // 背包 + 灵石（装备/商店货币） + 钻石（商城消费货币）
+  bag: [], gold: 50, diamond: 0, materials: [0, 0, 0, 0, 0],                            // 背包 + 灵石（装备/商店货币） + 钻石（商城消费货币）
 };
 
 // 由 6 基础属性 + 境界 + 装备 推导出全部战斗数值

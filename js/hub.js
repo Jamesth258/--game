@@ -638,21 +638,24 @@ function initHub() {
     if (kind === 'equip') {
       const it = (player.bag || []).find(x => x.uid === key); if (!it) return '';
       const bonus = equipBonusText(it), eff = equipEffectText(it), sell = SELL_PRICE[it.rarity] || 8;
+      const enh = it.enhance || 0;
       return `<div class="tt-name" style="color:${it.rarityColor}">${esc(it.name)}</div>
-        <div class="tt-meta">${it.rarityName} · ${EQUIP_SLOTS[it.slot].name}</div>
+        <div class="tt-meta">${it.rarityName} · ${EQUIP_SLOTS[it.slot].name}${enh ? ' · 强化 +' + enh : ''}</div>
         <div class="tt-stat">${esc(bonus)}${eff ? '<br>' + esc(eff) : ''}</div>
         <div class="tt-acts">
           <button class="tt-btn go" onclick="invAct(function(){equipItem('${it.uid}')})">装备</button>
+          <button class="tt-btn up" onclick="invAct(function(){openEnhanceModal('bag','${it.uid}')})">强化${enh ? ' +' + enh : ''}</button>
           <button class="tt-btn sell" onclick="invAct(function(){sellItem('${it.uid}')})">出售 ${sell}</button>
         </div>`;
     }
     if (kind === 'equipped') {
       const it = player.equipment[key]; if (!it) return '';
       const bonus = equipBonusText(it), eff = equipEffectText(it);
+      const enh = it.enhance || 0;
       return `<div class="tt-name" style="color:${it.rarityColor}">${esc(it.name)}</div>
-        <div class="tt-meta">已穿戴 · ${it.rarityName} · ${EQUIP_SLOTS[it.slot].name}</div>
+        <div class="tt-meta">已穿戴 · ${it.rarityName} · ${EQUIP_SLOTS[it.slot].name}${enh ? ' · 强化 +' + enh : ''}</div>
         <div class="tt-stat">${esc(bonus)}${eff ? '<br>' + esc(eff) : ''}</div>
-        <div class="tt-acts"><button class="tt-btn off" onclick="invAct(function(){unequipSlot('${key}')})">卸下</button></div>`;
+        <div class="tt-acts"><button class="tt-btn off" onclick="invAct(function(){unequipSlot('${key}')})">卸下</button><button class="tt-btn up" onclick="invAct(function(){openEnhanceModal('equipped','${key}')})">强化${enh ? ' +' + enh : ''}</button></div>`;
     }
     if (kind === 'chest') {
       const it = (player.bag || []).find(x => x.uid === key); if (!it) return '';
@@ -850,6 +853,8 @@ function initHub() {
       <div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6V4a2 0 012-2h4a2 0 012 2v2"/></svg>
       <h3 style="margin:0">背包</h3></div>
       <p style="color:rgba(241,239,232,0.7)">灵石 <b>${gold}</b> · 装备 <b>${equips.length}</b> · 宝箱 <b>${chests.length}</b> · 丹药 <b>${pillTotal}</b></p>
+      <div class="equip-sec-title">强化材料</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 8px">${MATERIAL_DB.map((m,i)=>`<span style="font-size:12px;color:${m.color}">● ${m.name} ×${player.materials[i]||0}</span>`).join('')}</div>
       <div class="equip-sec-title">宝箱（${chests.length}）</div>
       <div class="inv2-grid">${chCells}</div>
       <div class="equip-sec-title">丹药（${pillTotal}）</div>
@@ -993,6 +998,85 @@ function initHub() {
     refreshHub();
     showBagModal();
   }
+
+  // ===== 装备强化 / 分解（真 Sink）=====
+  let _enhRef = null; // {kind:'bag'|'equipped', key:uid|slot}
+  function _enhLookup() {
+    if (!_enhRef) return null;
+    if (_enhRef.kind === 'equipped') return player.equipment[_enhRef.key] || null;
+    return (player.bag || []).find(x => x.uid === _enhRef.key) || null;
+  }
+  window.openEnhanceModal = function (kind, key) {
+    _enhRef = { kind: kind, key: key };
+    _renderEnhanceModal('');
+  };
+  function _renderEnhanceModal(resultMsg) {
+    const it = _enhLookup(); if (!it) return;
+    const enh = it.enhance || 0;
+    const canEnh = enh < ENHANCE_MAX;
+    let body = '';
+    let info = null, canAfford = false, rateTxt = '';
+    if (canEnh) {
+      info = enhanceInfo(enh);
+      const have = player.materials[info.tier] || 0;
+      canAfford = have >= info.cost;
+      rateTxt = (info.rate >= 1 ? '100%' : Math.round(info.rate * 100) + '%');
+      const mt = MATERIAL_DB[info.tier];
+      body += '<div class="equip-sec-title">下一档（' + mt.name + '）</div>'
+        + '<p style="margin:4px 0;font-size:13px;color:rgba(241,239,232,0.8)">'
+        + '成功率 <b style="color:' + (info.rate >= 1 ? '#639922' : (info.rate >= 0.4 ? '#D4A843' : '#E87B7B')) + '">' + rateTxt + '</b>'
+        + ' ｜ 消耗 ' + mt.name + ' <b style="color:' + (canAfford ? '#639922' : '#E87B7B') + '">' + info.cost + '</b>（持有 ' + have + '）'
+        + ' ｜ ' + (info.drop ? '<b style="color:#E87B7B">失败掉一档</b>' : '失败仅损材料') + '</p>';
+    }
+    body += '<div class="equip-sec-title">强化材料</div><div style="display:flex;flex-wrap:wrap;gap:8px;margin:4px 0">'
+      + MATERIAL_DB.map(function (m, i) { return '<span style="font-size:12px;color:' + m.color + '">● ' + m.name + ' ×' + (player.materials[i] || 0) + '</span>'; }).join('') + '</div>';
+    if (resultMsg) body = '<p style="margin:2px 0 8px;color:' + (resultMsg.indexOf('成功') >= 0 ? '#639922' : '#E87B7B') + '">' + resultMsg + '</p>' + body;
+    const enhBtn = canEnh
+      ? '<button class="btn-full" onclick="doEnhance()" style="margin-top:12px;background:' + (canAfford ? 'linear-gradient(180deg,#e7c66a,#caa24a)' : 'rgba(255,255,255,0.06)') + ';color:' + (canAfford ? '#231a06' : 'rgba(241,239,232,0.3)') + ';border:1px solid #e7c66a">强化（成功率 ' + rateTxt + '）</button>'
+      : '<button class="btn-full" disabled style="margin-top:12px;background:rgba(255,255,255,0.06);color:rgba(241,239,232,0.3);border:1px solid rgba(255,255,255,0.12)">已满级</button>';
+    const disBtn = (_enhRef.kind === 'bag')
+      ? '<button class="btn-full" onclick="doDisenchant()" style="margin-top:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">分解（得 ' + MATERIAL_DB[it.rarity ? RARITY.findIndex(function(r){return r.key===it.rarity;}) : 0].name + ' ×1）</button>'
+      : '';
+    const html = '<div class="hub-modal-title"><svg viewBox="0 0 24 24" fill="none" stroke="#E7C66A" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg><h3 style="margin:0">' + esc(it.name) + ' · 强化</h3></div>'
+      + '<p style="color:rgba(241,239,232,0.7);font-size:13px">' + it.rarityName + ' · ' + EQUIP_SLOTS[it.slot].name + ' · 当前强化 +' + enh + '</p>'
+      + body + enhBtn + disBtn
+      + '<button class="btn-full" onclick="closeModal()" style="margin-top:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">关闭</button>';
+    openModal(html);
+  }
+  window.doEnhance = function () {
+    const it = _enhLookup(); if (!it) return;
+    const enh = it.enhance || 0;
+    if (enh >= ENHANCE_MAX) return;
+    const info = enhanceInfo(enh);
+    const have = player.materials[info.tier] || 0;
+    if (have < info.cost) { if (typeof showToast === 'function') showToast('强化材料不足：需 ' + MATERIAL_DB[info.tier].name + ' ×' + info.cost); return; }
+    player.materials[info.tier] -= info.cost;
+    const res = enhanceResolve(enh, Math.random());
+    it.enhance = res.newLevel;
+    recalcStats(player);
+    saveGame(); refreshHub();
+    const mt = MATERIAL_DB[info.tier];
+    const msg = res.success
+      ? ('强化成功！' + (res.newLevel >= ENHANCE_MAX ? '已达满级 +' + ENHANCE_MAX : '升至 +' + res.newLevel))
+      : ('强化失败：消耗 ' + mt.name + ' ×' + info.cost + (res.newLevel < enh ? '，掉至 +' + res.newLevel : '，未掉档'));
+    _renderEnhanceModal(msg);
+  };
+  window.doDisenchant = function () {
+    if (!_enhRef || _enhRef.kind !== 'bag') return;
+    const i = (player.bag || []).findIndex(function (x) { return x.uid === _enhRef.key; });
+    if (i < 0) return;
+    const it = player.bag[i];
+    const ri = (typeof RARITY !== 'undefined') ? RARITY.findIndex(function (r) { return r.key === it.rarity; }) : 0;
+    const tier = (ri < 0 ? 0 : ri);
+    player.bag.splice(i, 1);
+    player.materials[tier] = (player.materials[tier] || 0) + 1;
+    recalcStats(player);
+    saveGame(); refreshHub();
+    if (typeof showToast === 'function') showToast('分解 ' + it.name + '，获得 ' + MATERIAL_DB[tier].name + ' ×1');
+    closeModal();
+    showBagModal();
+  };
+
 
   // 购买：商店装备进背包（灵石足够）
   function buyShopItem(uid) {

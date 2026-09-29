@@ -28,6 +28,11 @@ function checkSavedCharacter() {
       const _eq = (saved.equipment && typeof saved.equipment === 'object') ? saved.equipment : {};
       player.equipment = { weapon: _eq.weapon || null, armor: _eq.armor || null, accessory: _eq.accessory || null, boots: _eq.boots || null };
       player.bag = Array.isArray(saved.bag) ? saved.bag : [];
+      player.materials = Array.isArray(saved.materials) ? saved.materials : [0, 0, 0, 0, 0];
+      // 旧装备补 enhance 字段（避免 NaN/undefined 导致强化显示/加成异常）
+      const _fixEnh = (e) => { if (e && typeof e === 'object' && typeof e.enhance !== 'number') e.enhance = 0; return e; };
+      (player.bag || []).forEach(_fixEnh);
+      EQUIP_SLOT_KEYS.forEach(s => _fixEnh(player.equipment[s]));
       player.gold = (saved.gold != null) ? saved.gold : 50;
       // 恢复丹药库存：存档优先；极老存档无 items 字段则保留顶层「新手护身」补的 3 颗，避免老玩家丢丹
       player.items = Array.isArray(saved.items) ? saved.items : (player.items || []);

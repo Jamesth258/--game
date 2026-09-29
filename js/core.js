@@ -100,6 +100,7 @@ function saveGame() {
       arena: player.arena,
       daily: player.daily, diamond: player.diamond,
       items: player.items,
+      materials: player.materials,
       equipCollected: player.equipCollected,
       codexReward: player.codexReward,
       skillPity: player.skillPity,

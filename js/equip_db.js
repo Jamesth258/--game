@@ -255,6 +255,9 @@ function resolvedEquipBonus(item) {
   // 同时保护旧存档中曾被境界缩放放大的异常值（如 eva=0.98 的靴子），无需重掉装备即生效
   if (bonus.hitRate > 0.40) bonus.hitRate = 0.40;
   if (bonus.eva > 0.50) bonus.eva = 0.50;
+  // 强化加成：缩放基础数值（每 +1 级 ×ENHANCE_MULT_PER_LEVEL）；特效不缩放（设计决策）
+  const _mul = (item && item.enhance > 0) ? enhanceMul(item) : 1;
+  if (_mul !== 1) { for (const k in bonus) { if (typeof bonus[k] === 'number') bonus[k] = Math.round(bonus[k] * _mul * 1000) / 1000; } }
   return bonus;
 }
 

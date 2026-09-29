@@ -150,7 +150,7 @@ code += `
       globalThis.__MODAL = null;
       openAllChestItems('equip', 0);
       assert('批量equip：3 箱换 3 件装备、无残留宝箱', player.bag.filter(x=>x&&x.type==='chest').length === 0 && player.bag.length === 3);
-      assert('批量equip：弹窗含品质汇总', (globalThis.__MODAL||'').indexOf('装备已入背包') >= 0);
+      assert('批量equip：弹窗含批量汇总「共开启 N 个装备宝箱」', (globalThis.__MODAL||'').indexOf('共开启') >= 0 && (globalThis.__MODAL||'').indexOf('装备宝箱') >= 0);
       player.bag = [ makeChestItem('skill',0), makeChestItem('skill',0) ];
       player.learned = [];
       openAllChestItems('skill', 0);
