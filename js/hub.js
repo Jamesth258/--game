@@ -50,6 +50,10 @@ function compareEquip(a, b) {
 }
 const SELL_PRICE = { fan: 125, ling: 500, bao: 2000, xian: 12500, shen: 50000 }; // 出售价（按品质，统一为商店价 25% 回收率）
 const SHOP_PRICE = { fan: 500, ling: 2000, bao: 8000, xian: 50000, shen: 200000 }; // 商店价（按品质，重新平衡：神品≈中等玩家15天收入）
+// 商店「灵石专区」可购强化材料：仅上架前 3 阶（凡/灵/宝）
+//   —— 低阶材料可用灵石补货，宝品以上必须靠分解装备 / 装备宝箱产出，避免直接砸钱买满神品
+//   价格按品阶档位与丹药对齐（初/中/高 = 500 / 2000 / 10000 灵石）
+const MAT_SHOP = [{ tier: 0, price: 500 }, { tier: 1, price: 2000 }, { tier: 2, price: 10000 }];
 const SHOP_REFRESH_FREE = 10;        // 每日免费刷新次数（前 10 次免费）
 const SHOP_REFRESH_PAID_MAX = 10;    // 每日灵石付费刷新上限（第 11~20 次）
 const SHOP_REFRESH_PAID_COST = 500;  // 每次灵石付费刷新消耗的灵石
@@ -628,6 +632,46 @@ function initHub() {
     }
     return buildIconSVG(type, ref, rc, name);
   }
+  // 强化材料图标：无写实 PNG 资产，用按品阶着色的晶石 SVG（class=ii 复用 .bag-ico 的 92% 尺寸规则）
+  //   tier 0 淬铁砂=碎矿堆 / 1 灵髓晶=六棱晶柱 / 2 宝纹玉=玉璧 / 3 仙灵露=露珠 / 4 神源髓=髓核
+  function matIconSVG(tier, color) {
+    var c = color || '#9aa0a6';
+    var t = (tier | 0);
+    var defs = '<defs>'
+      + '<linearGradient id="mg' + t + '" x1="0" y1="0" x2="0.65" y2="1">'
+      + '<stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/>'
+      + '<stop offset="34%" stop-color="' + c + '"/>'
+      + '<stop offset="100%" stop-color="#14100a"/></linearGradient>'
+      + '</defs>';
+    var body;
+    if (t === 0) {
+      body = '<path d="M8 31 L15 18 L26 21 L21 33 Z" fill="url(#mg0)" stroke="rgba(0,0,0,.4)"/>'
+        + '<path d="M22 34 L30 16 L42 23 L33 37 Z" fill="url(#mg0)" stroke="rgba(0,0,0,.4)"/>'
+        + '<path d="M12 39 L22 32 L31 39 L21 43 Z" fill="url(#mg0)" stroke="rgba(0,0,0,.32)"/>'
+        + '<path d="M30 18 L33 19" stroke="#fff" stroke-opacity=".55" stroke-width="1.4"/>';
+    } else if (t === 1) {
+      body = '<path d="M24 4 L37 17 L33 38 L24 44 L15 38 L11 17 Z" fill="url(#mg1)" stroke="rgba(0,0,0,.42)" stroke-width="1"/>'
+        + '<path d="M24 5 L24 43 M11 17 L37 17 M15 38 L33 38" stroke="#fff" stroke-opacity=".26" stroke-width=".9" fill="none"/>'
+        + '<path d="M18 12 L24 8 L28 26 L22 30 Z" fill="#fff" fill-opacity=".2"/>'
+        + '<path d="M14 19 L19 15" stroke="#fff" stroke-opacity=".5" stroke-width="1.4"/>';
+    } else if (t === 2) {
+      body = '<circle cx="24" cy="24" r="16" fill="url(#mg2)" stroke="rgba(0,0,0,.38)"/>'
+        + '<circle cx="24" cy="24" r="6.4" fill="#14100a" fill-opacity=".5" stroke="rgba(0,0,0,.32)"/>'
+        + '<path d="M24 8 A16 16 0 0 1 40 24" stroke="#fff" stroke-opacity=".42" stroke-width="1.7" fill="none"/>'
+        + '<path d="M12 34 A16 16 0 0 0 24 40" stroke="#fff" stroke-opacity=".16" stroke-width="1.2" fill="none"/>'
+        + '<path d="M19 14 L24 11" stroke="#fff" stroke-opacity=".5" stroke-width="1.4"/>';
+    } else if (t === 3) {
+      body = '<path d="M24 6 C31 17 37 23 37 30 A13 13 0 0 1 11 30 C11 23 17 17 24 6 Z" fill="url(#mg3)" stroke="rgba(0,0,0,.32)"/>'
+        + '<ellipse cx="19" cy="29" rx="3.4" ry="5" fill="#fff" fill-opacity=".34"/>'
+        + '<path d="M28 20 C31 24 32 26 32 28" stroke="#fff" stroke-opacity=".3" stroke-width="1.2" fill="none"/>';
+    } else {
+      body = '<circle cx="24" cy="24" r="13" fill="url(#mg4)" stroke="rgba(0,0,0,.36)"/>'
+        + '<circle cx="24" cy="24" r="6.6" fill="#fff" fill-opacity=".2"/>'
+        + '<circle cx="20" cy="19.5" r="2.6" fill="#fff" fill-opacity=".5"/>'
+        + '<path d="M24 11 A13 13 0 0 1 37 24" stroke="#fff" stroke-opacity=".4" stroke-width="1.5" fill="none"/>';
+    }
+    return '<svg viewBox="0 0 48 48" class="ii" preserveAspectRatio="xMidYMid meet">' + defs + body + '</svg>';
+  }
   window.invIconImgErr = function (img, type, ref, rc, name) {
     var s = buildIconSVG(type, ref, rc, name);
     if (s) img.outerHTML = s;
@@ -912,15 +956,34 @@ function initHub() {
       const owned = isEquipOwned(it.entryId);
       const statText = esc(equipBonusText(it)) + (equipEffectText(it) ? esc(' · ' + equipEffectText(it)) : '');
       const btn = owned
-        ? `<button class="shop-buy" disabled>已拥有</button>`
+        ? `<button class="equip-btn diamond-buy-btn" disabled style="background:rgba(255,255,255,0.06);color:rgba(241,239,232,0.3);cursor:default">已拥有</button>`
         : (can
-          ? `<button class="shop-buy" onclick="buyShopItem('${it.uid}')">${price}灵石</button>`
-          : `<button class="shop-buy" disabled>${price}灵石</button>`);
-      return `<div class="shop-cell" style="--rc:${it.rarityColor}">
-        <div class="tile">${invIconSVG('equip', it.slot, it.rarityColor, it.name)}</div>
-        <div class="nm" style="color:${it.rarityColor}">${esc(it.name)}</div>
-        <div class="st">${statText}</div>
+          ? `<button class="equip-btn diamond-buy-btn" onclick="buyShopItem('${it.uid}')">${price}灵</button>`
+          : `<button class="equip-btn diamond-buy-btn" disabled style="background:rgba(255,255,255,0.06);color:rgba(241,239,232,0.3);cursor:default">${price}灵</button>`);
+      return `<div class="bag-item shop-row" style="--rc:${it.rarityColor}">
+        <span class="bag-ico">${invIconSVG('equip', it.slot, it.rarityColor, it.name)}</span>
+        <div class="bag-info">
+          <span class="bag-name" style="color:${it.rarityColor}">${esc(it.name)}</span>
+          <span class="equip-bonus">${it.rarityName} · ${EQUIP_SLOTS[it.slot].name}</span>
+          <span class="equip-bonus">${statText}</span>
+        </div>
         ${btn}
+      </div>`;
+    }).join('');
+    // 强化材料商品行（与装备/丹药行完全同构；价格按用户规格 500 / 2000 / 10000 灵石）
+    const matRows = MAT_SHOP.map(m => {
+      const mt = MATERIAL_DB[m.tier];
+      const have = (player.materials && player.materials[m.tier]) || 0;
+      const buy = gold >= m.price
+        ? `<button class="equip-btn diamond-buy-btn" onclick="buyMaterial(${m.tier})">${m.price}灵</button>`
+        : `<button class="equip-btn diamond-buy-btn" disabled style="background:rgba(255,255,255,0.06);color:rgba(241,239,232,0.3);cursor:default">${m.price}灵</button>`;
+      return `<div class="bag-item shop-row" style="--rc:${mt.color}">
+        <span class="bag-ico">${matIconSVG(m.tier, mt.color)}</span>
+        <div class="bag-info">
+          <span class="bag-name" style="color:${mt.color}">${esc(mt.name)}</span>
+          <span class="equip-bonus">强化材料 · 持有 ×${have}</span>
+        </div>
+        ${buy}
       </div>`;
     }).join('');
     const shopRefreshTotal = SHOP_REFRESH_FREE + SHOP_REFRESH_PAID_MAX;
@@ -945,7 +1008,9 @@ function initHub() {
         <div class="bg-sec" style="margin:0">灵石专区（灵石消费）</div>
         ${refreshBtn}
       </div>
-      <div class="shop-grid">${rows}</div>
+      <div class="bag-list">${rows}</div>
+      <div class="equip-sec-title">强化材料</div>
+      <div class="bag-list">${matRows}</div>
       <div class="equip-sec-title">丹药</div>
       <div class="bag-list">${pillRows}</div>
       <hr>
@@ -1115,6 +1180,19 @@ function initHub() {
     showShopModal();
   }
   window.buyItem = buyItem;
+
+  // 灵石专区：用灵石购买强化材料（写入 materials 计数，不进背包；与分解/宝箱产出同一钱包）
+  function buyMaterial(tier) {
+    const ent = MAT_SHOP.find(function (m) { return m.tier === tier; });
+    if (!ent) return;
+    if ((player.gold || 0) < ent.price) { showShopModal(); return; }
+    player.gold -= ent.price;
+    player.materials[tier] = (player.materials[tier] || 0) + 1;
+    saveGame();
+    refreshHub();
+    showShopModal();
+  }
+  window.buyMaterial = buyMaterial;
 
   // 钻石专区：用钻石兑换抽奖宝箱（钻石为商城专属货币，由每日奖励产出）
   const DIAMOND_CHEST_PRICE = { skill: 200, equip: 200, stone: 50, exp: 50 };

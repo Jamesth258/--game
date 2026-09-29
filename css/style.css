@@ -474,7 +474,8 @@
   .equip-bonus { font-size: 11px; color: rgba(241,239,232,0.55); line-height: 1.5; margin-bottom: 6px; word-break: break-all; }
   .equip-btn { width: auto; min-width: 48px; padding: 0 12px; height: 26px; font-size: 12px; font-weight: 600; background: #2a6fd9; color: #fff; border: none; border-radius: 6px; cursor: pointer; flex-shrink: 0; }
   .equip-btn:hover { background: #3b82f6; }
-  .diamond-buy-btn { display: inline-block !important; flex: 0 0 80px !important; width: 80px !important; min-width: 80px !important; max-width: 80px !important; padding: 0 !important; text-align: center; justify-content: center; box-sizing: border-box !important; overflow: hidden; }
+  /* 行内购买按钮（灵石专区装备/材料、丹药、钻石专区宝箱共用）：88px 定宽，够放最长价 "200000灵" */
+  .diamond-buy-btn { display: inline-block !important; flex: 0 0 88px !important; width: 88px !important; min-width: 88px !important; max-width: 88px !important; padding: 0 !important; font-size: 11px !important; text-align: center; justify-content: center; box-sizing: border-box !important; overflow: hidden; }
   .equip-btn.danger { background: rgba(232,123,123,0.2); color: #E87B7B; }
   .equip-btn.danger:hover { background: rgba(232,123,123,0.32); }
   .bag-list { display: flex; flex-direction: column; gap: 8px; }
@@ -510,6 +511,9 @@
     background: radial-gradient(circle at 50% 32%, rgba(255,245,220,0.08), rgba(0,0,0,0.24));
   }
   .bag-ico .ii { width: 92%; height: 92%; object-fit: contain; display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); }
+  /* 横版商品行：名称/品质/属性三段横排自动换行，长属性独占次行不挤压右侧按钮 */
+  .bag-item.shop-row .bag-name { flex: 0 0 auto; }
+  .bag-item.shop-row > .equip-btn { align-self: center; }
 
   /* ===== 宝箱开启动画（写实宝箱立绘 + 品阶光色，已弃用 emoji）=====
      时间轴：0.00-0.62 落地 / 0.55-1.15 抖动 / 1.00 掀盖+光柱+光缝+爆闪+火花 / 1.78 收场出结果 */

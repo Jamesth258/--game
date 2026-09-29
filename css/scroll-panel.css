@@ -199,7 +199,7 @@
 .scroll-panel .equip-btn.danger { background:rgba(168,56,40,.15); color:#e87b7b; border:1px solid rgba(168,56,40,.35); }
 .scroll-panel .equip-btn.danger:hover:not(:disabled) { background:rgba(168,56,40,.28); border-color:rgba(168,56,40,.5); }
 .scroll-panel .equip-btn:disabled { background:rgba(255,255,255,.05); color:rgba(232,220,192,.3); cursor:default; border-color:rgba(255,255,255,.1); }
-.scroll-panel .equip-btn.diamond-buy-btn { flex:0 0 80px !important; width:80px !important; min-width:80px !important; max-width:80px !important; padding:0 !important; text-align:center; justify-content:center; box-sizing:border-box !important; overflow:hidden;
+.scroll-panel .equip-btn.diamond-buy-btn { flex:0 0 88px !important; width:88px !important; min-width:88px !important; max-width:88px !important; padding:0 !important; text-align:center; justify-content:center; box-sizing:border-box !important; overflow:hidden;
   background:linear-gradient(180deg, rgba(55,138,220,.18), rgba(40,100,180,.08)) !important; color:#7db8ff !important; border-color:rgba(55,138,220,.35) !important; }
 .scroll-panel .equip-btn.diamond-buy-btn:hover:not(:disabled) { background:linear-gradient(180deg, rgba(55,138,220,.3), rgba(40,100,180,.14)) !important; border-color:rgba(55,138,220,.5) !important; }
 
@@ -423,7 +423,7 @@
 .modal-box .equip-btn.danger { background:rgba(168,56,40,.15) !important; color:#e87b7b !important; border:1px solid rgba(168,56,40,.35) !important; }
 .modal-box .equip-btn.danger:hover:not(:disabled) { background:rgba(168,56,40,.28) !important; border-color:rgba(168,56,40,.5) !important; }
 .modal-box .equip-btn:disabled { background:rgba(255,255,255,.05) !important; color:rgba(232,220,192,.3) !important; cursor:default; border-color:rgba(255,255,255,.1) !important; }
-.modal-box .equip-btn.diamond-buy-btn { flex:0 0 80px !important; width:80px !important; min-width:80px !important; max-width:80px !important; padding:0 !important; text-align:center; justify-content:center; box-sizing:border-box !important; overflow:hidden;
+.modal-box .equip-btn.diamond-buy-btn { flex:0 0 88px !important; width:88px !important; min-width:88px !important; max-width:88px !important; padding:0 !important; text-align:center; justify-content:center; box-sizing:border-box !important; overflow:hidden;
   background:linear-gradient(180deg, rgba(55,138,220,.18), rgba(40,100,180,.08)) !important; color:#7db8ff !important; border-color:rgba(55,138,220,.35) !important; }
 .modal-box .equip-btn.diamond-buy-btn:hover:not(:disabled) { background:linear-gradient(180deg, rgba(55,138,220,.3), rgba(40,100,180,.14)) !important; border-color:rgba(55,138,220,.5) !important; }
 
