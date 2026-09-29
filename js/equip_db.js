@@ -256,8 +256,11 @@ function resolvedEquipBonus(item) {
   if (bonus.hitRate > 0.40) bonus.hitRate = 0.40;
   if (bonus.eva > 0.50) bonus.eva = 0.50;
   // 强化加成：缩放基础数值（每 +1 级 ×ENHANCE_MULT_PER_LEVEL）；特效不缩放（设计决策）
+  // 强化加成注入：仅缩放基础数值属性（攻/防/气血/灵力/精攻/精防/先攻），
+  // 命中(hitRate)/闪避(eva)/特效(effect) 不被强化放大，确保单件命中至多+40%、闪避至多+50% 铁律不被突破
+  const _ENH_ATTRS = ['atk', 'def', 'maxHp', 'maxMp', 'spiAtk', 'spiDef', 'init'];
   const _mul = (item && item.enhance > 0) ? enhanceMul(item) : 1;
-  if (_mul !== 1) { for (const k in bonus) { if (typeof bonus[k] === 'number') bonus[k] = Math.round(bonus[k] * _mul * 1000) / 1000; } }
+  if (_mul !== 1) { for (const k of _ENH_ATTRS) { if (typeof bonus[k] === 'number') bonus[k] = Math.round(bonus[k] * _mul * 1000) / 1000; } }
   return bonus;
 }
 

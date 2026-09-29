@@ -47,6 +47,21 @@ code += `
     assert('enhanceMul +10 = 1.8x', Math.abs(enhanceMul({enhance:10})-1.8)<1e-9);
     assert('enhanceMul +25 = 3.0x', Math.abs(enhanceMul({enhance:25})-3.0)<1e-9);
     assert('enhanceInfo +25 目标=26 (doEnhance 拦截满级)', enhanceInfo(25).target===26);
+    // ---- 强化缩放范围：仅 7 个基础属性，命中/闪避/特效不放大 ----
+    const _fake = { slot:'weapon', rarity:'__none__', bonus:{ atk:100, maxHp:50, spiAtk:30, hitRate:0.30, eva:0.10 } };
+    const _b0 = resolvedEquipBonus(_fake);
+    assert('resolvedEquipBonus 未强化原值(攻/命中)', Math.abs(_b0.atk-100)<1e-9 && Math.abs(_b0.hitRate-0.30)<1e-9);
+    const _fake2 = { slot:'weapon', rarity:'__none__', enhance:10, bonus:{ atk:100, maxHp:50, spiAtk:30, hitRate:0.30, eva:0.10 } };
+    const _b1 = resolvedEquipBonus(_fake2);
+    assert('强化 +10：攻×1.8', Math.abs(_b1.atk-180)<1e-9);
+    assert('强化 +10：气血×1.8', Math.abs(_b1.maxHp-90)<1e-9);
+    assert('强化 +10：精攻×1.8', Math.abs(_b1.spiAtk-54)<1e-9);
+    assert('强化 +10：命中不变(铁律不被突破)', Math.abs(_b1.hitRate-0.30)<1e-9);
+    assert('强化 +10：闪避不变(铁律不被突破)', Math.abs(_b1.eva-0.10)<1e-9);
+    const _fake3 = { slot:'weapon', rarity:'__none__', enhance:25, bonus:{ hitRate:0.50, eva:0.80 } };
+    const _b2 = resolvedEquipBonus(_fake3);
+    assert('强化 +25：命中超上限回落到 0.40（铁律守住）', Math.abs(_b2.hitRate-0.40)<1e-9);
+    assert('强化 +25：闪避超上限回落到 0.50（铁律守住）', Math.abs(_b2.eva-0.50)<1e-9);
   } catch(e){ results.push('FAIL | 异常：'+(e&&e.stack?e.stack:e)); }
   globalThis.__RESULTS=results;
 })();
