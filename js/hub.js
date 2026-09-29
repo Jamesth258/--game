@@ -645,6 +645,7 @@ function initHub() {
         <div class="tt-acts">
           <button class="tt-btn go" onclick="invAct(function(){equipItem('${it.uid}')})">装备</button>
           <button class="tt-btn up" onclick="invAct(function(){openEnhanceModal('bag','${it.uid}')})">强化${enh ? ' +' + enh : ''}</button>
+          <button class="tt-btn" onclick="disenchantBag('${it.uid}')" style="background:linear-gradient(180deg,#9c6b3a,#7a4a22);color:#f6efe2;border:1px solid #caa24a">分解</button>
           <button class="tt-btn sell" onclick="invAct(function(){sellItem('${it.uid}')})">出售 ${sell}</button>
         </div>`;
     }
@@ -1075,6 +1076,11 @@ function initHub() {
     if (typeof showToast === 'function') showToast('分解 ' + it.name + '，获得 ' + MATERIAL_DB[tier].name + ' ×1');
     closeModal();
     showBagModal();
+  };
+  // 装备 tip 直接分解入口：设置 _enhRef 为背包装备后复用 doDisenchant
+  window.disenchantBag = function (uid) {
+    _enhRef = { kind: 'bag', key: uid };
+    window.doDisenchant();
   };
 
 

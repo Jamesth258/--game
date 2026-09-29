@@ -62,6 +62,19 @@ code += `
     const _b2 = resolvedEquipBonus(_fake3);
     assert('强化 +25：命中超上限回落到 0.40（铁律守住）', Math.abs(_b2.hitRate-0.40)<1e-9);
     assert('强化 +25：闪避超上限回落到 0.50（铁律守住）', Math.abs(_b2.eva-0.50)<1e-9);
+    // ---- 分解入口：从背包 tip 调 disenchantBag 得对应品阶材料 ----
+    closeModal = function(){}; showBagModal = function(){};
+    const _deq = { uid:'__dis__', slot:'weapon', rarity:'fan', bonus:{atk:10}, enhance:0 };
+    player.bag.push(_deq);
+    const _m0 = player.materials[0]||0, _lenB = player.bag.length;
+    window.disenchantBag('__dis__');
+    assert('disenchantBag：凡品装备分解→材料[0]+1', (player.materials[0]||0) === _m0+1);
+    assert('disenchantBag：装备移出背包', player.bag.length === _lenB-1);
+    const _deq2 = { uid:'__dis2__', slot:'armor', rarity:'shen', bonus:{def:10}, enhance:0 };
+    player.bag.push(_deq2);
+    const _m4 = player.materials[4]||0, _lenB2 = player.bag.length;
+    window.disenchantBag('__dis2__');
+    assert('disenchantBag：神品装备分解→材料[4]+1', (player.materials[4]||0) === _m4+1);
   } catch(e){ results.push('FAIL | 异常：'+(e&&e.stack?e.stack:e)); }
   globalThis.__RESULTS=results;
 })();
