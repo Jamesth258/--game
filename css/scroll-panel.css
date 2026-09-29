@@ -269,10 +269,8 @@
 #item-tip .tt-acts { display:flex; gap:6px; }
 #item-tip .tt-btn { flex:1; min-width:0; padding:6px 0; border:none; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; font-family:"Microsoft YaHei",sans-serif; white-space:nowrap; }
 /* go(装备/开启) · up(强化) · melt(分解) 共用同一块玄铁鎏金底板，仅文字不同 */
-#item-tip .tt-btn.go, #item-tip .tt-btn.up, #item-tip .tt-btn.melt { background:linear-gradient(180deg, rgba(201,151,47,.3), rgba(201,151,47,.12)); color:#f0d678; }
-#item-tip .tt-btn.go:hover, #item-tip .tt-btn.up:hover, #item-tip .tt-btn.melt:hover { background:linear-gradient(180deg, rgba(201,151,47,.42), rgba(201,151,47,.2)); }
-#item-tip .tt-btn.sell { background:linear-gradient(180deg, rgba(168,56,40,.3), rgba(168,56,40,.12)); color:#e87b7b; }
-#item-tip .tt-btn.sell:hover { background:linear-gradient(180deg, rgba(168,56,40,.42), rgba(168,56,40,.2)); }
+#item-tip .tt-btn.go, #item-tip .tt-btn.up, #item-tip .tt-btn.melt, #item-tip .tt-btn.sell { background:linear-gradient(180deg, rgba(201,151,47,.3), rgba(201,151,47,.12)); color:#f0d678; }
+#item-tip .tt-btn.go:hover, #item-tip .tt-btn.up:hover, #item-tip .tt-btn.melt:hover, #item-tip .tt-btn.sell:hover { background:linear-gradient(180deg, rgba(201,151,47,.42), rgba(201,151,47,.2)); }
 #item-tip .tt-btn.off { background:linear-gradient(180deg, rgba(201,151,47,.18), rgba(201,151,47,.06)); color:#d4a843; }
 #item-tip .tt-btn.off:hover { background:linear-gradient(180deg, rgba(201,151,47,.3), rgba(201,151,47,.12)); }
 
