@@ -268,8 +268,9 @@
 #item-tip .tt-stat b { color:#f0c75a; font-family:var(--s-song); }
 #item-tip .tt-acts { display:flex; gap:6px; }
 #item-tip .tt-btn { flex:1; min-width:0; padding:6px 0; border:none; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; font-family:"Microsoft YaHei",sans-serif; white-space:nowrap; }
-#item-tip .tt-btn.go { background:linear-gradient(180deg, rgba(201,151,47,.3), rgba(201,151,47,.12)); color:#f0d678; }
-#item-tip .tt-btn.go:hover { background:linear-gradient(180deg, rgba(201,151,47,.42), rgba(201,151,47,.2)); }
+/* go(装备/开启) · up(强化) · melt(分解) 共用同一块玄铁鎏金底板，仅文字不同 */
+#item-tip .tt-btn.go, #item-tip .tt-btn.up, #item-tip .tt-btn.melt { background:linear-gradient(180deg, rgba(201,151,47,.3), rgba(201,151,47,.12)); color:#f0d678; }
+#item-tip .tt-btn.go:hover, #item-tip .tt-btn.up:hover, #item-tip .tt-btn.melt:hover { background:linear-gradient(180deg, rgba(201,151,47,.42), rgba(201,151,47,.2)); }
 #item-tip .tt-btn.sell { background:linear-gradient(180deg, rgba(168,56,40,.3), rgba(168,56,40,.12)); color:#e87b7b; }
 #item-tip .tt-btn.sell:hover { background:linear-gradient(180deg, rgba(168,56,40,.42), rgba(168,56,40,.2)); }
 #item-tip .tt-btn.off { background:linear-gradient(180deg, rgba(201,151,47,.18), rgba(201,151,47,.06)); color:#d4a843; }
@@ -524,5 +525,5 @@
 /* 背包格子内联按钮行（单开/全部开启） */
 .scroll-panel .inv2-cell .cell-btns, .modal-box .inv2-cell .cell-btns { display:flex; gap:3px; width:100%; }
 .scroll-panel .inv2-cell .cell-btns .tt-btn, .modal-box .inv2-cell .cell-btns .tt-btn { flex:1; min-width:0; padding:3px 0; border:none; border-radius:6px; cursor:pointer; font-size:10px; font-weight:600; font-family:"Microsoft YaHei",sans-serif; white-space:nowrap; text-align:center; line-height:1.4; }
-.scroll-panel .inv2-cell .cell-btns .tt-btn.go, .modal-box .inv2-cell .cell-btns .tt-btn.go { background:linear-gradient(180deg, rgba(201,151,47,.3), rgba(201,151,47,.12)); color:#f0d678; }
-.scroll-panel .inv2-cell .cell-btns .tt-btn.go:hover, .modal-box .inv2-cell .cell-btns .tt-btn.go:hover { background:linear-gradient(180deg, rgba(201,151,47,.42), rgba(201,151,47,.2)); }
+.scroll-panel .inv2-cell .cell-btns .tt-btn.go, .modal-box .inv2-cell .cell-btns .tt-btn.go, .scroll-panel .inv2-cell .cell-btns .tt-btn.up, .modal-box .inv2-cell .cell-btns .tt-btn.up, .scroll-panel .inv2-cell .cell-btns .tt-btn.melt, .modal-box .inv2-cell .cell-btns .tt-btn.melt { background:linear-gradient(180deg, rgba(201,151,47,.3), rgba(201,151,47,.12)); color:#f0d678; }
+.scroll-panel .inv2-cell .cell-btns .tt-btn.go:hover, .modal-box .inv2-cell .cell-btns .tt-btn.go:hover, .scroll-panel .inv2-cell .cell-btns .tt-btn.up:hover, .modal-box .inv2-cell .cell-btns .tt-btn.up:hover, .scroll-panel .inv2-cell .cell-btns .tt-btn.melt:hover, .modal-box .inv2-cell .cell-btns .tt-btn.melt:hover { background:linear-gradient(180deg, rgba(201,151,47,.42), rgba(201,151,47,.2)); }

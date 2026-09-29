@@ -645,7 +645,7 @@ function initHub() {
         <div class="tt-acts">
           <button class="tt-btn go" onclick="invAct(function(){equipItem('${it.uid}')})">装备</button>
           <button class="tt-btn up" onclick="invAct(function(){openEnhanceModal('bag','${it.uid}')})">强化${enh ? ' +' + enh : ''}</button>
-          <button class="tt-btn" onclick="disenchantBag('${it.uid}')" style="background:linear-gradient(180deg,#9c6b3a,#7a4a22);color:#f6efe2;border:1px solid #caa24a">分解</button>
+          <button class="tt-btn melt" onclick="disenchantBag('${it.uid}')">分解</button>
           <button class="tt-btn sell" onclick="invAct(function(){sellItem('${it.uid}')})">出售 ${sell}</button>
         </div>`;
     }
