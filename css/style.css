@@ -247,7 +247,7 @@
   #create-screen[hidden] { display: none; }
   #create-bg {
     position: absolute; inset: 0;
-    background: url('assets/select/bg_login.jpg?v=1') center/cover no-repeat;
+    background: url('assets/select/create_bg.webp?v=1') center/cover no-repeat;
     filter: brightness(0.55);
   }
   #create-panel {
