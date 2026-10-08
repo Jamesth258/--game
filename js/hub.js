@@ -175,7 +175,9 @@ function initHub() {
     if (typeof refreshHubAvatar === 'function') refreshHubAvatar();
     syncRealmDOM();
     // 角色展示：B+C 融合 —— 当前所选角色「打坐修炼」横版动画（视频，失败自动回退静图 poster）
-    const _aid = player.avatarId || 'm2';
+    // [v40.1] 打坐视频跟随「当前选中形象」selectedAvatar（与头像小图一致），
+    // 而非创号时锁死的 avatarId —— 否则切换形象后主页视频不跟着变，玩家会误以为别的角色只有静图。
+    const _aid = player.selectedAvatar || player.avatarId || 'm2';
     const _vid = 'assets/select/' + _aid + '_med_h.mp4?v=23';
     const _png = 'assets/select/' + _aid + '_med_h.webp?v=24';
     if (charVideo.dataset.src !== _vid) {

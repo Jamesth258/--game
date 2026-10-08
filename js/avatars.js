@@ -100,7 +100,10 @@ function selectAvatar(avatarId) {
   if (!isAvatarUnlocked(avatarId)) return false;
   player.selectedAvatar = avatarId;
   saveGame();
-  refreshHubAvatar();
+  // [v40.1] 切换形象后同时刷新主页（头像小图 + 打坐视频），否则视频仍停在旧形象。
+  // refreshHub 内部已含 refreshHubAvatar，故无需再单独调用。
+  if (typeof refreshHub === 'function') refreshHub();
+  else refreshHubAvatar();
   return true;
 }
 
