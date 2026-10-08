@@ -60,6 +60,18 @@ const sandbox = {
   document: { getElementById: getEl, createElement: function(tag) { const el = makeEl('dyn_' + tag + '_' + Date.now()); el.tagName = (tag || '').toUpperCase(); _createdElements.push(el); return el; }, querySelectorAll: function() { return []; }, querySelector: function(s) { if (s === '.stage') { var st = makeEl('stage'); st.style = {}; return st; } return null; }, body: makeEl('body'), documentElement: makeEl('html'), addEventListener() {} },
   window: { addEventListener() {} },
 };
+// body.classList 真实实现：验证 battle-mode 的增删确实发生（默认桩是 no-op，会让断言假绿）
+const _bodyCls = new Set();
+sandbox.document.body.classList = {
+  add(c) { _bodyCls.add(c); },
+  remove(c) { _bodyCls.delete(c); },
+  contains(c) { return _bodyCls.has(c); },
+  toggle(c, f) {
+    if (f === undefined) { if (_bodyCls.has(c)) { _bodyCls.delete(c); } else { _bodyCls.add(c); } }
+    else if (f) { _bodyCls.add(c); } else { _bodyCls.delete(c); }
+  },
+};
+
 sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 
@@ -224,6 +236,38 @@ code += `
     var __codeStr = __CODE;
     assert('endBattle 含 storyLevelFirstClear 首通判断', __codeStr.indexOf('storyLevelFirstClear') !== -1);
     assert('endBattle 含 showBattleReturnBtn 调用(story分支)', __codeStr.indexOf('showBattleReturnBtn') !== -1);
+
+    // ===== 5) 副本弹窗背景 = 主页（不得露出 canvas 里的战斗残帧）=====
+    // 历史 bug：openStoryScreen() 早期调用 HUB.hide()，弹窗背后露出 canvas 残留的上一场战斗画面。
+    assert('storyBackToHubBg 辅助函数存在(统一弹窗底)', typeof storyBackToHubBg === 'function');
+    player.storyCleared = {}; player.storyRewardClaimed = {};
+    var hubEl = document.getElementById('hub-screen');
+    // 模拟「刚打完一场战斗」的脏状态：主页被隐藏 + battle-mode 仍挂着（canvas 残留战斗帧）
+    hubEl.hidden = true;
+    document.body.classList.add('battle-mode');
+    openStoryScreen();
+    assert('打开副本界面后 主页可见(=弹窗背景)', hubEl.hidden === false);
+    assert('打开副本界面后 battle-mode 已移除(画布回常规尺寸)', document.body.classList.contains('battle-mode') === false);
+    assert('打开副本界面后 状态机=hub', state === 'hub');
+    // 章节列表弹窗同样以主页为底
+    hubEl.hidden = true;
+    document.body.classList.add('battle-mode');
+    openChapter(1);
+    assert('打开章节弹窗后 主页可见', hubEl.hidden === false);
+    assert('打开章节弹窗后 battle-mode 已移除', document.body.classList.contains('battle-mode') === false);
+    // 三选一奖励弹窗同样以主页为底
+    player.storyCleared = {}; player.storyRewardClaimed = {};
+    player.storyCleared[1] = 10; player.storyRewardClaimed[1] = false;
+    hubEl.hidden = true; document.body.classList.add('battle-mode');
+    showStoryReward(1);
+    assert('打开三选一弹窗后 主页可见', hubEl.hidden === false);
+    assert('打开三选一弹窗后 battle-mode 已移除', document.body.classList.contains('battle-mode') === false);
+    // 只有点关卡「挑战」才隐藏主页、放大画布进战斗
+    player.storyCleared = {}; player.storyRewardClaimed = {};
+    startStoryBattle(1, 1);
+    assert('点「挑战」进战斗后 主页被隐藏(专注战斗画面)', hubEl.hidden === true);
+    assert('点「挑战」进战斗后 状态机=battle', state === 'battle');
+    assert('点「挑战」进战斗后 battle-mode 已加回(画布放大)', document.body.classList.contains('battle-mode') === true);
   } catch (e) {
     results.push('ERROR | ' + (e && e.stack ? e.stack : e));
   }

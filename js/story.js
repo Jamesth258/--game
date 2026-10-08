@@ -64,15 +64,22 @@ function startStoryBattle(ch, lv) {
   startBattle(node, 'story');
 }
 
+// 副本弹窗统一底：显示「主页」层作弹窗背景，并退出战斗画布尺寸（battle-mode）。
+// 修正历史 bug：早期此处 HUB.hide() 后，弹窗背后会露出 canvas 里残留的上一场战斗画面。
+// 弹窗层级 .modal(z200) > #hub-screen(z90)，本就压在主页之上，无需隐藏主页。
+function storyBackToHubBg() {
+  state = 'hub';
+  document.body.classList.remove('battle-mode');
+  if (window.HUB) window.HUB.show();
+}
+
 // ===== 副本主页：卷标签 + 章节卡片 =====
 function openStoryScreen() {
+  storyBackToHubBg();
   // 若有已通关但未领奖励的章节 → 先弹三选一
-  // 注意：不在此处移除 battle-mode，因为副本弹窗背景仍需战斗画布大尺寸
   for (let c = 1; c <= 100; c++) {
     if ((player.storyCleared[c] || 0) >= 10 && !player.storyRewardClaimed[c]) { showStoryReward(c); return; }
   }
-  state = 'hub';
-  if (window.HUB) window.HUB.hide();
   const volTabs = STORY_VOLUMES.map(v =>
     `<button class="story-vol-tab ${v.vol === _storyVol ? 'on' : ''}" onclick="storySetVol(${v.vol})">${esc(v.name.split('·')[1] || v.name)}</button>`
   ).join('');
@@ -111,6 +118,7 @@ function storyBackVol() { openStoryScreen(); }
 
 // ===== 章节详情：10 关 + 通关奖励预览 =====
 function openChapter(ch) {
+  storyBackToHubBg();
   const d = STORY_BY_CH[ch];
   const cleared = player.storyCleared[ch] || 0;
   const rows = [];
@@ -150,6 +158,7 @@ function openChapter(ch) {
 
 // ===== 章节通关三选一奖励 =====
 function showStoryReward(ch) {
+  storyBackToHubBg();
   const rw = STORY_BY_CH[ch].reward;
   _rewardCh = ch;
   _selSkill = rw.skills[0];
