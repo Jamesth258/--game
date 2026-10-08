@@ -11,7 +11,7 @@ const HUB_TOP_ITEMS = [
   { id: 'codex',  label: '图鉴', icon: '<img class="hub-ico" src="assets/icons/icon_codex.png?v=14" alt="图鉴">', action: 'modal_codex' },
   { id: 'worldboss', label: '世界BOSS', icon: '<img class="hub-ico" src="assets/icons/icon_worldboss.png?v=14" alt="世界BOSS">', action: 'go_worldboss' },
   { id: 'arena',  label: '神魔竞技场', icon: '<img class="hub-ico" src="assets/icons/icon_arena.png?v=14" alt="神魔竞技场">', action: 'go_arena' },
-  { id: 'rank',   label: '排行榜', icon: '<img class="hub-ico" src="assets/icons/icon_rank.png?v=15" alt="排行榜">', action: 'go_rank' },
+  // { id: 'rank',   label: '排行榜', icon: '<img class="hub-ico" src="assets/icons/icon_rank.png?v=15" alt="排行榜">', action: 'go_rank' },  // [暂移除] 排行榜：联网功能尚未开启，待腾讯云配置后取消本行注释即可恢复
   { id: 'settings', label: '设置', icon: '<img class="hub-ico" src="assets/icons/icon_settings.png?v=15" alt="设置">', action: 'modal_settings' },
 ];
 
@@ -101,10 +101,10 @@ function initHub() {
       case 'go_story':      openStoryScreen(); break;
       case 'go_worldboss': openWorldBossScreen(); break;
       case 'go_arena':     openArenaScreen(); break;
-      case 'go_rank':
-        if (window.Online && window.Online.showBoard) window.Online.showBoard();
-        else openModal('<div class="hub-modal-title"><h3 style="margin:0">排行榜</h3></div><p style="color:rgba(241,239,232,0.7)">联网功能尚未开启，完成腾讯云配置后即可查看全服排行榜。</p><button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button></div>');
-        break;
+      // case 'go_rank':
+      // if (window.Online && window.Online.showBoard) window.Online.showBoard();
+      // else openModal('<div class="hub-modal-title"><h3 style="margin:0">排行榜</h3></div><p style="color:rgba(241,239,232,0.7)">联网功能尚未开启，完成腾讯云配置后即可查看全服排行榜。</p><button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button></div>');
+      // break;
       case 'modal_attr':    showAttrModal(); break;
       case 'modal_skills':  showSkillsModal(); break;
       case 'modal_equip':   showEquipModal(); break;

@@ -79,7 +79,7 @@ code += `
     const _hubHtml = document.getElementById("hub-float-icons").innerHTML || "";
     assert("主页菜单渲染含「神魔竞技场」", _hubHtml.indexOf("神魔竞技场") !== -1);
     assert("主页菜单渲染含 icon_arena.png", _hubHtml.indexOf("icon_arena.png") !== -1);
-    assert("主页菜单图标数=12(data-hub)", (_hubHtml.match(/data-hub=/g) || []).length === 12);
+    assert("主页菜单图标数=11(data-hub，排行榜暂移除)", (_hubHtml.match(/data-hub=/g) || []).length === 11);
     const TODAY = '2026-09-22';
     window.__ARENA_TEST_DATE = TODAY;
     window.__ARENA_TEST_MINUTES = 10 * 60;   // 默认 10:00（未到结算点）
