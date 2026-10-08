@@ -87,17 +87,23 @@ function checkSavedCharacter() {
 
 // 真实资源清单（驱动登录进度条）。onerror 也计数，缺失文件不会卡死进度。
 const LOADING_ASSETS = [
-  'assets/cover.png?v=21',
+  'assets/cover.webp?v=22',
   // 功能栏图标（11 个，主页与各界面通用，体积小必须预载）
   'assets/icons/icon_attr.png','assets/icons/icon_equip.png','assets/icons/icon_bag.png',
   'assets/icons/icon_skill.png','assets/icons/icon_story.png','assets/icons/icon_daily.png',
   'assets/icons/icon_shop.png','assets/icons/icon_codex.png','assets/icons/icon_worldboss.png',
   'assets/icons/icon_rank.png','assets/icons/icon_settings.png',
-  // 注：角色选择立绘(6) 仅 create.js 创建/选人界面使用，已移出首屏预载
-  // （创建界面按需加载，回档玩家直进主页不浪费这 7MB）。
-  // 战斗立绘(21)+战斗背景(15)共约 45MB，主页用不到，也已移出。
-  // 装备图标 28 张写实 PNG（灵品7 + 宝/仙/神21；凡品 fan 运行时映射灵品 ling 底图）
-  // 登录预载，避免打开装备面板瞬间裂图
+  // [v40 首屏瘦身] 下列资源已移出首屏阻塞，改由 IDLE_ASSETS 进主页后空闲预载：
+  //   · 角色选择立绘(6) —— 仅创建/选人界面使用（回档玩家直进主页，不浪费这 7MB）
+  //   · 战斗立绘(21)+战斗背景(15) 约 45MB —— 主页用不到
+  //   · 装备图标(28)+宝箱/丹药图标(6) 约 1.4MB —— 仅打开「装备/背包」面板才可见
+  //   · 打坐动画 mp4 —— 进主页后由 hub.js 按需加载
+];
+
+// 进主页后「空闲预载」清单（requestIdleCallback 串行加载，不阻塞首屏、失败无影响）。
+// 装备图标 28 张写实 PNG（灵品7 + 宝/仙/神21；凡品 fan 运行时映射灵品 ling 底图）
+// + 宝箱/丹药 6 张。玩家一进主页即在后台悄悄缓存，打开面板时已就位，不会裂图。
+const IDLE_ASSETS = [
   'assets/items/item_weapon_jian.png?v=3',
   'assets/items/item_weapon_jian_bao.png?v=3',
   'assets/items/item_weapon_jian_xian.png?v=3',
@@ -126,15 +132,12 @@ const LOADING_ASSETS = [
   'assets/items/item_boots_bao.png?v=3',
   'assets/items/item_boots_xian.png?v=3',
   'assets/items/item_boots_shen.png?v=3',
-  // 宝箱 / 丹药 写实 PNG（设计稿 13 款全览 + 背包面板；全 6 张已就位）
   'assets/items/item_chest_skill.png?v=3',
   'assets/items/item_chest_equip.png?v=3',
   'assets/items/item_chest_exp.png?v=3',
   'assets/items/item_chest_stone.png?v=3',
   'assets/items/item_pill_hp.png?v=3',
   'assets/items/item_pill_mp.png?v=3',
-  // 改由 prefetchBattleAssets() 在玩家进入游戏后空闲预载（requestIdleCallback），
-  // 进战斗时 loadImg 动态加载、ready() 未就绪自动回退占位图，不阻塞首屏、不空白。
 ];
 
 // ===== 初始化拆成两步 =====
@@ -174,12 +177,14 @@ function startGame() {
 
 // ===== 登录等待画面：三段式加载 =====
 // 阶段配额：美术资源 0→70%、读档 70→88%、世界初始化 88→100%。
-// 每段都有最短展示时长，保证缓存命中时也有稳定节奏（合计约 5s）；
-// 但绝不在真实工作完成前提前报 100% —— 进度条必须是可信的。
+// 每段都有最短展示时长，保证缓存命中时也有稳定节奏；但绝不在真实工作完成前
+// 提前报 100% —— 进度条必须是可信的（eff=min(real,paced)，见 phaseAssets）。
+// [v40] 保底时长由 3000/600/600 下调为 1200/400/400：首屏资源已瘦身到 <1MB，
+//   再压 4.2s 的纯等待就是白白让玩家干等（缓存命中时尤其明显）。
 const BOOT_PHASE = {
-  assets: { from: 0,  to: 70,  minMs: 3000, tip: '正在加载美术资源' },
-  save:   { from: 70, to: 88,  minMs: 600,  tip: '正在读取角色存档' },
-  world:  { from: 88, to: 100, minMs: 600,  tip: '正在初始化世界'   },
+  assets: { from: 0,  to: 70,  minMs: 1200, tip: '正在加载美术资源' },
+  save:   { from: 70, to: 88,  minMs: 400,  tip: '正在读取角色存档' },
+  world:  { from: 88, to: 100, minMs: 400,  tip: '正在初始化世界'   },
 };
 
 function bootGame() {
@@ -387,6 +392,8 @@ const BATTLE_PREFETCH = [
   'assets/bg/bg_boss_03_abyss.png?v=1','assets/bg/bg_boss_04_bloodriver.png?v=1',
   'assets/bg/bg_boss_05_void.png?v=1',
 ];
+// 预载队列：小体积装备/宝箱图标优先（玩家很快会打开装备/背包面板），大体积战斗图排后。
+const PREFETCH_QUEUE = IDLE_ASSETS.concat(BATTLE_PREFETCH);
 let _battlePrefetchStarted = false;
 function prefetchBattleAssets() {
   if (_battlePrefetchStarted) return;
@@ -396,26 +403,26 @@ function prefetchBattleAssets() {
     : (cb) => setTimeout(cb, 250);   // 降级：不支持 Idle 时退化为低优先级 setTimeout
   let i = 0;
   const step = () => {
-    if (i >= BATTLE_PREFETCH.length) return;
+    if (i >= PREFETCH_QUEUE.length) return;
     const img = new Image();
     const next = () => idle(step);   // 失败也继续，不影响游戏
     img.onload = next; img.onerror = next;
-    img.src = BATTLE_PREFETCH[i++];
+    img.src = PREFETCH_QUEUE[i++];
   };
   idle(step);
 }
 
 // 主页打坐资源预加载（铁律：bootGame 在 initSave 前就消费 LOADING_ASSETS，
 // 而 avatarId 要等 initSave 读档才有，故此处先 peek localStorage 把当前角色 med 资源推入清单）
-// 仅推海报图（~1MB）进首屏，视频(~3MB)移至进主页后按需加载（hub.js 设 video.src 时浏览器自动请求），
-// 首屏从 ~16MB 降至 ~4MB，加载条不再卡死。
+// 仅推海报图 webp（~280KB）进首屏，视频(~3MB)移至进主页后按需加载（hub.js 设 video.src 时浏览器自动请求），
+// [v40] 海报改 webp 后首屏再降至 ~0.7MB（原 PNG 2775KB → webp 279KB）。
 (function peekHubMed() {
   try {
     const _s = JSON.parse(localStorage.getItem('wuxia_save'));
     const _aid = _s && _s.avatarId;
     if (_aid && /^(m[1-3]|f[1-3])$/.test(_aid)) {
       // 仅预载静态海报图（小），视频延迟到主页后加载
-      LOADING_ASSETS.push('assets/select/' + _aid + '_med_h.png?v=23');
+      LOADING_ASSETS.push('assets/select/' + _aid + '_med_h.webp?v=24');
     }
   } catch (e) {}
 })();
