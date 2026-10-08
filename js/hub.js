@@ -175,12 +175,31 @@ function initHub() {
     if (typeof refreshHubAvatar === 'function') refreshHubAvatar();
     syncRealmDOM();
     // 角色展示：B+C 融合 —— 当前所选角色「打坐修炼」横版动画（视频，失败自动回退静图 poster）
-    // [v40.1] 打坐视频跟随「当前选中形象」selectedAvatar（与头像小图一致），
-    // 而非创号时锁死的 avatarId —— 否则切换形象后主页视频不跟着变，玩家会误以为别的角色只有静图。
-    const _aid = player.selectedAvatar || player.avatarId || 'm2';
+    // [v40.2 修复主页黑屏] 打坐形象只能取「6 主角」的 id（m1-m3 / f1-f3）——只有这 6 个有 _med_h.mp4/webp。
+    // avatars.js 的头像图鉴另有 15 个敌人/BOSS 头像（enemy_v1..v10 / boss_1..5），它们只是"名片头像"，
+    // assets/select 里根本没有对应打坐文件。若直接拿 selectedAvatar 拼路径 → 404 → 视频与 poster 双双失败，
+    // 视频层无帧即透明，露出 #hub-screen 的近黑底(#0a0a0c) → 就是玩家看到的"主页背景全黑"。
+    const HERO_MED_IDS = ['m1', 'm2', 'm3', 'f1', 'f2', 'f3'];
+    const _own = HERO_MED_IDS.indexOf(player.avatarId) >= 0 ? player.avatarId : 'm2';
+    const _aid = HERO_MED_IDS.indexOf(player.selectedAvatar) >= 0 ? player.selectedAvatar : _own;
     const _vid = 'assets/select/' + _aid + '_med_h.mp4?v=23';
     const _png = 'assets/select/' + _aid + '_med_h.webp?v=24';
-    if (charVideo.dataset.src !== _vid) {
+    // 兜底网：视频 404 / 解码失败 → 回退到玩家本体(_own)的打坐画面，绝不留黑屏（只回退一次，防抖）。
+    if (!charVideo._medErrWired) {
+      charVideo._medErrWired = true;
+      charVideo.addEventListener('error', function () {
+        if (charVideo._medFellBack) return;
+        charVideo._medFellBack = true;
+        const _fv = 'assets/select/' + _own + '_med_h.mp4?v=23';
+        charVideo.dataset.src = _fv;
+        charVideo.poster = 'assets/select/' + _own + '_med_h.webp?v=24';
+        charVideo.src = _fv;
+        charVideo.load();
+        const _fp = charVideo.play();
+        if (_fp && _fp.catch) _fp.catch(function () {});
+      });
+    }
+    if (charVideo.dataset.src !== _vid && !charVideo._medFellBack) {
       charVideo.dataset.src = _vid;
       charVideo.poster = _png;
       charVideo.src = _vid;

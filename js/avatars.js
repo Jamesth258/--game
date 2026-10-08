@@ -100,10 +100,12 @@ function selectAvatar(avatarId) {
   if (!isAvatarUnlocked(avatarId)) return false;
   player.selectedAvatar = avatarId;
   saveGame();
-  // [v40.1] 切换形象后同时刷新主页（头像小图 + 打坐视频），否则视频仍停在旧形象。
-  // refreshHub 内部已含 refreshHubAvatar，故无需再单独调用。
-  if (typeof refreshHub === 'function') refreshHub();
-  else refreshHubAvatar();
+  // [v40.2] 切换形象后刷新主页（头像小图 + 打坐视频）。
+  // 坑点：refreshHub 定义在 hub.js 的 IIFE 内部、不是 window 属性，跨文件写 typeof refreshHub
+  // 恒为 'undefined'（会静默走 else 分支 → 只换头像小图、打坐视频不动）。
+  // 必须走 hub.js 显式暴露的 window.HUB.refresh()。
+  if (window.HUB && typeof window.HUB.refresh === 'function') window.HUB.refresh();
+  else if (typeof refreshHubAvatar === 'function') refreshHubAvatar();
   return true;
 }
 
