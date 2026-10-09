@@ -108,11 +108,20 @@ function startBattle(node, mode) {
     loadBattleBg(null);
   }
   // 重置玩家本场战斗的临时状态（buff/debuff/护盾/僵直），避免跨场残留
-  player.buffs = []; player.debuffs = []; player.shield = null; player.stun = 0; player.poison = null; player.dot = null; player.regen = null; player.deathWard = null;
+  player.buffs = []; player.debuffs = []; player.shield = null; player.stun = 0; player.poison = null; player.dot = null; player.regen = null; player.deathWard = null; player.silenceRecovery = 0; player.lowHpLifesteal = null;
   // 每场战斗满血满灵开局：battle.player 直接引用全局 player（非副本），
   // 上一场若阵亡 player.hp 会残留在 0，若不在此回满，下一场开场即被 checkEnd 判负，
   // 表现为「死亡后无法再挑战任何副本」（刷新页面从旧存档恢复满血才正常）。
   player.hp = player.maxHp; player.mp = player.maxMp;
+  // 扫描已习得被动心法，收集带「战斗中触发」(trigger) 的运行时触发（低气血自我增益 / 低气血下次吸血）
+  player.passiveTriggers = [];
+  if (player.learned && typeof SKILLS_DB_MAP !== 'undefined') {
+    for (const _id of player.learned) {
+      const _sk = SKILLS_DB_MAP[_id];
+      if (!_sk || _sk.kind !== 'passive' || !_sk.passive || !_sk.passive.trigger) continue;
+      player.passiveTriggers.push(Object.assign({ sid: _id, name: _sk.name }, _sk.passive.trigger));
+    }
+  }
   // 聚合装备特效；若带「罡气」类特效则开局获得护盾
   const mods = (typeof computeEquipMods === 'function') ? computeEquipMods(player) : null;
   if (mods && mods.shieldPct > 0) player.shield = { pct: mods.shieldPct, dur: 999 };
@@ -120,7 +129,7 @@ function startBattle(node, mode) {
     node, player, enemy,
     mode: mode || 'story',         // 'story' = 剧情副本；'worldboss' = 世界BOSS
     queue: [], turn: 0, roundCount: 0, playerDmg: 0, mods,
-    _stackCrit: 0, _reviveUsed: false,
+    _stackCrit: 0, _reviveUsed: false, _passiveLifestealUsed: false,
     _usedOnce: {},               // 每场战斗重置「限一次」功法（必须在对象字面量内初始化：battle 仍为 null 时解引用会抛 TypeError 导致无法进入战斗）
     msg: (isWB ? '世界BOSS · ' : '遭遇 ') + enemy.name + '！',
   };
@@ -306,6 +315,11 @@ function beginRound() {
   [p, e].forEach(u => {
     if (u.deathWard && (u.deathWard.dur -= 1) <= 0) u.deathWard = null;
   });
+  // 沉默（禁止恢复）：持续回合到期清除
+  [p, e].forEach(u => { if (u.silenceRecovery > 0) u.silenceRecovery--; });
+  // 被动心法·战斗中触发（低气血自我增益 / 低气血下次吸血）：每回合评估一次
+  evaluatePassiveTriggers(p);
+  evaluatePassiveTriggers(e);
   // 僵直（stun）：本回合无法行动，并递减
   const pStun = (p.stun || 0) > 0, eStun = (e.stun || 0) > 0;
   if (pStun) p.stun--;
@@ -445,6 +459,7 @@ function damage(attacker, target, mult, type) {
     base = 0;
   }
   if (base > 0) target.hp = Math.max(0, target.hp - base);
+  tryLowHpLifesteal(attacker, base);
   if (base > 0 && !attacker.isEnemy && battle) battle.playerDmg = (battle.playerDmg || 0) + base; // 世界BOSS 累计玩家伤害
   const col = crit ? '#A32D2D' : '#2C2C2A';
   const txt = (crit ? '暴击 ' : '') + '-' + base;
@@ -502,6 +517,7 @@ function applySkill(actor, target, sk) {
         if (target.defending) base *= 0.5;
         d = Math.max(1, Math.round(base));
         target.hp = Math.max(0, target.hp - d);
+        tryLowHpLifesteal(actor, d);
         if (!actor.isEnemy && battle) battle.playerDmg = (battle.playerDmg || 0) + d; // 穿透伤害也累计
         const col = crit ? '#A32D2D' : '#2C2C2A';
         const txt = (crit ? '暴击 ' : '') + '-' + d;
@@ -611,6 +627,14 @@ function applySkill(actor, target, sk) {
       battle.msg = actor.name + ' 施展「' + sk.name + '」凝灵护体，获得 ' + actor.deathWard.charges + ' 次免死（持续 ' + actor.deathWard.dur + ' 回合）';
       break;
     }
+    case 'silence_mp': { // 抽干敌方灵力 + 禁止敌方使用恢复类功法（星陨禁典）
+      const _drain = Math.round(target.maxMp * (e.mpPct != null ? e.mpPct : 0.4));
+      target.mp = Math.max(0, target.mp - _drain);
+      floatAt(target, '-' + _drain + '灵', '#378ADD');
+      target.silenceRecovery = (e.silenceDur != null ? e.silenceDur : 2);
+      battle.msg = actor.name + ' 施展「' + sk.name + '」抽干敌方 ' + _drain + ' 灵力，并禁其恢复（' + target.silenceRecovery + '回合）';
+      break;
+    }
     default:
       battle.msg = actor.name + ' 施展「' + sk.name + '」（未知效果）';
   }
@@ -672,10 +696,12 @@ function enemyAct(enemy) {
     // 固定 10 回合出手脚本（用户逐回合指定），按 _script[_turn-1] 精确施放：确定性、无随机、无冷却
     const name = (enemy._script && enemy._script[enemy._turn - 1]) || null;
     const sk = name ? enemy.skills.find(s => s.name === name) : null;
-    if (sk && enemy.mp >= sk.cost) {
+    const _silenced = enemy.silenceRecovery > 0;
+    const _recovery = sk && sk.effect && (sk.effect.kind === 'heal_hp' || sk.effect.kind === 'heal_mp' || sk.effect.kind === 'regen');
+    if (sk && enemy.mp >= sk.cost && !(_silenced && _recovery)) {
       applySkill(enemy, p, sk);
     } else {
-      applyAction(enemy, p, 'attack');   // 兜底：内力不足或脚本缺失时普攻
+      applyAction(enemy, p, 'attack');   // 兜底：内力不足 / 脚本缺失 / 被沉默禁恢复时普攻
     }
     nextTurn();
     return;
@@ -722,6 +748,41 @@ function tryPlayerDeathWard() {
     return true;
   }
   return false;
+}
+
+// 被动心法·战斗中触发：低气血自我增益（持续N回合，可重复授予） / 低气血下次吸血（每场限一次）
+function evaluatePassiveTriggers(u) {
+  if (!u.passiveTriggers || !u.passiveTriggers.length) return;
+  u.passiveTriggers.forEach(t => {
+    if (t.lifestealNext) { // 逆鳞补天诀：低血下次吸血，每场限一次
+      if (battle._passiveLifestealUsed) return;
+      if (u.hp > 0 && u.hp < u.maxHp * (t.hpBelow || 0.7) && !u.lowHpLifesteal) {
+        u.lowHpLifesteal = t.lifestealNext;
+        battle.msg = u.name + ' 血气翻涌，下一击吸取 ' + Math.round(t.lifestealNext * 100) + '% 气血！';
+      }
+      return;
+    }
+    if (t.stats) { // 九天血怒法 / 踏星护体神功：低血自我增益
+      if (u.hp > 0 && u.hp < u.maxHp * (t.hpBelow || 0.5)) {
+        const has = (u.buffs || []).some(b => b.sid === t.sid);
+        if (!has) {
+          t.stats.forEach(st => u.buffs.push({ sid: t.sid, stat: st, amt: (t.amt != null ? t.amt : 0), dur: (t.dur || 3) }));
+          battle.msg = u.name + ' 触发「' + (t.name || '血怒') + '」，' + t.stats.map(statCn).join('与') + '提升！';
+        }
+      }
+    }
+  });
+}
+// 低气血下次吸血（逆鳞补天诀）：玩家造成伤害时触发一次，吸血后本场不再触发
+function tryLowHpLifesteal(attacker, dmg) {
+  if (attacker.isEnemy || !attacker.lowHpLifesteal || dmg <= 0) return;
+  if (battle._passiveLifestealUsed) { attacker.lowHpLifesteal = null; return; }
+  const h = Math.round(dmg * attacker.lowHpLifesteal);
+  attacker.hp = Math.min(attacker.maxHp, attacker.hp + h);
+  floats.push({ x: attacker._x, y: attacker._y, text: '吸血+' + h, color: '#3B6D11', ttl: 60 });
+  battle.msg += '（血怒吸血 ' + h + '）';
+  attacker.lowHpLifesteal = null;
+  battle._passiveLifestealUsed = true;
 }
 
 function checkEnd() {
