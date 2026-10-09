@@ -59,7 +59,7 @@ function makeEnemy(node) {
     atk: e.atk, def: e.def, spd: e.spd,
     init: Math.round(10 + e.spd * 2), eva: 0.05, spiAtk: 0, spiDef: e.def, luck: 0,
     potions: 0, defending: false, extraActions: 0,
-    buffs: [], debuffs: [], shield: null, stun: 0, poison: null, dot: null,
+    buffs: [], debuffs: [], shield: null, stun: 0, poison: null, dot: null, regen: null, deathWard: null,
     skill: { name: '敌袭', type: 'phys', mult: 1.8, cost: 10 },
     _x: 490, _y: 160,
   };
@@ -108,7 +108,7 @@ function startBattle(node, mode) {
     loadBattleBg(null);
   }
   // 重置玩家本场战斗的临时状态（buff/debuff/护盾/僵直），避免跨场残留
-  player.buffs = []; player.debuffs = []; player.shield = null; player.stun = 0; player.poison = null; player.dot = null;
+  player.buffs = []; player.debuffs = []; player.shield = null; player.stun = 0; player.poison = null; player.dot = null; player.regen = null; player.deathWard = null;
   // 每场战斗满血满灵开局：battle.player 直接引用全局 player（非副本），
   // 上一场若阵亡 player.hp 会残留在 0，若不在此回满，下一场开场即被 checkEnd 判负，
   // 表现为「死亡后无法再挑战任何副本」（刷新页面从旧存档恢复满血才正常）。
@@ -293,6 +293,18 @@ function beginRound() {
     u.hp = Math.max(0, u.hp - dmg);
     floats.push({ x: u._x, y: u._y, text: (u.dot.name || '持续') + '-' + dmg, color: '#E8B23B', ttl: 60 });
     if ((u.dot.dur -= 1) <= 0) u.dot = null;
+  });
+  // 持续回血（HoT）：每回合开始按上限百分比回复，持续 e.dur 回合后清除（震雷疗伤术等）
+  [p, e].forEach(u => {
+    if (!u.regen) return;
+    const h = Math.round(u.maxHp * (u.regen.pct || 0));
+    if (u.hp > 0) u.hp = Math.min(u.maxHp, u.hp + h);
+    floats.push({ x: u._x, y: u._y, text: (u.regen.name || '回春') + '+' + h, color: '#3B6D11', ttl: 60 });
+    if ((u.regen.dur -= 1) <= 0) u.regen = null;
+  });
+  // 免死（deathWard）：持续 e.dur 回合，到期清除剩余次数（血影凝灵法等）
+  [p, e].forEach(u => {
+    if (u.deathWard && (u.deathWard.dur -= 1) <= 0) u.deathWard = null;
   });
   // 僵直（stun）：本回合无法行动，并递减
   const pStun = (p.stun || 0) > 0, eStun = (e.stun || 0) > 0;
@@ -586,6 +598,19 @@ function applySkill(actor, target, sk) {
       battle.msg = actor.name + ' 施展「' + sk.name + '」令 ' + target.name + ' 中毒';
       break;
     }
+    case 'regen': { // 持续回血（HoT）+ 可选减伤护盾（震雷疗伤术）
+      actor.regen = { pct: e.pct, dur: e.dur, name: e.name || '回春' };
+      let _msg = actor.name + ' 施展「' + sk.name + '」每回合回复自身 ' + Math.round((e.pct || 0) * 100) + '% 气血（' + e.dur + '回合）';
+      if (e.shieldPct) { actor.shield = { pct: e.shieldPct, dur: (e.shieldDur || 1) }; _msg += '，并使下一回合受到的伤害减少 ' + Math.round(e.shieldPct * 100) + '%'; }
+      battle.msg = _msg;
+      break;
+    }
+    case 'deathward': { // 自损气血 + 授予免死（保留1点气血，可多次，持续N回合）（血影凝灵法）
+      if (e.selfHpLoss) { const _loss = Math.round(actor.maxHp * e.selfHpLoss); actor.hp = Math.max(1, actor.hp - _loss); floatAt(actor, '-' + _loss, '#B23B3B'); }
+      actor.deathWard = { charges: (e.charges != null ? e.charges : 1), dur: (e.dur != null ? e.dur : 6) };
+      battle.msg = actor.name + ' 施展「' + sk.name + '」凝灵护体，获得 ' + actor.deathWard.charges + ' 次免死（持续 ' + actor.deathWard.dur + ' 回合）';
+      break;
+    }
     default:
       battle.msg = actor.name + ' 施展「' + sk.name + '」（未知效果）';
   }
@@ -685,22 +710,38 @@ function nextTurn() {
   setTimeout(processTurn, 500);
 }
 
+// 免死（技能授予）：玩家受到致死伤害时保留 1 点气血，消耗 1 次；次数/持续回合耗尽后失效
+function tryPlayerDeathWard() {
+  const u = battle.player;
+  if (u.deathWard && u.deathWard.charges > 0) {
+    u.deathWard.charges--;
+    u.hp = 1;
+    floats.push({ x: u._x, y: u._y, text: '免死!', color: '#D4A843', ttl: 90 });
+    battle.msg = '「免死」触发，保留 1 点气血！';
+    if (u.deathWard.charges <= 0) u.deathWard = null;
+    return true;
+  }
+  return false;
+}
+
 function checkEnd() {
   // 世界BOSS：击杀/阵亡/回合耗尽都视为「结算」（记录累计伤害，不触发地图/副本逻辑）
   if (battle.mode === 'worldboss') {
     if (battle.enemy.hp <= 0) { endWorldBossBattle(true); return true; }
-    if (battle.player.hp <= 0) { endWorldBossBattle(false); return true; }
+    if (battle.player.hp <= 0) { if (tryPlayerDeathWard()) return false; endWorldBossBattle(false); return true; }
     return false;
   }
   if (battle.mode === 'arena') {
     if (battle.enemy.hp <= 0) { endArenaBattle(true); return true; }
-    if (battle.player.hp <= 0) { endArenaBattle(false); return true; }
+    if (battle.player.hp <= 0) { if (tryPlayerDeathWard()) return false; endArenaBattle(false); return true; }
     return false;
   }
   if (battle.enemy.hp <= 0) {
     endBattle(true); return true;
   }
   if (battle.player.hp <= 0) {
+    // 免死（技能授予）：优先于装备「涅槃」触发
+    if (tryPlayerDeathWard()) return false;
     // 装备特效「涅槃」：阵亡复活 1 次
     if (battle.mods && battle.mods.revive > 0 && !battle._reviveUsed) {
       battle._reviveUsed = true;
