@@ -138,6 +138,19 @@ function startBattle(node, mode) {
   // 聚合装备特效；若带「罡气」类特效则开局获得护盾
   const mods = (typeof computeEquipMods === 'function') ? computeEquipMods(player) : null;
   if (mods && mods.shieldPct > 0) player.shield = { pct: mods.shieldPct, dur: 999 };
+  // 被动·苍穹守元功：战斗开始形成「吸收池护盾」（气血上限百分比），优先抵扣伤害，耗尽才扣血
+  // 必须放在装备护盾聚合之后，避免被装备护盾覆盖
+  if (player.passiveTriggers && player.passiveTriggers.length) {
+    player.passiveTriggers.forEach(t => {
+      if (t.shieldOnStartPct) {
+        const _sp = (t.shieldOnStartPct || 0.1);
+        player.shield = player.shield || { pct: 0, dur: 999 };
+        player.shield.value = Math.round(player.maxHp * _sp);
+      }
+    });
+  }
+
+
   battle = {
     node, player, enemy,
     mode: mode || 'story',         // 'story' = 剧情副本；'worldboss' = 世界BOSS
@@ -460,7 +473,20 @@ function damage(attacker, target, mult, type) {
   (target.buffs || []).forEach(b => { if (b.stat === 'reduceDmg') _buffReduce += (b.amt || 0); });
   if (_buffReduce > 0) base *= (1 - Math.min(0.9, _buffReduce));
   if (target.shield && target.shield.pct) base *= (1 - target.shield.pct);
+
+
   base = Math.max(1, Math.round(base));
+  // 吸收池护盾（苍穹守元功）：在最小伤害下限之后，优先抵扣实际伤害，耗尽才扣血
+  if (target.shield && target.shield.value != null && target.shield.value > 0 && base > 0) {
+    const _absorbed = Math.min(target.shield.value, base);
+    target.shield.value -= _absorbed;
+    base -= _absorbed;
+    if (target.shield.value <= 0) {
+      target.shield.value = 0;
+      if (!target.shield.pct) target.shield = null; // 护盾耗尽且无减伤 → 移除
+    }
+    if (_absorbed > 0) floats.push({ x: target._x, y: target._y, text: '护盾-' + _absorbed, color: '#5DCAA5', ttl: 60 });
+  }
   // 反弹（功法反弹buff）：将敌方来犯伤害按比率弹回攻击者（先于无敌判定，确保反弹照常生效）
   let reflectPct = 0;
   (target.buffs || []).forEach(b => { if (b.stat === 'reflect') reflectPct += b.amt; });
