@@ -195,7 +195,7 @@ function arenaVirtual(rank) {
   const avatarId = ARENA_AVATARS[seed % ARENA_AVATARS.length];
   const schoolIdx = Math.floor(seed / 6) % ARENA_SCHOOLS.length;
   const school = ARENA_SCHOOLS[schoolIdx];
-  const name = ARENA_SURNAMES[Math.floor(rng() * ARENA_SURNAMES.length)] + ARENA_GIVEN[Math.floor(rng() * ARENA_GIVEN.length)] + '·' + school.cn;
+  const name = ARENA_SURNAMES[Math.floor(rng() * ARENA_SURNAMES.length)] + ARENA_GIVEN[Math.floor(rng() * ARENA_GIVEN.length)];
   const f = arenaRankFactor(rank);
   const P = player || {};
   const jit = () => 0.90 + rng() * 0.20;
@@ -211,7 +211,7 @@ function arenaVirtual(rank) {
   const built = buildArenaSkills(schoolIdx, atk, spiAtk);
   const ult = built.skills.find(s => s.ult) || built.skills[0];
   return {
-    name: name, isEnemy: true, avatarId: avatarId, school: school.key, schoolCn: school.cn, weapon: school.weapon,
+    name: name, isEnemy: true, avatarId: avatarId,
     rank: rank,
     maxHp: maxHp, hp: maxHp, maxMp: maxMp, mp: maxMp,
     atk: atk, def: def, spd: spd, init: init, eva: eva, spiAtk: spiAtk, spiDef: spiDef,
@@ -266,24 +266,31 @@ function startArenaBattle(rank) {
   }
   player.arena.attempts -= 1;
   player.arena._lastOpp = rank;
+  // 每日任务埋点：当日挑战神魔竞技场次数 +1（与「挑战世界BOSS」同口径，开战即计）
+  if (typeof dailyRecordArenaChallenge === 'function') dailyRecordArenaChallenge();
   if (typeof saveGame === 'function') saveGame();
   closeModal();
   if (window.HUB) window.HUB.hide();
   startBattle({ id: -3, _arenaRank: rank }, 'arena');
 }
 
-// 单场结算：胜则夺取对手名次（互换）；负仅扣次数，名次不变
+// 单场结算：仅当对手排名更靠前（名次数字更小）时夺取其名次；否则胜利但名次不变。
+// 修复：此前无条件 rank = oppRank，导致已登顶（第 1 名）时挑战排名靠后的对手、胜利后名次反而下降。
 function endArenaBattle(win) {
   awaitingInput = false;
   if (typeof setButtons === 'function') setButtons(false);
   ensureArenaDaily();
   const oppRank = player.arena._lastOpp;
   const oldRank = player.arena.rank;
-  let msg;
-  if (win && oppRank) {
+  const oldLabel = oldRank > ARENA_SIZE ? '榜外' : ('第 ' + oldRank + ' 名');
+  let msg, took = false;
+  if (win && oppRank && oppRank < oldRank) {
     player.arena.rank = oppRank;
     player.arena.lastSwap = { from: oldRank, to: oppRank, date: arenaTodayStr() };
-    msg = '★ 胜！夺取第 ' + oppRank + ' 名（原第 ' + (oldRank > ARENA_SIZE ? '榜外' : oldRank) + ' 名）';
+    msg = '★ 胜！夺取第 ' + oppRank + ' 名（原 ' + oldLabel + '）';
+    took = true;
+  } else if (win) {
+    msg = '★ 胜！对手排名在你之后，名次保持不变（' + oldLabel + '）';
   } else {
     msg = '败北……名次不变（挑战次数 -1）';
   }
@@ -291,7 +298,7 @@ function endArenaBattle(win) {
   if (typeof saveGame === 'function') saveGame();
   state = win ? 'win' : 'lose';
   toast = msg;
-  openArenaResult(win, oppRank);
+  openArenaResult(win, oppRank, took);
 }
 
 // ====== 界面 ======
@@ -304,15 +311,13 @@ function arenaBoardPreview() {
     const v = arenaVirtual(r);
     const me = onBoard && my === r;
     rows += `<div class="bag-item" style="padding:5px 8px"><div class="bag-info">`
-      + `<span class="bag-name" style="${me ? 'color:#639922;font-weight:700' : ''}">${r}. ${esc(me ? (player.name + '（你）') : v.name)}</span>`
-      + `<span class="equip-bonus">${esc(v.schoolCn)}</span></div></div>`;
+      + `<span class="bag-name" style="${me ? 'color:#639922;font-weight:700' : ''}">${r}. ${esc(me ? (player.name + '（你）') : v.name)}</span></div></div>`;
   }
   let html = `<div class="equip-sec-title">竞技榜 · 前十</div><div class="bag-list">${rows}</div>`;
   if (onBoard && my > 10) {
-    const mv = arenaVirtual(my);
     html += `<div class="bag-item" style="padding:5px 8px;margin-top:4px"><div class="bag-info">`
       + `<span class="bag-name" style="color:#639922;font-weight:700">${my}. ${esc(player.name)}（你）</span>`
-      + `<span class="equip-bonus">${esc(mv.schoolCn)} · 当前排名</span></div></div>`;
+      + `<span class="equip-bonus">当前排名</span></div></div>`;
   }
   return html;
 }
@@ -325,7 +330,7 @@ function openArenaScreen() {
   const remain = player.arena.attempts;
   const tier = onBoard ? arenaTierDiamond(my) : 0;
   let html = `<div class="hub-modal-title"><img src="assets/icons/icon_arena.png?v=12" style="width:22px;height:22px;vertical-align:-4px;margin-right:6px" alt=""><h3 style="margin:0">神魔竞技场</h3></div>`;
-  html += `<p style="font-size:12px;color:rgba(241,239,232,.7);margin:4px 0 8px">1000 名虚拟高手占据榜单前 1000 席，击败对手即可夺取其名次。每日 ${ARENA_MAX_ATTEMPTS} 次挑战，每天 <b style="color:#D4A843">${ARENA_SETTLE_HOUR}:00</b> 按名次自动结算钻石。</p>`;
+  html += `<p style="font-size:12px;color:rgba(241,239,232,.7);margin:4px 0 8px">1000 名虚拟高手占据榜单前 1000 席，击败排名在你<b style="color:#D4A843">之前</b>的对手即可夺取其名次；击败排名在你之后的对手则名次不变。每日 ${ARENA_MAX_ATTEMPTS} 次挑战，每天 <b style="color:#D4A843">${ARENA_SETTLE_HOUR}:00</b> 按名次自动结算钻石。</p>`;
   html += `<div class="bag-item" style="align-items:center"><div class="bag-info">`
     + `<span class="bag-name" style="color:#D4A843">我的名次：${onBoard ? ('第 ' + my + ' 名') : '榜外（第 1001）'}</span>`
     + `<span class="equip-bonus">剩余挑战 ${remain}/${ARENA_MAX_ATTEMPTS} 次 ｜ 今日结算档位：${tier > 0 ? (tier + ' 钻石') : '未上榜（无奖励）'}</span></div></div>`;
@@ -345,7 +350,7 @@ function openArenaScreen() {
       html += `<div class="bag-item" style="align-items:center">`
         + `<img src="${av}" style="width:34px;height:34px;border-radius:8px;margin-right:8px;border:1px solid rgba(212,168,67,.35);object-fit:cover" alt="">`
         + `<div class="bag-info"><span class="bag-name">第 ${o.rank} 名 · ${esc(o.name)}</span>`
-        + `<span class="equip-bonus">${esc(o.schoolCn)} · ${esc(o.weapon)} ｜ ${dir}</span></div>`
+        + `<span class="equip-bonus">${dir}</span></div>`
         + `<button class="equip-btn" onclick="startArenaBattle(${o.rank})">挑战</button></div>`;
     });
     html += `</div>`;
@@ -355,14 +360,15 @@ function openArenaScreen() {
   openModal(html);
 }
 
-function openArenaResult(win, oppRank) {
+function openArenaResult(win, oppRank, took) {
   ensureArenaDaily();
   const my = player.arena.rank;
   const onBoard = my <= ARENA_SIZE;
   const remain = player.arena.attempts;
   let html = `<div class="hub-modal-title"><img src="assets/icons/icon_arena.png?v=12" style="width:22px;height:22px;vertical-align:-4px;margin-right:6px" alt=""><h3 style="margin:0">神魔竞技场 · 战果</h3></div>`;
-  if (win) html += `<p style="margin:6px 0;font-size:15px;font-weight:700;color:#D4A843">★ 胜利！你已夺取第 ${my} 名</p>`;
-  else     html += `<p style="margin:6px 0;font-size:15px;font-weight:700;color:#E87B7B">败北 — 名次不变，再战可期</p>`;
+  if (win && took)      html += `<p style="margin:6px 0;font-size:15px;font-weight:700;color:#D4A843">★ 胜利！你已夺取第 ${my} 名</p>`;
+  else if (win)         html += `<p style="margin:6px 0;font-size:15px;font-weight:700;color:#D4A843">★ 胜利！对手排名在你之后，名次保持${onBoard ? ('第 ' + my + ' 名') : '榜外'}</p>`;
+  else                  html += `<p style="margin:6px 0;font-size:15px;font-weight:700;color:#E87B7B">败北 — 名次不变，再战可期</p>`;
   html += `<p style="margin:2px 0;font-size:12px;color:rgba(241,239,232,.7)">当前名次：<b style="color:#D4A843">${onBoard ? ('第 ' + my + ' 名') : '榜外（第 1001）'}</b> ｜ 剩余挑战：<b>${remain}</b> 次</p>`;
   html += `<p style="margin:2px 0;font-size:12px;color:rgba(241,239,232,.6)">今日 ${ARENA_SETTLE_HOUR}:00 结算档位：<b style="color:#D4A843">${onBoard ? (arenaTierDiamond(my) + ' 钻石') : '未上榜（无奖励）'}</b></p>`;
   let btns = '';

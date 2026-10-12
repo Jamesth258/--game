@@ -534,7 +534,8 @@ function damage(attacker, target, mult, type) {
     floats.push({ x: attacker._x, y: attacker._y, text: '反伤-' + r, color: '#A32D2D', ttl: 60 });
   }
   // 灼烧（玩家攻击附带，持续 2 回合按比例掉血）
-  if (aMods && aMods.burn && base > 0) {
+  // 免疫不良状态（invinc / debuffImmune）时应免疫，与 applyDebuff / dot / stun / poison 同口径
+  if (aMods && aMods.burn && base > 0 && !isImmune(target)) {
     target.debuffs.push({ stat: 'burn', amt: Math.round(attacker.atk * aMods.burn), dur: 2 });
   }
   return base;
@@ -685,6 +686,7 @@ function applySkill(actor, target, sk) {
       break;
     }
     case 'silence_mp': { // 抽干敌方灵力 + 禁止敌方使用恢复类功法（星陨禁典）
+      if (isImmune(target)) { battle.msg = actor.name + ' 施展「' + sk.name + '」但 ' + target.name + ' 免疫不良效果，无效'; break; }
       const _drain = Math.round(target.maxMp * (e.mpPct != null ? e.mpPct : 0.4));
       target.mp = Math.max(0, target.mp - _drain);
       floatAt(target, '-' + _drain + '灵', '#378ADD');

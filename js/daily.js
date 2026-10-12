@@ -21,7 +21,7 @@
  *     - 每日挑战世界BOSS 5 次       → 500 灵石
  *     - 每日挑战世界BOSS 10 次      → 50 钻石 + 灵石宝箱 ×1
  *     - 每日挑战世界BOSS 15 次      → 100 钻石 + 灵石宝箱 ×5
- *     - 每日挑战世界BOSS 20 次      → 经验宝箱 ×10
+ *     - 每日挑战神魔竞技场 10 次    → 经验宝箱 ×10
  *   钻石：专用于商城消费的货币（见 hub.js 商店「钻石专区」）。
  */
 
@@ -60,14 +60,14 @@ const DAILY_ONLINE_MILESTONES = [
   { min: 60, desc: '灵石宝箱 ×2 + 30 钻石',                    kind: 'stonediamond' },
 ];
 // 第三重 · 日常任务奖励里程碑
-//   metric: 'story' = 当日通关副本关卡数；'boss' = 当日挑战世界BOSS次数
+//   metric: 'story' = 当日通关副本关卡数；'boss' = 当日挑战世界BOSS次数；'arena' = 当日挑战神魔竞技场次数
 //   rewards: 奖励清单（gold/diamond/stone/exp/skill/equip，宝箱以道具入背包手动开启）
 const DAILY_TASK_MILESTONES = [
   { metric: 'story', count: 10, desc: '500 灵石',             rewards: [{ kind: 'gold', amount: 500 }] },
   { metric: 'boss',  count: 5,  desc: '500 灵石',             rewards: [{ kind: 'gold', amount: 500 }] },
   { metric: 'boss',  count: 10, desc: '50 钻石 + 灵石宝箱 ×1',  rewards: [{ kind: 'diamond', amount: 50 }, { kind: 'stone', count: 1 }] },
   { metric: 'boss',  count: 15, desc: '100 钻石 + 灵石宝箱 ×5', rewards: [{ kind: 'diamond', amount: 100 }, { kind: 'stone', count: 5 }] },
-  { metric: 'boss',  count: 20, desc: '经验宝箱 ×10',          rewards: [{ kind: 'exp', count: 10 }] },
+  { metric: 'arena', count: 10, desc: '经验宝箱 ×10',          rewards: [{ kind: 'exp', count: 10 }] },
 ];
 
 // ===== 数据初始化与每日/每月重置 =====
@@ -76,7 +76,7 @@ function ensureDaily() {
   const month = today.slice(0, 7);
   let d = player.daily;
   if (!d || typeof d !== 'object') {
-    d = { date: today, month, signedToday: false, monthSignCount: 0, monthClaimed: {}, onlineSecToday: 0, onlineClaimed: {}, storyClearToday: 0, bossChalToday: 0, taskClaimed: {}, shopRefreshCount: 0 };
+    d = { date: today, month, signedToday: false, monthSignCount: 0, monthClaimed: {}, onlineSecToday: 0, onlineClaimed: {}, storyClearToday: 0, bossChalToday: 0, arenaChalToday: 0, taskClaimed: {}, shopRefreshCount: 0 };
     player.daily = d;
     return d;
   }
@@ -88,6 +88,7 @@ function ensureDaily() {
     d.onlineClaimed = {};
     d.storyClearToday = 0;
     d.bossChalToday = 0;
+    d.arenaChalToday = 0;
     d.taskClaimed = {};
     d.shopRefreshCount = 0; // 商店每日免费刷新次数跨天归零（8/22 修复：此前遗漏导致次日按钮永久置灰）
     if (d.month !== month) { d.month = month; d.monthSignCount = 0; d.monthClaimed = {}; }
@@ -98,6 +99,7 @@ function ensureDaily() {
   // 兼容旧存档：补齐第三重日常任务所需字段（缺失则默认）
   if (typeof d.storyClearToday !== 'number') d.storyClearToday = 0;
   if (typeof d.bossChalToday !== 'number') d.bossChalToday = 0;
+  if (typeof d.arenaChalToday !== 'number') d.arenaChalToday = 0;
   if (!d.taskClaimed || typeof d.taskClaimed !== 'object') d.taskClaimed = {};
   return d;
 }
@@ -233,6 +235,19 @@ function dailyRecordBossChallenge() {
   return newly;
 }
 
+// 玩家挑战一次神魔竞技场时调用（每次开战 +1，与「挑战世界BOSS」同口径）
+function dailyRecordArenaChallenge() {
+  ensureDaily();
+  const d = player.daily;
+  d.arenaChalToday = (d.arenaChalToday || 0) + 1;
+  const newly = dailyCheckTaskClaims('arena', d.arenaChalToday);
+  if (newly.length) {
+    saveGame();
+    if (typeof showToast === 'function') showToast('日常任务达成：' + newly.join('，'));
+  }
+  return newly;
+}
+
 // ===== 界面：每日奖励总览 =====
 function openDailyRewardScreen() {
   ensureDaily();
@@ -280,19 +295,22 @@ function openDailyRewardScreen() {
   // 第三重 · 日常任务奖励
   const storyTasks = DAILY_TASK_MILESTONES.filter(m => m.metric === 'story');
   const bossTasks = DAILY_TASK_MILESTONES.filter(m => m.metric === 'boss');
+  const arenaTasks = DAILY_TASK_MILESTONES.filter(m => m.metric === 'arena');
   const taskRow = (m, cur) => {
     const done = !!d.taskClaimed[m.metric + m.count];
     const reached = cur >= m.count;
     const cls = done ? 'color:#639922' : (reached ? 'color:#D4A843' : 'color:rgba(241,239,232,0.45)');
     const tag = done ? '已领取' : (reached ? '已达成' : '未达成');
-    const label = m.metric === 'story' ? ('每日通关副本 ' + cur + '/' + m.count) : ('今日挑战世界BOSS ' + cur + '/' + m.count);
+    const label = m.metric === 'story' ? ('每日通关副本 ' + cur + '/' + m.count)
+      : m.metric === 'arena' ? ('今日挑战神魔竞技场 ' + cur + '/' + m.count)
+      : ('今日挑战世界BOSS ' + cur + '/' + m.count);
     return `<div class="bag-item"><div class="bag-info">
       <span class="bag-name" style="${cls}">${label}</span>
       <span class="equip-bonus">${esc(m.desc)} · <b style="${cls}">${tag}</b></span></div></div>`;
   };
   html += `<div class="equip-sec-title" style="margin-top:12px">第三重 · 日常任务奖励（达成即自动发放）</div>`;
-  html += `<div class="bag-list">` + storyTasks.map(m => taskRow(m, d.storyClearToday || 0)).join('') + bossTasks.map(m => taskRow(m, d.bossChalToday || 0)).join('') + `</div>`;
-  html += `<p style="margin:6px 0 0;font-size:11px;color:rgba(241,239,232,0.4)">通关副本 / 挑战世界BOSS 即累计进度，达成后奖励自动发放；次日 0 点重置。</p>`;
+  html += `<div class="bag-list">` + storyTasks.map(m => taskRow(m, d.storyClearToday || 0)).join('') + bossTasks.map(m => taskRow(m, d.bossChalToday || 0)).join('') + arenaTasks.map(m => taskRow(m, d.arenaChalToday || 0)).join('') + `</div>`;
+  html += `<p style="margin:6px 0 0;font-size:11px;color:rgba(241,239,232,0.4)">通关副本 / 挑战世界BOSS / 挑战神魔竞技场 即累计进度，达成后奖励自动发放；次日 0 点重置。</p>`;
 
   html += `<button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`;
   openModal(html);
@@ -302,3 +320,4 @@ window.openDailyRewardScreen = openDailyRewardScreen;
 window.dailySignIn = dailySignIn;
 window.dailyRecordStoryClear = dailyRecordStoryClear;
 window.dailyRecordBossChallenge = dailyRecordBossChallenge;
+window.dailyRecordArenaChallenge = dailyRecordArenaChallenge;
