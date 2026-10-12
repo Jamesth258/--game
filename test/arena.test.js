@@ -1,9 +1,9 @@
 /* 无头回归测试：神魔竞技场系统（js/arena.js）
  *  1) 每日数据初始化：初始榜外第 1001 名、10 次挑战、跨天只重置次数不清名次
  *  2) 排名钻石档位表（用户给定 10 档）逐档校验
- *  3) 虚拟玩家确定性（同名次两次生成完全一致）+ 六形象六流派差异化
+ *  3) 虚拟玩家确定性（同名次两次生成完全一致）+ 六形象差异化（无「职业」设定）
  *  4) 对手池 5 名：常规 1 后 + 4 前；榜外/榜首/榜尾边界降级
- *  5) 挑战消耗次数、胜则夺取名次（互换）
+ *  5) 挑战消耗次数 + 名次规则（仅当对手更靠前才夺取；对手更靠后则名次不变）
  *  6) 每日 23:00 结算发钻、幂等、榜外不发、跨天补结算
  * 运行：node test/arena.test.js
  */
@@ -122,19 +122,19 @@ code += `
     assert('同名次两次生成 形象一致', v1.avatarId === v2.avatarId);
     assert('虚拟玩家 rank 正确', v1.rank === 327);
     assert('虚拟玩家 有立绘avatarId', ['m1','m2','m3','f1','f2','f3'].indexOf(v1.avatarId) !== -1);
-    assert('虚拟玩家 有流派与武器', !!v1.schoolCn && !!v1.weapon);
+    assert('虚拟玩家 无职业字段(school/schoolCn/weapon 已移除)', !v1.school && !v1.schoolCn && !v1.weapon);
     assert('虚拟玩家 有功法组合', v1.skills && v1.skills.length > 0);
     assert('虚拟玩家 出手脚本=10回合', v1._script && v1._script.length === 10);
     // 脚本引用的技能名必须都在 skills 里（否则会退化为普攻）
     let scriptOK = true;
     for (let i = 0; i < v1._script.length; i++) { if (!v1.skills.some(s => s.name === v1._script[i])) scriptOK = false; }
     assert('出手脚本技能名均存在于技能表', scriptOK);
-    // 形象/流派/名字 差异化
-    const avSet = {}, scSet = {}, nmSet = {};
-    for (let r = 1; r <= 60; r++) { const v = arenaVirtual(r); avSet[v.avatarId] = 1; scSet[v.school] = 1; nmSet[v.name] = 1; }
+    // 形象/名字 差异化（原「六流派/职业」设定已按用户要求整体移除：竞技场只有名字）
+    const avSet = {}, nmSet = {}; let nameHadSuffix = 0;
+    for (let r = 1; r <= 60; r++) { const v = arenaVirtual(r); avSet[v.avatarId] = 1; nmSet[v.name] = 1; if (v.name.indexOf('·') !== -1) nameHadSuffix++; }
     assert('六形象均有分布(>1种)', Object.keys(avSet).length > 1);
-    assert('六流派均有分布(>1种)', Object.keys(scSet).length > 1);
     assert('名字不单一(>10种)', Object.keys(nmSet).length > 10);
+    assert('虚拟玩家名字不含「·职业」后缀', nameHadSuffix === 0);
 
     // ===== 4) 对手池 =====
     player.arena = { date: TODAY, startDate: TODAY, attempts: 10, rank: 300, settledDate: TODAY, lastReward: null, lastSwap: null };
@@ -170,10 +170,21 @@ code += `
     assert('挑战后 记录 _lastOpp=980', player.arena._lastOpp === 980);
     assert('挑战后 battle.mode===arena', typeof battle === 'object' && battle && battle.mode === 'arena');
     assert('挑战后 敌方 rank=980', battle && battle.enemy && battle.enemy.rank === 980);
-    // 胜利 → 夺取名次（榜外1001 → 980）
+    // 胜利 + 对手更靠前 → 夺取名次（榜外1001 → 980）
     endArenaBattle(true);
     assert('胜利后 夺取对手名次(rank=980)', player.arena.rank === 980);
     assert('胜利后 state=win', state === 'win');
+    // 【BUG 修复守护】胜利 + 对手更靠后 → 名次必须不变（修复前会退到对手名次）
+    player.arena.rank = 1; player.arena._lastOpp = 33;
+    endArenaBattle(true);
+    assert('已登顶挑战更靠后对手 → 名次保持第1(不后退)', player.arena.rank === 1);
+    player.arena.rank = 500; player.arena._lastOpp = 880;
+    endArenaBattle(true);
+    assert('中游挑战更靠后对手 → 名次保持500(不后退)', player.arena.rank === 500);
+    // 胜利 + 对手更靠前（中游）→ 正常夺取
+    player.arena.rank = 500; player.arena._lastOpp = 420;
+    endArenaBattle(true);
+    assert('中游挑战更靠前对手 → 夺取第420名', player.arena.rank === 420);
     // 失败 → 名次不变
     player.arena.rank = 500; player.arena._lastOpp = 460;
     endArenaBattle(false);

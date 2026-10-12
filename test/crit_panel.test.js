@@ -130,12 +130,17 @@ code += `
     // G) 被动心法暴击率/暴伤必须进入战斗 computeEquipMods（修复：面板满暴击、实战却不暴击）
     player.equipment = { weapon: null, armor: null, accessory: null, boots: null };
     recalcStats(player);
-    player.learned = ['bu018']; // 碧落磐石术 被动暴击 +9%
+    // 样本功法说明：原用 bu018（碧落磐石术），其字段已改为「物防 +20%」不再含暴击，
+    // 故改用仍带被动暴击的 bu077（天罡暴袭诀 · 暴击率 +20%）作为样本。
+    player.learned = ['bu077'];
     const mG1 = computeEquipMods(player);
-    assert('被动心法 bu018 暴击率进入战斗 computeEquipMods (实际=' + mG1.critRate + ')', Math.abs(mG1.critRate - 0.09) < 1e-9);
+    assert('被动心法 bu077 暴击率进入战斗 computeEquipMods (实际=' + mG1.critRate + ')', Math.abs(mG1.critRate - 0.20) < 1e-9);
     player.learned = ['bu006']; // 孤鸿破军式 被动暴伤 +30%
     const mG2 = computeEquipMods(player);
     assert('被动心法 bu006 暴伤进入战斗 computeEquipMods (实际=' + mG2.critDmg + ')', Math.abs(mG2.critDmg - 0.30) < 1e-9);
+    player.learned = ['bu018']; // 碧落磐石术（第六波已改为 物防+20%）——不得再提供战斗暴击率
+    const mG3 = computeEquipMods(player);
+    assert('bu018 已改为物防+20%，不再提供战斗暴击率', Math.abs(mG3.critRate) < 1e-9);
     player.learned = [];
 
     // H) 穿透功法暴击必须进入战斗判定（修复：battle.js pierce 支路曾硬编码 15%，无视暴击装/被动）
@@ -153,11 +158,11 @@ code += `
     floats.length = 0; applySkill(player, eH, skH);
     const fNo = floats.find(x => x.text.startsWith('暴击') || x.text.startsWith('-'));
     assert('穿透功法 无暴击装→Math.random0.20 不暴击 (实际=' + (fNo?fNo.text:'?') + ')', !!fNo && !fNo.text.startsWith('暴击'));
-    // 带 bu018 被动 +9%：critChance = 0.15+0.09=0.24 > 0.20 → 暴击
-    player.learned = ['bu018']; battle.mods = computeEquipMods(player);
+    // 带 bu077 被动 +20%：critChance = 0.15+0.20=0.35 > 0.20 → 暴击
+    player.learned = ['bu077']; battle.mods = computeEquipMods(player);
     floats.length = 0; applySkill(player, eH, skH);
     const fYes = floats.find(x => x.text.startsWith('暴击') || x.text.startsWith('-'));
-    assert('穿透功法 带 bu018→Math.random0.20 暴击 (实际=' + (fYes?fYes.text:'?') + ')', !!fYes && fYes.text.startsWith('暴击'));
+    assert('穿透功法 带 bu077→Math.random0.20 暴击 (实际=' + (fYes?fYes.text:'?') + ')', !!fYes && fYes.text.startsWith('暴击'));
     Math.random = _rnd; player.learned = [];
 
   } catch (err) {
