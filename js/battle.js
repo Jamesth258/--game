@@ -108,7 +108,7 @@ function startBattle(node, mode) {
     loadBattleBg(null);
   }
   // 重置玩家本场战斗的临时状态（buff/debuff/护盾/僵直），避免跨场残留
-  player.buffs = []; player.debuffs = []; player.shield = null; player.stun = 0; player.poison = null; player.dot = null; player.regen = null; player.deathWard = null; player.silenceRecovery = 0; player.lowHpLifesteal = null;
+  player.buffs = []; player.debuffs = []; player.shield = null; player.stun = 0; player.poison = null; player.dot = null; player.regen = null; player.deathWard = null; player.silenceRecovery = 0; player.lowHpLifesteal = null; player.immuneNextHit = false;
   // 每场战斗满血满灵开局：battle.player 直接引用全局 player（非副本），
   // 上一场若阵亡 player.hp 会残留在 0，若不在此回满，下一场开场即被 checkEnd 判负，
   // 表现为「死亡后无法再挑战任何副本」（刷新页面从旧存档恢复满血才正常）。
@@ -471,6 +471,13 @@ function damage(attacker, target, mult, type) {
     floats.push({ x: target._x, y: target._y, text: '无敌', color: '#FFD86B', ttl: 60 });
     base = 0;
   }
+  // 被动·罡风不灭身：免疫下一次受到的伤害（低血触发，每场限一次）
+  if (base > 0 && target.immuneNextHit) {
+    target.immuneNextHit = false;
+    floats.push({ x: target._x, y: target._y, text: '罡风护体', color: '#FFD86B', ttl: 60 });
+    battle.msg = target.name + ' 罡风不灭身凝罡，免疫了这次伤害！';
+    base = 0;
+  }
   if (base > 0) target.hp = Math.max(0, target.hp - base);
   tryLowHpLifesteal(attacker, base);
   if (base > 0 && !attacker.isEnemy && battle) battle.playerDmg = (battle.playerDmg || 0) + base; // 世界BOSS 累计玩家伤害
@@ -793,6 +800,27 @@ function evaluatePassiveTriggers(u) {
         u.mp = Math.min(u.maxMp, u.mp + m);
         floats.push({ x: u._x, y: u._y, text: '汇灵+' + m, color: '#378ADD', ttl: 60 });
         battle.msg = u.name + ' 灵力告急，乾元汇灵恢复 ' + m + ' 灵力！';
+        t.fired = true;
+      }
+      return;
+    }
+    if (t.defBuffAtHp) { // 不灭金钟罩：气血低于阈值，物理/精神防御+amt%，每场限一次
+      if (t.fired) return;
+      if (u.hp > 0 && u.hp < u.maxHp * (t.hpBelow || 0.35)) {
+        u.buffs.push({ sid: t.sid, stat: 'def', amt: t.defBuffAtHp, dur: 99 });
+        u.buffs.push({ sid: t.sid, stat: 'spiDef', amt: t.defBuffAtHp, dur: 99 });
+        floats.push({ x: u._x, y: u._y, text: '金钟+80%双防', color: '#FFD86B', ttl: 60 });
+        battle.msg = u.name + ' 气血告危，不灭金钟罩护体，物理/精神防御 +' + Math.round(t.defBuffAtHp * 100) + '%！';
+        t.fired = true;
+      }
+      return;
+    }
+    if (t.immuneNext) { // 罡风不灭身：气血低于阈值，免疫下一次受到的伤害，每场限一次
+      if (t.fired) return;
+      if (u.hp > 0 && u.hp < u.maxHp * (t.hpBelow || 0.20)) {
+        u.immuneNextHit = true;
+        floats.push({ x: u._x, y: u._y, text: '罡风护体', color: '#FFD86B', ttl: 60 });
+        battle.msg = u.name + ' 气血告危，罡风不灭身凝罡，免疫下一次伤害！';
         t.fired = true;
       }
       return;
