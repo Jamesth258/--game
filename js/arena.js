@@ -5,7 +5,8 @@
  *  - 真实玩家初始排名 = 第 1001 名（榜外）；击败榜上对手即夺取其名次（两人互换）。
  *  - 每日 10 次挑战；每次展示 5 名对手：1 名排在自己之后 + 4 名排在自己之前（距离 ~10~50）。
  *  - 每日 23:00 按名次自动结算钻石；离线安全（次日首次进入补结算前一天，不丢奖励）。
- *  - 虚拟玩家参照 6 种玩家形象 × 6 种流派，武器/装备/功法/出手脚本各异，保证攻击模式不同。
+ *  - 虚拟玩家参照 6 种玩家形象 × 6 种战斗风格，技能组/出手脚本各异，保证攻击模式不同。
+ *  - 【设计定调】本游戏没有「职业」设定：竞技场对手只显示名字，不显示任何职业标签。
  */
 const ARENA_SIZE = 1000;              // 榜单总席位数
 const ARENA_MAX_ATTEMPTS = 10;        // 每日挑战次数
@@ -94,16 +95,11 @@ function checkArenaSettlement() {
   if (typeof saveGame === 'function') saveGame();
 }
 
-// ====== 虚拟玩家：六形象 × 六流派（名次种子确定性生成）======
+// ====== 虚拟玩家：六形象 × 六种战斗风格（名次种子确定性生成）======
 const ARENA_AVATARS = ['m1', 'm2', 'm3', 'f1', 'f2', 'f3'];   // 与 create.js / avatars.js 一致
-const ARENA_SCHOOLS = [
-  { key: 'sword',  cn: '剑修', weapon: '青锋剑' },
-  { key: 'blade',  cn: '刀客', weapon: '雁翎刀' },
-  { key: 'spear',  cn: '枪神', weapon: '寒铁枪' },
-  { key: 'fist',   cn: '拳师', weapon: '赤手'   },
-  { key: 'magic',  cn: '法修', weapon: '拂尘'   },
-  { key: 'poison', cn: '毒修', weapon: '毒蒺藜' },
-];
+// 内部战斗风格索引：仅决定虚拟玩家的技能组与出手脚本（保证攻击模式各异），
+// 不向玩家展示任何「职业」名称（用户明确要求：本游戏无职业设定，竞技场只显示名字）。
+const ARENA_SCHOOLS = ['sword', 'blade', 'spear', 'fist', 'magic', 'poison'];
 const ARENA_SURNAMES = ['叶', '萧', '慕容', '百里', '南宫', '司空', '上官', '独孤', '东方', '西门', '轩辕', '欧阳'];
 const ARENA_GIVEN   = ['惊鸿', '无尘', '破军', '听雪', '凌霄', '寒山', '问天', '逐月', '御风', '苍冥', '孤鸿', '未名'];
 
@@ -117,10 +113,10 @@ function arenaRankFactor(rank) {
   return ARENA_FACTOR_LO + (ARENA_FACTOR_HI - ARENA_FACTOR_LO) * Math.pow(tt, 1.15);
 }
 
-// 六流派各一套 skills + 10 回合固定出手脚本（effect 复用战斗引擎 applySkill 结构）
+// 六种战斗风格各一套 skills + 10 回合固定出手脚本（effect 复用战斗引擎 applySkill 结构）
 function buildArenaSkills(schoolIdx, atk, spi) {
   const r = Math.round;
-  if (schoolIdx === 0) { // 剑修 — 均衡迅捷
+  if (schoolIdx === 0) { // 战斗风格 0 · 均衡迅捷
     return {
       skills: [
         { name: '剑气斩', type: 'phys', mult: 2.2, cost: 10 },
@@ -131,7 +127,7 @@ function buildArenaSkills(schoolIdx, atk, spi) {
       script: ['剑气斩','万剑归宗','剑气斩','破锋式','万剑归宗','剑气斩','御剑护盾','万剑归宗','剑气斩','万剑归宗'],
     };
   }
-  if (schoolIdx === 1) { // 刀客 — 爆发吸血
+  if (schoolIdx === 1) { // 战斗风格 1 · 爆发吸血
     return {
       skills: [
         { name: '蓄力斩', type: 'phys', mult: 1.2, cost: 10 },
@@ -142,7 +138,7 @@ function buildArenaSkills(schoolIdx, atk, spi) {
       script: ['狂刀诀','蓄力斩','裂天斩','裂天斩','血刃回锋','裂天斩','蓄力斩','裂天斩','血刃回锋','裂天斩'],
     };
   }
-  if (schoolIdx === 2) { // 枪神 — 强攻破甲
+  if (schoolIdx === 2) { // 战斗风格 2 · 强攻破甲
     return {
       skills: [
         { name: '寒星突刺', type: 'phys', mult: 2.6, cost: 10 },
@@ -153,7 +149,7 @@ function buildArenaSkills(schoolIdx, atk, spi) {
       script: ['寒星突刺','擎天一击','游龙连刺','破军枪','擎天一击','寒星突刺','游龙连刺','擎天一击','破军枪','擎天一击'],
     };
   }
-  if (schoolIdx === 3) { // 拳师 — 刚体硬控
+  if (schoolIdx === 3) { // 战斗风格 3 · 刚体硬控
     return {
       skills: [
         { name: '崩山拳', type: 'phys', mult: 2.8, cost: 12 },
@@ -164,7 +160,7 @@ function buildArenaSkills(schoolIdx, atk, spi) {
       script: ['金刚体','崩山拳','震岳击','八荒破','崩山拳','八荒破','震岳击','八荒破','崩山拳','八荒破'],
     };
   }
-  if (schoolIdx === 4) { // 法修 — 法术控场 + 灼烧
+  if (schoolIdx === 4) { // 战斗风格 4 · 法术控场 + 灼烧
     return {
       skills: [
         { name: '雷引术', type: 'spirit', mult: 2.4, cost: 12 },
@@ -175,7 +171,7 @@ function buildArenaSkills(schoolIdx, atk, spi) {
       script: ['灼魂咒','雷引术','玄冰封','九霄雷罚','雷引术','九霄雷罚','雷引术','九霄雷罚','玄冰封','九霄雷罚'],
     };
   }
-  // 5 毒修 — 蚀骨中毒 + 减益消耗
+  // 战斗风格 5 · 蚀骨中毒 + 减益消耗
   return {
     skills: [
       { name: '蚀骨毒', type: 'spirit', mult: 0.8, cost: 10, effect: { kind: 'poison', dmg: r(spi * 2.0), dur: 5 } },
@@ -194,7 +190,6 @@ function arenaVirtual(rank) {
   const rng = arenaRng(seed);
   const avatarId = ARENA_AVATARS[seed % ARENA_AVATARS.length];
   const schoolIdx = Math.floor(seed / 6) % ARENA_SCHOOLS.length;
-  const school = ARENA_SCHOOLS[schoolIdx];
   const name = ARENA_SURNAMES[Math.floor(rng() * ARENA_SURNAMES.length)] + ARENA_GIVEN[Math.floor(rng() * ARENA_GIVEN.length)];
   const f = arenaRankFactor(rank);
   const P = player || {};
