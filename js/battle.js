@@ -122,6 +122,19 @@ function startBattle(node, mode) {
       player.passiveTriggers.push(Object.assign({ sid: _id, name: _sk.name }, _sk.passive.trigger));
     }
   }
+  // 开场被动效果：进入战斗后立即生效（碧落生肌法·每回合回血 / 破军·无相·四象·开场增益）
+  // 仅在 startBattle 执行一次，天然满足「每场战斗只触发一次」。
+  if (player.passiveTriggers && player.passiveTriggers.length) {
+    player.passiveTriggers.forEach(t => {
+      if (t.battleStartRegen) {
+        player.regen = { pct: (t.pct != null ? t.pct : 0.03), dur: (t.dur || 5), name: (t.name || '生肌') };
+      }
+      if (t.battleStartBuff) {
+        // 开场 push 在首轮 tickDurations 之前，故 dur+1 使实际持续 t.dur 回合
+        player.buffs.push({ sid: t.sid, stat: t.stat, amt: (t.amt != null ? t.amt : 0), dur: (t.dur || 2) + 1 });
+      }
+    });
+  }
   // 聚合装备特效；若带「罡气」类特效则开局获得护盾
   const mods = (typeof computeEquipMods === 'function') ? computeEquipMods(player) : null;
   if (mods && mods.shieldPct > 0) player.shield = { pct: mods.shieldPct, dur: 999 };
@@ -759,6 +772,28 @@ function evaluatePassiveTriggers(u) {
       if (u.hp > 0 && u.hp < u.maxHp * (t.hpBelow || 0.7) && !u.lowHpLifesteal) {
         u.lowHpLifesteal = t.lifestealNext;
         battle.msg = u.name + ' 血气翻涌，下一击吸取 ' + Math.round(t.lifestealNext * 100) + '% 气血！';
+      }
+      return;
+    }
+    if (t.healHpPct) { // 星潢续命篇：气血首次低于阈值，立刻恢复，每场限一次
+      if (t.fired) return;
+      if (u.hp > 0 && u.hp < u.maxHp * (t.hpBelow || 0.65)) {
+        const h = Math.round(u.maxHp * (t.healHpPct || 0.25));
+        u.hp = Math.min(u.maxHp, u.hp + h);
+        floats.push({ x: u._x, y: u._y, text: '续命+' + h, color: '#3B6D11', ttl: 60 });
+        battle.msg = u.name + ' 气血告急，星潢续命恢复 ' + h + ' 气血！';
+        t.fired = true;
+      }
+      return;
+    }
+    if (t.healMpPct) { // 乾元汇灵录：灵力首次低于阈值，立刻恢复，每场限一次
+      if (t.fired) return;
+      if (u.mp != null && u.hp > 0 && u.mp < u.maxMp * (t.mpBelow || 0.20)) {
+        const m = Math.round(u.maxMp * (t.healMpPct || 0.25));
+        u.mp = Math.min(u.maxMp, u.mp + m);
+        floats.push({ x: u._x, y: u._y, text: '汇灵+' + m, color: '#378ADD', ttl: 60 });
+        battle.msg = u.name + ' 灵力告急，乾元汇灵恢复 ' + m + ' 灵力！';
+        t.fired = true;
       }
       return;
     }
