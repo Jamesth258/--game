@@ -213,7 +213,7 @@ function startBattle(node, mode) {
 // 状态乘区：buff 加成（amt 为比例，1 即 +0%）、debuff 削减（下限 0）
 function buffMul(u, stat) { let m = 1; (u.buffs || []).forEach(b => { if (b.stat === stat) m += b.amt; }); return m; }
 function debuffMul(u, stat) { let m = 1; (u.debuffs || []).forEach(b => { if (b.stat === stat) m -= b.amt; }); return Math.max(0, m); }
-function isImmune(u) { return (u.buffs || []).some(b => b.stat === 'invinc'); }
+function isImmune(u) { return (u.buffs || []).some(b => b.stat === 'invinc' || b.stat === 'debuffImmune'); }
 // 施加减益；noStack 时若同名（同 stat）减益已存在则刷新而非叠加
 function applyDebuff(target, d) {
   if (isImmune(target)) return; // 无敌：免疫一切不良效果
@@ -650,7 +650,7 @@ function applySkill(actor, target, sk) {
       break;
     }
     case 'stun': {
-      if (isImmune(target)) { battle.msg = actor.name + ' 施展「' + sk.name + '」但 ' + target.name + ' 处于无敌，无效'; break; }
+      if (isImmune(target)) { battle.msg = actor.name + ' 施展「' + sk.name + '」但 ' + target.name + ' 免疫不良效果，无效'; break; }
       target.stun = (target.stun || 0) + e.dur;
       battle.msg = actor.name + ' 施展「' + sk.name + '」令 ' + target.name + ' 僵直';
       break;
@@ -666,7 +666,7 @@ function applySkill(actor, target, sk) {
       break;
     }
     case 'poison': {
-      if (isImmune(target)) { battle.msg = actor.name + ' 施展「' + sk.name + '」但 ' + target.name + ' 处于无敌，无效'; break; }
+      if (isImmune(target)) { battle.msg = actor.name + ' 施展「' + sk.name + '」但 ' + target.name + ' 免疫不良效果，无效'; break; }
       target.poison = { dmg: e.dmg, dur: e.dur }; // 每回合开始扣 e.dmg 点血，持续 e.dur 回合
       battle.msg = actor.name + ' 施展「' + sk.name + '」令 ' + target.name + ' 中毒';
       break;
