@@ -1352,7 +1352,7 @@ function drawBattle() {
   floats.forEach(f => {
     ctx.globalAlpha = Math.max(0, f.ttl / 60);
     ctx.fillStyle = f.color;
-    ctx.font = 'bold 15px sans-serif';
+    ctx.font = 'bold 15px STKaiti, KaiTi, 楷体, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.shadowColor = 'rgba(0,0,0,0.55)';
