@@ -133,6 +133,13 @@ function startBattle(node, mode) {
         // 开场 push 在首轮 tickDurations 之前，故 dur+1 使实际持续 t.dur 回合
         player.buffs.push({ sid: t.sid, stat: t.stat, amt: (t.amt != null ? t.amt : 0), dur: (t.dur || 2) + 1 });
       }
+      if (t.initBuffIfSlower) {
+        // 千影灭世光：敌方先攻高于我方时，开场提升我方先攻（百分比），持续 dur 回合，每场限一次
+        const _eInit = (typeof enemy !== 'undefined' && enemy) ? enemy.init : 0;
+        if (_eInit > player.init) {
+          player.buffs.push({ sid: t.sid, stat: 'init', amt: (t.amt != null ? t.amt : 0), dur: (t.dur || 3) + 1 });
+        }
+      }
     });
   }
   // 聚合装备特效；若带「罡气」类特效则开局获得护盾
@@ -504,8 +511,8 @@ function damage(attacker, target, mult, type) {
   // 被动·罡风不灭身：免疫下一次受到的伤害（低血触发，每场限一次）
   if (base > 0 && target.immuneNextHit) {
     target.immuneNextHit = false;
-    floats.push({ x: target._x, y: target._y, text: '罡风护体', color: '#FFD86B', ttl: 60 });
-    battle.msg = target.name + ' 罡风不灭身凝罡，免疫了这次伤害！';
+    floats.push({ x: target._x, y: target._y, text: '凝罡护体', color: '#FFD86B', ttl: 60 });
+    battle.msg = target.name + ' 凝罡护体，免疫了这次伤害！';
     base = 0;
   }
   if (base > 0) target.hp = Math.max(0, target.hp - base);
@@ -849,8 +856,8 @@ function evaluatePassiveTriggers(u) {
       if (t.fired) return;
       if (u.hp > 0 && u.hp < u.maxHp * (t.hpBelow || 0.20)) {
         u.immuneNextHit = true;
-        floats.push({ x: u._x, y: u._y, text: '罡风护体', color: '#FFD86B', ttl: 60 });
-        battle.msg = u.name + ' 气血告危，罡风不灭身凝罡，免疫下一次伤害！';
+        floats.push({ x: u._x, y: u._y, text: (t.name || '罡风') + '护体', color: '#FFD86B', ttl: 60 });
+        battle.msg = u.name + ' 气血告危，' + (t.name || '罡风不灭身') + ' 凝罡，免疫下一次伤害！';
         t.fired = true;
       }
       return;

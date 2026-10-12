@@ -242,6 +242,7 @@ function recalcStats(p) {
   let maxMp  = Math.round(100 + p.com * 20 + idx * 100);    // 灵力上限
   let spiAtk = Math.round(20 + p.sou * 2 + idx * 10);       // 精神攻击
   let spiDef = Math.round(10 + p.sou * 1 + idx * 2);        // 精神防御
+  let defPct = 0, spiDefPct = 0;                            // 防御/精神防御百分比加成（被动心法 +X%）
   let spd    = p.spd;                                        // 速度（战斗速度=属性值）
   let init   = Math.round(10 + p.spd * 2 + idx * 2);        // 先攻值
   let eva    = 0.10 + idx * 0.001 + p.spd * 0.001 + p.des * 0.001; // 闪避率（基础）
@@ -289,8 +290,12 @@ function recalcStats(p) {
       if (pa.pasHit)    hitR   += pa.pasHit;        // 命中率（永久，进面板，随命中率封顶100%）
       if (pa.pasCrit)   pasCR  += pa.pasCrit;       // 暴击率（合并至 cr）
       if (pa.pasCritDmg) pasCD  += pa.pasCritDmg;   // 暴击伤害（合并至 cd，无封顶）
+      if (pa.pasDefPct)    defPct    += pa.pasDefPct;     // 物理防御百分比
+      if (pa.pasSpiDefPct) spiDefPct += pa.pasSpiDefPct;  // 精神防御百分比
     }
   }
+  if (defPct)    def    = Math.round(def * (1 + defPct));
+  if (spiDefPct) spiDef = Math.round(spiDef * (1 + spiDefPct));
 
   p.maxHp = maxHp;
   p.def = def;
