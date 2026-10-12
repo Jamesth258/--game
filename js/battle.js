@@ -455,6 +455,10 @@ function damage(attacker, target, mult, type) {
   }
   // 玩家受击：护体减伤（装备）+ 护盾
   if (tMods && tMods.reduceDmg) base *= (1 - tMods.reduceDmg);
+  // 被动·功法减伤 buff（如九幽玄甲诀：进入战斗后前 N 回合减伤），按受击方 buff 累加
+  let _buffReduce = 0;
+  (target.buffs || []).forEach(b => { if (b.stat === 'reduceDmg') _buffReduce += (b.amt || 0); });
+  if (_buffReduce > 0) base *= (1 - Math.min(0.9, _buffReduce));
   if (target.shield && target.shield.pct) base *= (1 - target.shield.pct);
   base = Math.max(1, Math.round(base));
   // 反弹（功法反弹buff）：将敌方来犯伤害按比率弹回攻击者（先于无敌判定，确保反弹照常生效）
@@ -822,6 +826,19 @@ function evaluatePassiveTriggers(u) {
         floats.push({ x: u._x, y: u._y, text: '罡风护体', color: '#FFD86B', ttl: 60 });
         battle.msg = u.name + ' 气血告危，罡风不灭身凝罡，免疫下一次伤害！';
         t.fired = true;
+      }
+      return;
+    }
+    if (t.enemyHpDrainPct) { // 残血湮灭指：气血低于阈值，立刻扣除敌方 40% 气血，每场限一次
+      if (t.fired) return;
+      if (u.hp > 0 && u.hp < u.maxHp * (t.hpBelow || 0.20)) {
+        const foe = battle.enemy;
+        const d = Math.round(foe.hp * (t.enemyHpDrainPct || 0.4));
+        foe.hp = Math.max(0, foe.hp - d);
+        floats.push({ x: foe._x, y: foe._y, text: '湮灭-' + d, color: '#B23AC9', ttl: 60 });
+        battle.msg = u.name + ' 气血告危，残血湮灭指湮灭敌方 ' + d + ' 气血！';
+        t.fired = true;
+        if (foe.hp <= 0) checkEnd();
       }
       return;
     }
