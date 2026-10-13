@@ -125,7 +125,7 @@ function buildBossSkills(idx, atk, spi) {
   if (idx === 4) { // 血河神祖 — 嗜血狂化 · 吸血与蚀血之咒
     return {
       skills: [
-        { name: '血河噬魂', type: 'phys', mult: 2.8, cost: 12, effect: { kind: 'dmg', type: 'phys', mult: 2.8, lifesteal: 2.0 } },
+        { name: '血河噬魂', type: 'phys', mult: 12, cost: 12, effect: { kind: 'dmg', type: 'phys', mult: 12, lifesteal: 2.0 } },
         { name: '血刃裂空', type: 'phys', mult: 2.2, cost: 12, effect: { kind: 'dmg', type: 'phys', mult: 2.2 } },
         { name: '蚀血之咒', type: 'spirit', mult: 0.6, cost: 10, effect: { kind: 'poison', dmg: r(atk * 1.8), dur: 5 } },
         { name: '血祭狂化', type: 'phys', mult: 0.5, cost: 8, effect: { kind: 'buff', stat: 'atk', amt: 1.0, dur: 3 } },
@@ -164,13 +164,20 @@ function makeWorldBoss(slotIdx) {
   //   固定 2.6 会严重低估 → 攻击力反推偏高 → 玩家被秒。mult 不依赖 atk，故先用占位值取池）。
   const _probe = buildBossSkills(slot.idx, 1000, 1000);
   const BOSS_AVG_MULT = _probe.skills.reduce((s2, x) => s2 + (x.mult || 1), 0) / Math.max(1, _probe.skills.length);
-  const bAtk = (typeof pacingEnemyAtk === 'function')
+  // 2026-10-13 用户拍板：以原设计固定值为「下限」，动态反推只在玩家更强时上调。
+  //   原设计一一 design/世界BOSS系统设计.md §3.2（2026-08-16）：hp = B.maxHp × 100（肉度拉满，无法速杀）；
+  //   design/神魔竞技场 无关；攻击基底 atk 1400 / spi 1500 为 2026-09-17 用户拍板「双砍·温和」后的固定值。
+  //   此前纯动态反推把中期 BOSS 血气压到原设计的 24%（39 万），用户实测反馈「BOSS 太脆、一回合就结束」。
+  const HP_FLOOR  = Math.round(B.maxHp * 100);   // 164 万：肉度地板，任何时候不得低于原设计
+  const ATK_FLOOR = 1400;                        // 2026-09-17 拍板固定基底（不随境界缩放）
+  const SPI_FLOOR = 1500;
+  const bAtk = Math.max(ATK_FLOOR, (typeof pacingEnemyAtk === 'function')
     ? pacingEnemyAtkSeq('worldboss', _probe.skills, 0.60, 1.0, hitRate)
-    : 1400;
-  const bSpi = Math.round(bAtk * 1.05);
-  const hp = (typeof pacingEnemyHp === 'function')
+    : ATK_FLOOR);
+  const bSpi = Math.max(SPI_FLOOR, Math.round(bAtk * 1.05));
+  const hp = Math.max(HP_FLOOR, (typeof pacingEnemyHp === 'function')
     ? pacingEnemyHp('worldboss', def, spiDef, init, eva)
-    : Math.round(B.maxHp * 100);
+    : HP_FLOOR);
   const built = buildBossSkills(slot.idx, bAtk, bSpi);
   const skills = built.skills;
   const ult = skills.find(s => s.ult) || skills[0];

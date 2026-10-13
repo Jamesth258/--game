@@ -203,10 +203,9 @@ function arenaVirtual(rank) {
   const maxMp     = Math.round((P.maxMp  || 600)  * f * jit());
   const def       = Math.round((P.def    || 60)   * f * jit());
   const spiDef    = Math.round((P.spiDef || 60)   * f * jit());
-  // 先攻与名次系数解耦（2026-10-12）：原 init = 玩家先攻 × f(最高 2.6)，
-  // 使榜首对手先攻碾压、玩家被压到每回合 1 次出手，战斗被拖到 10+ 回合。
-  // 现改为独立梯度 0.9~1.5 倍：保证对手仍有先手感，但不至于拉长战斗。
-  const init      = Math.round((P.init   || 60)   * (0.9 + arenaNorm(rank) * 0.6) * (0.9 + rng() * 0.2));
+  // 2026-10-13 用户拍板：先攻恢复原设计（玩家 init × 名次系数 f × 抖动）。
+  //   此前为压战斗长度改成独立梯度 0.9~1.5 倍，导致榜首对手的先手威慑消失（用户反馈「对手打不动我」）。
+  const init      = Math.round((P.init   || 60)   * f * (0.9 + rng() * 0.2));
   const spd       = Math.round((P.spd    || 20)   * (0.9 + rng() * 0.2));
   const eva       = Math.min(0.25, ((P.eva || 0.1) + 0.02) * (0.8 + rng() * 0.4));
   const atkBase    = Math.round((P.atk    || 120)  * f * jit());
@@ -224,15 +223,21 @@ function arenaVirtual(rank) {
   // 攻击力反推用「技能平均倍率」而非大招倍率：敌人按固定脚本混放普攻与大招，
   // 若按大招倍率反推会让攻击力偏低、实战几乎打不动玩家（2026-10-12 校准）。
   const ultMult = built.skills.reduce((s2, x) => s2 + (x.mult || 1), 0) / Math.max(1, built.skills.length);
-  const maxHp = (typeof pacingEnemyHp === 'function')
+  // 2026-10-13：血量同样以原设计值（玩家 maxHp × f × 抖动）为下限，
+  //   否则先攻恢复 f 倍后玩家每回合出手数下降，反推血量会同步缩水，反而让对手更脆。
+  const hpBase = Math.round((P.maxHp || 1200) * f * (0.9 + rng() * 0.2));
+  const maxHp = Math.max(hpBase, (typeof pacingEnemyHp === 'function')
     ? pacingEnemyHp('arena', def, spiDef, init, eva)
-    : Math.round((P.maxHp || 1200) * f * jit());
-  const atk = (typeof pacingEnemyAtk === 'function')
+    : hpBase);
+  // 2026-10-13 用户拍板：以原设计「玩家 atk × 名次系数 f × 抖动」为下限，动态反推只在玩家更强时上调。
+  //   原设计见 design/神魔竞技场_系统设计.md §7.4（stat = base.stat × f × jit，f 最高 2.6）。
+  //   此前纯动态反推把中期榜首对手攻击力压到原设计的约 57%（3408 -> 1927），用户反馈「站着挨打都不掉血」。
+  const atk = Math.max(atkBase, (typeof pacingEnemyAtk === 'function')
     ? pacingEnemyAtkSeq('arena', built.skills, pressure, 1.0, hitRate)
-    : atkBase;
-  const spiAtk = (typeof pacingEnemyAtkSeq === 'function')
+    : atkBase);
+  const spiAtk = Math.max(spiAtkBase, (typeof pacingEnemyAtkSeq === 'function')
     ? pacingEnemyAtkSeq('arena', built.skills, pressure, 1.0, hitRate)
-    : spiAtkBase;
+    : spiAtkBase);
   return {
     name: name, isEnemy: true, avatarId: avatarId,
     rank: rank,
