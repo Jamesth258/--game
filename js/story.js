@@ -73,7 +73,7 @@ function makeStoryEnemy(ch, lv) {
     ? Math.round(pacingEnemyHp('story', def, spiDef, init, eva) * (isBoss ? 1.2 : 1))
     : Math.round((p.maxHp * 0.55 + 90) * D * (isBoss ? 1.7 : 1));
   const atk = (typeof pacingEnemyAtk === 'function')
-    ? pacingEnemyAtkSeq('story', built.skills, isBoss ? 1.05 : 0.95, 1.0, hitRate)
+    ? pacingEnemyAtkSeq('story', built.skills, isBoss ? 1.00 : 0.85, 1.0, hitRate)
     : Math.round((p.atk * 0.42 + 12) * D);
   const mp = Math.round(60 + ch * 1.5);         // 上调：技能组需要连续施法（原 40+ch/2 只够 3~4 次）
   return {

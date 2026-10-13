@@ -60,6 +60,7 @@ const PACING_ROUNDS = { story: 4, arena: 6, worldboss: 10 };  // 各模式目标
 const PACING_LINK_CAP = 4;        // 单回合出手次数封顶（2026-10-13 用户拍板：封顶 4 次）
 const PACING_ULT_CD = { story: 1, arena: 2, worldboss: 2 };  // 大招冷却（按模式：副本 4 回合内放 2 次，竞技场/BOSS 每 3 回合 1 次）
 const PACING_MAX_SINGLE = 0.34;   // 单发伤害上限（占玩家气血）：高倍率大招不能一击秒杀
+const PACING_MIN_SINGLE = 0.22;   // 小技能最低输出（占「单发上限」的比例）：保证低倍率技能也能破防
 const PACING_HP_FIT = { story: 1.10, arena: 1.00, worldboss: 1.30 };  // 血量校准：把实际回合数拉回目标值
 
 // 连动次数：先攻比值 → 本回合出手次数（阶梯 >=2→2, >=3→3, >=4→4, >=5→4 封顶）
@@ -76,8 +77,12 @@ function pacingTargetRounds(mode) { return PACING_ROUNDS[mode] || 4; }
 // 玩家单回合可出手次数（必须与 beginRound 的连动规则一致，否则血量反推会失准）
 function pacingPlayerActions(enemyInit) {
   const pi = (typeof player !== 'undefined' && player && player.init) ? player.init : 1;
-  const ratio = pi / Math.max(1, enemyInit || 1);
-  return linkCountFromRatio(ratio);
+  const ei = Math.max(1, enemyInit || 1);
+  const ratio = pi / ei;
+  // 极品装备的 extraActions 会在封顶之外继续追加（beginRound: n += faster.extraActions）。
+  // 血量反推若不计入，带连动装的玩家会把敌人血量按 1/2 ~ 1/3 的回合数打穿（2026-10-13 修复）。
+  const extra = (pi >= ei && player && player.extraActions) ? player.extraActions : 0;
+  return linkCountFromRatio(ratio) + extra;
 }
 
 // 玩家单击期望伤害（含平均功法倍率与暴击期望；不含防御扣减，由调用方扣）
@@ -154,7 +159,10 @@ function pacingEnemySkillSeq(skills, rounds, ultCd) {
     // 非伤害型技能（增益 / 减益 / 僵直 / 护盾）仍占用回合但不造成伤害 → 按「伤害型占比」折算期望倍率
     const dmgNorms = norms.filter(isDmg);
     const avg = dmgNorms.length ? dmgNorms.reduce((s, x) => s + (x.mult || 1), 0) / dmgNorms.length : 0;
-    nm = avg * (dmgNorms.length / norms.length) * bn;
+    // 2026-10-13 修正：不再乘「伤害型占比」。技能池里若只有 1/4 是 dmg 技能，
+    //   占比折算会把非大招回合的期望倍率压成真实值的 1/4，反推出的 atk 又被高倍率大招主导，
+    //   实战表现为「非大招回合 atk*mult - def < 0，完全零输出」——用户反馈的「打不动我」。
+    nm = avg * bn;
     const sp = norms.filter(s => s.type === 'spirit').length;
     normSpirit = sp > (norms.length - sp);
   }
@@ -182,25 +190,41 @@ function pacingEnemyAtkSeq(mode, skills, pressure, defFactor, enemyHitRate) {
   const effDefP = ((player && player.def) || 0) * df;
   const effDefS = ((player && player.spiDef) || 0) * df;   // 精神系按 spiDef 抵扣（常远低于 def）
   const acc = Math.max(0.30, Math.min(1.0, (enemyHitRate || 1.2) - ((player && player.eva) || 0)));
-  const targetTotal = maxHp * (pressure == null ? 0.7 : pressure) / acc / 1.08;   // 1.08 = 敌人平均暴击加成
-  let lo = 1, hi = Math.max(10000, effDefP * 20 + targetTotal * 4);
+  // pressure = 目标回合内「期望」打掉玩家气血的比例。除以 acc 是把期望还原成名义伤害，
+  // 除以 1.08 是扣掉敌人平均暴击加成。名义值过大会让每发都撞上 singleCap 而失去技能差异。
+  const targetTotal = maxHp * (pressure == null ? 0.7 : pressure) / acc / 1.08;
+  // 单发上限（2026-10-13 修订）：必须钳制「每发的最终伤害」，绝不能钳制攻击力。
+  //   旧实现用大招倍率反推 atk 上限（cap = f(maxHp) / ultMult）。但 damage() 是减法公式
+  //   atk*mult - def，atk 一旦被压到「只够大招打出 34% 血」的水平，低倍率小技能
+  //   （mult 0.4~1.6）乘上去连玩家防御都破不了 -> 实测满级档敌方大小技能伤害全为 0/1，
+  //   敌人形同虚设（用户反馈「站着不动让对方打都掉不了血」的根因）。
+  const singleCap = maxHp * PACING_MAX_SINGLE;
+  // 攻击力硬上界：让「折算倍率最低的那一发」也刚好不超过单发上限。
+  //   没有这个上界，二分在全部发数饱和后会一路把 atk 顶到 hi 初值（实测 20 万~80 万），
+  //   实战表现是每一发都被截断成同一个 34%，大小技能毫无差别。
+  let minM = 0;
+  for (let j = 0; j < info.seq.length; j++) {
+    const m = info.seq[j].m;
+    if (m > 0 && (minM === 0 || m < minM)) minM = m;
+  }
+  const maxAtk = (singleCap + Math.max(effDefP, effDefS)) / Math.max(0.05, minM);
+  // 攻击力下限：保证「倍率最低的伤害技能」也能破防并打出实质伤害。
+  //   没有这个下限时，反推会被高倍率大招主导（中期实测 atk 被压到 478），
+  //   低倍率小技能 atk*mult - def < 0 -> 非大招回合完全零输出。
+  const atkFloor = (singleCap * PACING_MIN_SINGLE + Math.max(effDefP, effDefS)) / Math.max(0.05, minM);
+  let lo = 1, hi = Math.min(maxAtk, Math.max(10000, effDefP * 20 + targetTotal * 4));
+  if (hi <= lo) hi = lo + 1;
   for (let i = 0; i < 60; i++) {
     const mid = (lo + hi) / 2;
     let dmg = 0;
     for (let j = 0; j < info.seq.length; j++) {
-      dmg += Math.max(1, mid * info.seq[j].m - (info.seq[j].spirit ? effDefS : effDefP));
+      const raw = mid * info.seq[j].m - (info.seq[j].spirit ? effDefS : effDefP);
+      dmg += Math.min(singleCap, Math.max(1, raw));   // 与 damage() 内的敌人单发上限同口径
     }
     if (dmg < targetTotal) lo = mid; else hi = mid;
   }
   let atk = (lo + hi) / 2;
-  if (info.ultMult > 0) {
-    // 单发上限（2026-10-13）：封顶的是「期望单次伤害」而非「命中后伤害」。
-    // 玩家堆闪避时命中率很低，若按命中后的伤害封顶会把敌人压到毫无威胁；
-    // acc 折算下限 0.6 → 命中时最多约 75% 气血，足以致命但不会一击秒杀。
-    const accCap = Math.max(0.6, acc);
-    const cap = (maxHp * PACING_MAX_SINGLE / accCap + (info.ultSpirit ? effDefS : effDefP)) / info.ultMult;
-    if (atk > cap) atk = cap;
-  }
+  if (atk < atkFloor) atk = Math.min(atkFloor, maxAtk);
   return Math.max(1, Math.round(atk));
 }
 
@@ -648,6 +672,12 @@ function damage(attacker, target, mult, type) {
 
 
   base = Math.max(1, Math.round(base));
+  // 敌人单发伤害上限（2026-10-13）：高倍率大招不能一击秒杀玩家。
+  //   只钳制「最终伤害」；钳制攻击力会让低倍率技能在减法公式下归零（见 pacingEnemyAtkSeq 注释）。
+  if (attacker.isEnemy && !target.isEnemy) {
+    const _ecap = (target.maxHp || 1000) * PACING_MAX_SINGLE;
+    if (base > _ecap) base = _ecap;
+  }
   // 吸收池护盾（苍穹守元功）：在最小伤害下限之后，优先抵扣实际伤害，耗尽才扣血
   if (target.shield && target.shield.value != null && target.shield.value > 0 && base > 0) {
     const _absorbed = Math.min(target.shield.value, base);
@@ -970,16 +1000,16 @@ function enemySkillScore(enemy, p, sk, turn) {
     if (bst === 'atk' && (enemy._ultCd || 0) <= 1) s += 5;   // 大招快好了 → 先把攻击叠起来
     if (bst && (enemy.buffs || []).some(b => b.stat === bst)) s -= 4;   // 已生效不重复（否则会挤掉大招）
   } else if (kind === 'debuff') {
-    s = turn <= 3 ? 3.5 : 1.5;                   // 开局铺减益
+    s = turn <= 3 ? 2.0 : 0.8;                   // 开局铺减益
     if (ai === 'cunning') s += 2.5;
     const dst = sk.effect.stat || (sk.effect.stats && sk.effect.stats[0]);
     if (dst && (p.debuffs || []).some(b => b.stat === dst)) s -= 4;     // 已生效不重复
   } else if (kind === 'stun') {
-    s = (p.stun || 0) > 0 ? -5 : 3;              // 对手已被控 → 不浪费
+    s = (p.stun || 0) > 0 ? -5 : 2.0;              // 对手已被控 → 不浪费
     if (ai === 'cunning') s += 2;
     if (tHp < 0.3) s += 1.5;                     // 控住再收割
   } else if (kind === 'poison') {
-    s = p.poison ? -4 : 3;                       // 已在中毒 → 不重复
+    s = p.poison ? -4 : 1.8;                       // 已在中毒 → 不重复
     if (ai === 'cunning') s += 2.5;
   }
   if (enemy._lastSkill === sk.name) s -= 3;      // 避免整场重复同一招

@@ -78,6 +78,9 @@ function bossBaseStats() {
   };
 }
 // 世界BOSS 绝学库：每只 BOSS 一套主题进攻手段（中毒/灼烧/减益/僵直/护盾/嗜血/大招）。
+// 2026-10-13 重要修正：每只 BOSS 必须带至少 1 个 kind:'dmg' 的普通技能。
+//   此前非大招全是 poison/debuff/shield，在 pacingEnemySkillSeq 里按 0 伤害折算 ->
+//   反推方程无解使 atk 被推到 35 万~80 万，且实战非大招回合完全不掉血（用户反馈「站着挨打都不掉血」）。
 // 大招倍率 mult 为定值（2026-09-17 温和回调 ×0.6）；基底 atk/spiAtk 由 makeWorldBoss 统一设定（原 2000/2200 → 1400/1500）。保证难度可控且玩家可生存。
 // effect 直接复用战斗引擎 applySkill 的 effect 结构（poison/debuff/stun/shield/buff/dmg-lifesteal）。
 function buildBossSkills(idx, atk, spi) {
@@ -85,54 +88,63 @@ function buildBossSkills(idx, atk, spi) {
   if (idx === 1) { // 幽冥魔尊 — 剧毒侵蚀 · 削减防御/身法
     return {
       skills: [
+        { name: '毒瘴侵蚀', type: 'spirit', mult: 2.4, cost: 12, effect: { kind: 'dmg', type: 'spirit', mult: 2.4 } },
+        { name: '毒刃穿心', type: 'phys', mult: 2.2, cost: 12, effect: { kind: 'dmg', type: 'phys', mult: 2.2 } },
         { name: '噬魂毒雾', type: 'spirit', mult: 1.0, cost: 12, effect: { kind: 'poison', dmg: r(spi * 2.2), dur: 5 } },
         { name: '幽冥诅咒', type: 'spirit', mult: 0.7, cost: 10, effect: { kind: 'debuff', stat: 'def', amt: 0.50, dur: 3 } },
         { name: '蚀骨阴风', type: 'spirit', mult: 0.7, cost: 10, effect: { kind: 'debuff', stat: 'init', amt: 1.0, dur: 3 } },
         { name: '灭世一击', type: 'phys', mult: 9, cost: 20, effect: { kind: 'dmg', type: 'phys', mult: 9 }, ult: true },
       ],
-      script: ['噬魂毒雾','灭世一击','灭世一击','灭世一击','蚀骨阴风','灭世一击','幽冥诅咒','灭世一击','灭世一击','灭世一击'],
+      script: ['毒瘴侵蚀','毒刃穿心','灭世一击','噬魂毒雾','毒瘴侵蚀','灭世一击','毒刃穿心','幽冥诅咒','毒瘴侵蚀','灭世一击'],
     };
   }
   if (idx === 2) { // 焚天炎帝 — 烈焰灼烧 · 蓄力焚天爆炎
     return {
       skills: [
+        { name: '烈焰斩', type: 'phys', mult: 2.6, cost: 12, effect: { kind: 'dmg', type: 'phys', mult: 2.6 } },
+        { name: '炎爆术', type: 'spirit', mult: 2.2, cost: 12, effect: { kind: 'dmg', type: 'spirit', mult: 2.2 } },
         { name: '烈焰焚身', type: 'phys', mult: 1.0, cost: 12, effect: { kind: 'debuff', stat: 'burn', amt: r(atk * 2.5), dur: 5 } },
         { name: '炽炎附魔', type: 'phys', mult: 0.6, cost: 8, effect: { kind: 'buff', stat: 'atk', amt: 1.0, dur: 3 } },
         { name: '焚天爆炎', type: 'phys', mult: 8, cost: 22, effect: { kind: 'dmg', type: 'phys', mult: 8 }, ult: true },
       ],
-      script: ['烈焰焚身','焚天爆炎','焚天爆炎','焚天爆炎','炽炎附魔','焚天爆炎','焚天爆炎','焚天爆炎','焚天爆炎','焚天爆炎'],
+      script: ['烈焰斩','炎爆术','焚天爆炎','炽炎附魔','烈焰斩','焚天爆炎','炎爆术','烈焰焚身','烈焰斩','焚天爆炎'],
     };
   }
   if (idx === 3) { // 九幽冥皇 — 寒霜禁锢 · 僵直减速重击
     return {
       skills: [
+        { name: '冥寒掌', type: 'spirit', mult: 2.5, cost: 12, effect: { kind: 'dmg', type: 'spirit', mult: 2.5 } },
+        { name: '幽冥爪', type: 'phys', mult: 2.3, cost: 12, effect: { kind: 'dmg', type: 'phys', mult: 2.3 } },
         { name: '寒霜禁锢', type: 'spirit', mult: 0.8, cost: 12, effect: { kind: 'stun', dur: 2 } },
         { name: '阴潮蚀骨', type: 'spirit', mult: 0.9, cost: 10, effect: { kind: 'debuff', stat: 'init', amt: 1.0, dur: 3 } },
         { name: '九幽冥爆', type: 'phys', mult: 10, cost: 20, effect: { kind: 'dmg', type: 'phys', mult: 10 }, ult: true },
       ],
-      script: ['寒霜禁锢','九幽冥爆','九幽冥爆','九幽冥爆','阴潮蚀骨','九幽冥爆','九幽冥爆','九幽冥爆','九幽冥爆','九幽冥爆'],
+      script: ['冥寒掌','幽冥爪','九幽冥爆','寒霜禁锢','冥寒掌','九幽冥爆','幽冥爪','阴潮蚀骨','冥寒掌','九幽冥爆'],
     };
   }
   if (idx === 4) { // 血河神祖 — 嗜血狂化 · 吸血与蚀血之咒
     return {
       skills: [
-        { name: '血河噬魂', type: 'phys', mult: 12, cost: 12, effect: { kind: 'dmg', type: 'phys', mult: 12, lifesteal: 2.0 } },
+        { name: '血河噬魂', type: 'phys', mult: 2.8, cost: 12, effect: { kind: 'dmg', type: 'phys', mult: 2.8, lifesteal: 2.0 } },
+        { name: '血刃裂空', type: 'phys', mult: 2.2, cost: 12, effect: { kind: 'dmg', type: 'phys', mult: 2.2 } },
         { name: '蚀血之咒', type: 'spirit', mult: 0.6, cost: 10, effect: { kind: 'poison', dmg: r(atk * 1.8), dur: 5 } },
         { name: '血祭狂化', type: 'phys', mult: 0.5, cost: 8, effect: { kind: 'buff', stat: 'atk', amt: 1.0, dur: 3 } },
         { name: '血海滔天', type: 'phys', mult: 8, cost: 20, effect: { kind: 'dmg', type: 'phys', mult: 8, lifesteal: 0.6 }, ult: true },
       ],
-      script: ['蚀血之咒','血海滔天','血海滔天','血海滔天','血河噬魂','血祭狂化','血海滔天','血海滔天','血海滔天','血海滔天'],
+      script: ['血河噬魂','血刃裂空','血海滔天','血祭狂化','血河噬魂','血海滔天','血刃裂空','蚀血之咒','血河噬魂','血海滔天'],
     };
   }
   // 5 / 默认：太虚帝尊 — 综合最强 · 太虚镇魂 + 九天裂魂 + 虚空壁垒 + 寂灭星陨
   return {
     skills: [
+      { name: '太虚剑罡', type: 'phys', mult: 2.6, cost: 12, effect: { kind: 'dmg', type: 'phys', mult: 2.6 } },
+      { name: '太虚罡风', type: 'spirit', mult: 2.2, cost: 12, effect: { kind: 'dmg', type: 'spirit', mult: 2.2 } },
       { name: '太虚镇魂', type: 'spirit', mult: 1.0, cost: 12, effect: { kind: 'debuff', stat: 'atk', amt: 0.50, dur: 3 } },
       { name: '九天裂魂', type: 'spirit', mult: 0.8, cost: 10, effect: { kind: 'debuff', stat: 'def', amt: 0.50, dur: 3 } },
       { name: '虚空壁垒', type: 'phys', mult: 0.4, cost: 10, effect: { kind: 'shield', pct: 0.40, dur: 2 } },
       { name: '寂灭星陨', type: 'phys', mult: 18, cost: 24, effect: { kind: 'dmg', type: 'phys', mult: 18 }, ult: true },
     ],
-    script: ['太虚镇魂','寂灭星陨','寂灭星陨','寂灭星陨','九天裂魂','寂灭星陨','寂灭星陨','虚空壁垒','寂灭星陨','寂灭星陨'],
+    script: ['太虚剑罡','太虚罡风','寂灭星陨','太虚镇魂','太虚剑罡','寂灭星陨','太虚罡风','九天裂魂','太虚剑罡','寂灭星陨'],
   };
 }
 
@@ -150,16 +162,16 @@ function makeWorldBoss(slotIdx) {
   const hitRate = Math.min(1.50, 1.35 + slotIdx * 0.04);   // 2026-10-13：命中率大幅提升（原 0.95）
   // 平均倍率按「本只 BOSS 的真实技能池」动态计算（2026-10-13：大招倍率恢复原值后，
   //   固定 2.6 会严重低估 → 攻击力反推偏高 → 玩家被秒。mult 不依赖 atk，故先用占位值取池）。
-  const _probe = buildBossSkills(slotIdx, 1000, 1000);
+  const _probe = buildBossSkills(slot.idx, 1000, 1000);
   const BOSS_AVG_MULT = _probe.skills.reduce((s2, x) => s2 + (x.mult || 1), 0) / Math.max(1, _probe.skills.length);
   const bAtk = (typeof pacingEnemyAtk === 'function')
-    ? pacingEnemyAtkSeq('worldboss', _probe.skills, 0.80, 1.0, hitRate)
+    ? pacingEnemyAtkSeq('worldboss', _probe.skills, 0.60, 1.0, hitRate)
     : 1400;
   const bSpi = Math.round(bAtk * 1.05);
   const hp = (typeof pacingEnemyHp === 'function')
     ? pacingEnemyHp('worldboss', def, spiDef, init, eva)
     : Math.round(B.maxHp * 100);
-  const built = buildBossSkills(slotIdx, bAtk, bSpi);
+  const built = buildBossSkills(slot.idx, bAtk, bSpi);
   const skills = built.skills;
   const ult = skills.find(s => s.ult) || skills[0];
   return {
