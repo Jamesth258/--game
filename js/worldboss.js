@@ -88,7 +88,7 @@ function buildBossSkills(idx, atk, spi) {
         { name: '噬魂毒雾', type: 'spirit', mult: 1.0, cost: 12, effect: { kind: 'poison', dmg: r(spi * 2.2), dur: 5 } },
         { name: '幽冥诅咒', type: 'spirit', mult: 0.7, cost: 10, effect: { kind: 'debuff', stat: 'def', amt: 0.50, dur: 3 } },
         { name: '蚀骨阴风', type: 'spirit', mult: 0.7, cost: 10, effect: { kind: 'debuff', stat: 'init', amt: 1.0, dur: 3 } },
-        { name: '灭世一击', type: 'phys', mult: 4.2, cost: 20, effect: { kind: 'dmg', type: 'phys', mult: 4.2 }, ult: true },
+        { name: '灭世一击', type: 'phys', mult: 9, cost: 20, effect: { kind: 'dmg', type: 'phys', mult: 9 }, ult: true },
       ],
       script: ['噬魂毒雾','灭世一击','灭世一击','灭世一击','蚀骨阴风','灭世一击','幽冥诅咒','灭世一击','灭世一击','灭世一击'],
     };
@@ -98,7 +98,7 @@ function buildBossSkills(idx, atk, spi) {
       skills: [
         { name: '烈焰焚身', type: 'phys', mult: 1.0, cost: 12, effect: { kind: 'debuff', stat: 'burn', amt: r(atk * 2.5), dur: 5 } },
         { name: '炽炎附魔', type: 'phys', mult: 0.6, cost: 8, effect: { kind: 'buff', stat: 'atk', amt: 1.0, dur: 3 } },
-        { name: '焚天爆炎', type: 'phys', mult: 4, cost: 22, effect: { kind: 'dmg', type: 'phys', mult: 4 }, ult: true },
+        { name: '焚天爆炎', type: 'phys', mult: 8, cost: 22, effect: { kind: 'dmg', type: 'phys', mult: 8 }, ult: true },
       ],
       script: ['烈焰焚身','焚天爆炎','焚天爆炎','焚天爆炎','炽炎附魔','焚天爆炎','焚天爆炎','焚天爆炎','焚天爆炎','焚天爆炎'],
     };
@@ -108,7 +108,7 @@ function buildBossSkills(idx, atk, spi) {
       skills: [
         { name: '寒霜禁锢', type: 'spirit', mult: 0.8, cost: 12, effect: { kind: 'stun', dur: 2 } },
         { name: '阴潮蚀骨', type: 'spirit', mult: 0.9, cost: 10, effect: { kind: 'debuff', stat: 'init', amt: 1.0, dur: 3 } },
-        { name: '九幽冥爆', type: 'phys', mult: 4.5, cost: 20, effect: { kind: 'dmg', type: 'phys', mult: 4.5 }, ult: true },
+        { name: '九幽冥爆', type: 'phys', mult: 10, cost: 20, effect: { kind: 'dmg', type: 'phys', mult: 10 }, ult: true },
       ],
       script: ['寒霜禁锢','九幽冥爆','九幽冥爆','九幽冥爆','阴潮蚀骨','九幽冥爆','九幽冥爆','九幽冥爆','九幽冥爆','九幽冥爆'],
     };
@@ -119,7 +119,7 @@ function buildBossSkills(idx, atk, spi) {
         { name: '血河噬魂', type: 'phys', mult: 12, cost: 12, effect: { kind: 'dmg', type: 'phys', mult: 12, lifesteal: 2.0 } },
         { name: '蚀血之咒', type: 'spirit', mult: 0.6, cost: 10, effect: { kind: 'poison', dmg: r(atk * 1.8), dur: 5 } },
         { name: '血祭狂化', type: 'phys', mult: 0.5, cost: 8, effect: { kind: 'buff', stat: 'atk', amt: 1.0, dur: 3 } },
-        { name: '血海滔天', type: 'phys', mult: 4, cost: 20, effect: { kind: 'dmg', type: 'phys', mult: 4, lifesteal: 0.6 }, ult: true },
+        { name: '血海滔天', type: 'phys', mult: 8, cost: 20, effect: { kind: 'dmg', type: 'phys', mult: 8, lifesteal: 0.6 }, ult: true },
       ],
       script: ['蚀血之咒','血海滔天','血海滔天','血海滔天','血河噬魂','血祭狂化','血海滔天','血海滔天','血海滔天','血海滔天'],
     };
@@ -130,7 +130,7 @@ function buildBossSkills(idx, atk, spi) {
       { name: '太虚镇魂', type: 'spirit', mult: 1.0, cost: 12, effect: { kind: 'debuff', stat: 'atk', amt: 0.50, dur: 3 } },
       { name: '九天裂魂', type: 'spirit', mult: 0.8, cost: 10, effect: { kind: 'debuff', stat: 'def', amt: 0.50, dur: 3 } },
       { name: '虚空壁垒', type: 'phys', mult: 0.4, cost: 10, effect: { kind: 'shield', pct: 0.40, dur: 2 } },
-      { name: '寂灭星陨', type: 'phys', mult: 5, cost: 24, effect: { kind: 'dmg', type: 'phys', mult: 5 }, ult: true },
+      { name: '寂灭星陨', type: 'phys', mult: 18, cost: 24, effect: { kind: 'dmg', type: 'phys', mult: 18 }, ult: true },
     ],
     script: ['太虚镇魂','寂灭星陨','寂灭星陨','寂灭星陨','九天裂魂','寂灭星陨','寂灭星陨','虚空壁垒','寂灭星陨','寂灭星陨'],
   };
@@ -143,17 +143,21 @@ function makeWorldBoss(slotIdx) {
   // 原实现是「固定 164 万血 + 固定 atk 1400」，与玩家战力完全脱钩 →
   // 中期玩家打不动（199 回合），后期玩家几回合秒杀，是断崖式难度曲线而非平滑曲线。
   // 现改为：防御随玩家缩放；血量与攻击按「玩家单回合实际输出 × 目标回合数」反推。
-  const def    = Math.max(1, Math.round((player.def    || 60) * 0.45));
-  const spiDef = Math.max(1, Math.round((player.spiDef || 60) * 0.45));
+  const def    = Math.max(1, Math.round((player.def    || 60) * 0.60));   // 2026-10-13：BOSS 防御上调
+  const spiDef = Math.max(1, Math.round((player.spiDef || 60) * 0.60));
   const init   = Math.max(1, Math.round((player.init   || 60) * 0.35));
   const eva    = Math.min(0.15, B.eva);
-  const BOSS_ULT_MULT = 2.6;   // BOSS 技能平均倍率（普通 1.6~2.5 / 大招 4~5，脚本混放）用于反推攻击力
+  const hitRate = Math.min(1.50, 1.35 + slotIdx * 0.04);   // 2026-10-13：命中率大幅提升（原 0.95）
+  // 平均倍率按「本只 BOSS 的真实技能池」动态计算（2026-10-13：大招倍率恢复原值后，
+  //   固定 2.6 会严重低估 → 攻击力反推偏高 → 玩家被秒。mult 不依赖 atk，故先用占位值取池）。
+  const _probe = buildBossSkills(slotIdx, 1000, 1000);
+  const BOSS_AVG_MULT = _probe.skills.reduce((s2, x) => s2 + (x.mult || 1), 0) / Math.max(1, _probe.skills.length);
   const bAtk = (typeof pacingEnemyAtk === 'function')
-    ? pacingEnemyAtk('worldboss', BOSS_ULT_MULT, 0.9, 0.7)
+    ? pacingEnemyAtkSeq('worldboss', _probe.skills, 0.80, 1.0, hitRate)
     : 1400;
   const bSpi = Math.round(bAtk * 1.05);
   const hp = (typeof pacingEnemyHp === 'function')
-    ? pacingEnemyHp('worldboss', def, spiDef, init)
+    ? pacingEnemyHp('worldboss', def, spiDef, init, eva)
     : Math.round(B.maxHp * 100);
   const built = buildBossSkills(slotIdx, bAtk, bSpi);
   const skills = built.skills;
@@ -163,12 +167,14 @@ function makeWorldBoss(slotIdx) {
     maxHp: hp, hp: hp, maxMp: B.maxMp, mp: B.maxMp,
     // 攻击/精神攻击用指定基底（玩家靠回血丹顶住高频大招）；防御/先攻/闪避维持满值（肉度拉满）
     atk: bAtk, def: def, spd: B.spd,
-    init: init, eva: eva, hitRate: 0.95, spiAtk: bSpi, spiDef: spiDef,
+    init: init, eva: eva, spiAtk: bSpi, spiDef: spiDef,
+    hitRate: hitRate,
     luck: 0, potions: 0, defending: false, extraActions: 0,
     buffs: [], debuffs: [], shield: null, stun: 0, poison: null,
     skills: skills,                       // 绝学组合（中毒/灼烧/减益/僵直/护盾/大招）
     skill: ult,                           // 兜底单体大招（普攻回退时可用）
-    _script: built.script,                // 固定 10 回合出手脚本（用户逐回合指定）
+    _script: built.script,                // 兜底顺序（2026-10-13：改由情境智能 AI 决策，脚本仅作无解时回退）
+    _ai: ['brute', 'cunning', 'steady'][slotIdx % 3],   // 情境智能 AI 的性格倾向
     _turn: 0,                             // enemyAct 按 _script[_turn-1] 精确施放
     _x: 490, _y: 160,
   };

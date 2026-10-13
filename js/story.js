@@ -30,35 +30,63 @@ function storyChapterLockReason(ch) {
 }
 
 // 按章节/关卡缩放敌方强度（以玩家当前属性为基准 × 章节难度系数，保证可战胜且随进度变难）
+// 副本敌人技能组（2026-10-13）：原「1 个技能 + 50% 平A」过于单调，
+// 改为 4 技能组（输出 / 减益 / 增益 / 大招），守关 BOSS 追加护盾技，
+// 由 battle.js 的情境智能 AI 按战场状态选招。奇数章精神系、偶数章物理系交替。
+function buildStorySkills(ch, isBoss) {
+  const spirit = ch % 2 === 1;
+  const ai = ['brute', 'cunning', 'steady'][ch % 3];
+  const ult = isBoss ? 3.6 : 3.2;
+  const skills = spirit ? [
+    { name: '灵芒击', type: 'spirit', mult: 2.4, cost: 10 },
+    { name: '蚀魂咒', type: 'spirit', mult: 1.6, cost: 10, effect: { kind: 'debuff', stat: 'spiDef', amt: 0.35, dur: 3 } },
+    { name: '咒缚',   type: 'spirit', mult: 1.6, cost: 12, effect: { kind: 'stun', dur: 2 } },
+    { name: '灵爆',   type: 'spirit', mult: ult, cost: 20, effect: { kind: 'dmg', type: 'spirit', mult: ult }, ult: true },
+  ] : [
+    { name: '猛击',   type: 'phys', mult: 2.4, cost: 10 },
+    { name: '碎骨',   type: 'phys', mult: 1.6, cost: 10, effect: { kind: 'debuff', stat: 'def', amt: 0.35, dur: 3 } },
+    { name: '狂血',   type: 'phys', mult: 0.6, cost: 8,  effect: { kind: 'buff', stat: 'atk', amt: 0.7, dur: 3 } },
+    { name: '裂石崩', type: 'phys', mult: ult, cost: 20, effect: { kind: 'dmg', type: 'phys', mult: ult }, ult: true },
+  ];
+  if (isBoss) skills.push(spirit
+    ? { name: '玄灵护体', type: 'spirit', mult: 0.6, cost: 12, effect: { kind: 'shield', pct: 0.35, dur: 2 } }
+    : { name: '磐石护体', type: 'phys',   mult: 0.6, cost: 12, effect: { kind: 'shield', pct: 0.35, dur: 2 } });
+  return { skills: skills, ai: ai };
+}
+
 function makeStoryEnemy(ch, lv) {
   const data = STORY_BY_CH[ch];
   const isBoss = lv === 10;
   const D = 0.5 + ch * 0.05 + lv * 0.012;   // ch1≈0.56 → ch100≈5.62
   const p = player;
-  const def    = Math.round((p.def * 0.45 + 6) * D);
-  const spiDef = Math.round((p.spiDef * 0.4 + 4) * D);
+  const def    = Math.round((p.def * 0.60 + 8) * D);      // 2026-10-13：防御上调，让「破防」成为副本推进的一部分
+  const spiDef = Math.round((p.spiDef * 0.55 + 6) * D);
   const spd    = Math.round(p.spd * 0.82 + ch * 0.22 + (isBoss ? 6 : 0));
   const init   = Math.round(10 + spd * 2);
   const skillMult = 1.7 + ch * 0.01;
+  const built = buildStorySkills(ch, isBoss);   // 2026-10-13：技能组 + 性格（供情境智能 AI 使用）
+  const eva     = Math.min(0.15, 0.05 + ch * 0.001);
+  const hitRate = Math.min(1.50, 1.20 + ch * 0.003 + (isBoss ? 0.08 : 0));   // 2026-10-13：命中率大幅提升（原 0.95）
   // 战斗节奏（2026-10-12）：血量/攻击按「目标回合数 4」反推。
   // 原公式只按玩家血量/攻击的固定比例缩放，未计入玩家连动与暴击放大 → 后期一回合秒杀。
   const hp = (typeof pacingEnemyHp === 'function')
-    ? Math.round(pacingEnemyHp('story', def, spiDef, init) * (isBoss ? 1.2 : 1))
+    ? Math.round(pacingEnemyHp('story', def, spiDef, init, eva) * (isBoss ? 1.2 : 1))
     : Math.round((p.maxHp * 0.55 + 90) * D * (isBoss ? 1.7 : 1));
   const atk = (typeof pacingEnemyAtk === 'function')
-    ? pacingEnemyAtk('story', skillMult, isBoss ? 0.75 : 0.7, 0.7)
+    ? pacingEnemyAtkSeq('story', built.skills, isBoss ? 1.05 : 0.95, 1.0, hitRate)
     : Math.round((p.atk * 0.42 + 12) * D);
-  const mp = 40 + Math.floor(ch / 2);
+  const mp = Math.round(60 + ch * 1.5);         // 上调：技能组需要连续施法（原 40+ch/2 只够 3~4 次）
   return {
     name: data.title + (isBoss ? '·守关boss' : '·第' + lv + '关'),
     isEnemy: true,
     maxHp: hp, hp: hp, maxMp: mp, mp: mp,
     atk, def, spd,
-    init: init, eva: Math.min(0.15, 0.05 + ch * 0.001), hitRate: 0.95,
+    init: init, eva: eva, hitRate: hitRate,
     spiAtk: Math.round(p.spiAtk * 0.4 * D), spiDef: spiDef, luck: 0,
     potions: 0, defending: false, extraActions: 0,
     buffs: [], debuffs: [], shield: null, stun: 0,
-    skill: { name: '敌袭', type: 'phys', mult: skillMult, cost: 10 },
+    skill: { name: '敌袭', type: 'phys', mult: skillMult, cost: 10 },   // 兜底单体技（AI 无解时）
+    skills: built.skills, _ai: built.ai,
   };
 }
 

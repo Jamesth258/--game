@@ -57,8 +57,19 @@ const BOSS_SPRITES = {
 // 方案：敌人血量 = 玩家单回合期望输出 × 目标回合数；敌人攻击 = 让玩家在目标回合内承受预期压力。
 //   这样无论玩家战力如何膨胀，战斗长度都稳定在设计值附近，功法/buff/被动才有登场空间。
 const PACING_ROUNDS = { story: 4, arena: 6, worldboss: 10 };  // 各模式目标回合数（用户拍板）
-const PACING_LINK_RATIO = 4;      // 连动触发倍率（与 beginRound 保持一致）
-const PACING_LINK_CAP = 2;        // 连动后单回合出手次数上限（与 beginRound 保持一致）
+const PACING_LINK_CAP = 4;        // 单回合出手次数封顶（2026-10-13 用户拍板：封顶 4 次）
+const PACING_ULT_CD = { story: 1, arena: 2, worldboss: 2 };  // 大招冷却（按模式：副本 4 回合内放 2 次，竞技场/BOSS 每 3 回合 1 次）
+const PACING_MAX_SINGLE = 0.34;   // 单发伤害上限（占玩家气血）：高倍率大招不能一击秒杀
+const PACING_HP_FIT = { story: 1.10, arena: 1.00, worldboss: 1.30 };  // 血量校准：把实际回合数拉回目标值
+
+// 连动次数：先攻比值 → 本回合出手次数（阶梯 >=2→2, >=3→3, >=4→4, >=5→4 封顶）
+// beginRound 与 pacing 血量反推共用此函数，保证「敌人血量」永远按玩家实际出手次数反推。
+function linkCountFromRatio(ratio) {
+  let n = Math.floor(ratio);
+  if (n < 1) n = 1;
+  if (n > PACING_LINK_CAP) n = PACING_LINK_CAP;
+  return n;
+}
 
 function pacingTargetRounds(mode) { return PACING_ROUNDS[mode] || 4; }
 
@@ -66,7 +77,7 @@ function pacingTargetRounds(mode) { return PACING_ROUNDS[mode] || 4; }
 function pacingPlayerActions(enemyInit) {
   const pi = (typeof player !== 'undefined' && player && player.init) ? player.init : 1;
   const ratio = pi / Math.max(1, enemyInit || 1);
-  return ratio >= PACING_LINK_RATIO ? PACING_LINK_CAP : 1;
+  return linkCountFromRatio(ratio);
 }
 
 // 玩家单击期望伤害（含平均功法倍率与暴击期望；不含防御扣减，由调用方扣）
@@ -91,16 +102,16 @@ function pacingPlayerHit() {
 }
 
 // 敌人血量：让玩家按目标回合数打完（已计入玩家连动次数）
-function pacingEnemyHp(mode, enemyDef, enemySpiDef, enemyInit) {
+function pacingEnemyHp(mode, enemyDef, enemySpiDef, enemyInit, enemyEva) {
   const h = pacingPlayerHit();
   const phys = Math.max(1, h.atk * h.avgMult * h.critF - (enemyDef || 0));
   const spir = Math.max(1, h.spiAtk * h.avgMult * h.critF - (enemySpiDef || 0));
   const perHit = h.useSpirit ? spir : phys;
   const actions = pacingPlayerActions(enemyInit);
-  // 命中补偿：玩家命中率 = player.hitRate − 敌人闪避，未命中的回合不产生伤害，
-  // 若不计入会让敌人血量偏薄、战斗偏快。取保守值 0.82。
-  const acc = 0.82;
-  return Math.round(perHit * actions * pacingTargetRounds(mode) / acc);
+  // 命中补偿动态化（2026-10-13）：实际命中率 = 玩家命中率 − 敌人闪避。
+  // 原硬编码 0.82 在「玩家不堆命中 / 敌人高闪避」时会高估命中 → 敌人血量虚高 → 战斗被拉长一倍。
+  const acc = Math.max(0.30, Math.min(1.0, ((player && player.hitRate) || 0.8) - (enemyEva || 0)));
+  return Math.round(perHit * actions * pacingTargetRounds(mode) / acc * (PACING_HP_FIT[mode] || 1));
 }
 
 // 敌人攻击：让玩家在目标回合内被消耗 pressure 比例的气血
@@ -111,9 +122,86 @@ function pacingEnemyAtk(mode, enemyMult, pressure, defFactor) {
   // defFactor = 1.0：damage() 是「攻击×倍率 − 防御」全额抵扣，若只按部分防御反推，
   // 高防玩家的敌人攻击会被防御完全吃掉 → 敌人打不出伤害（2026-10-12 校准）。
   const effDef = ((player && player.def) || 0) * (defFactor == null ? 1.0 : defFactor);
-  // 命中补偿：敌人命中率 = 敌人 hitRate(0.95) − 玩家闪避(上限 0.30) ≈ 0.65
-  const acc = 0.65;
+  // 命中补偿：敌人命中率已大幅提高（1.05~1.40），玩家闪避上限恢复 100%，
+  // 常规 build（闪避 30~60%）下实际命中约 0.70~0.90，取 0.80 作反推基准。
+  const acc = 0.80;
   return Math.max(1, Math.round((target / acc + effDef) / Math.max(0.5, enemyMult || 1)));
+}
+
+// 按「大招冷却」规则推导目标回合内的技能倍率序列（供攻击力反推使用）
+function pacingEnemySkillSeq(skills, rounds, ultCd) {
+  const list = (skills || []).filter(s => s && s.mult);
+  const ults = list.filter(s => s.ult);
+  const norms = list.filter(s => !s.ult);
+  // 增益·攻击（2026-10-13 校准）：AI 会在大招前叠 atk buff（狂刀诀 +80% / 血祭狂化 +100%），
+  // 若不计入，「带 buff 的大招」实际伤害会是反推值的 1.8~2 倍 → 一击 87% 血秒杀。
+  let atkBuff = 0;
+  list.forEach(s => {
+    const e = s.effect;
+    if (e && e.kind === 'buff' && (e.stat === 'atk' || (e.stats && e.stats.indexOf('atk') >= 0))) {
+      const amt = (e.amt != null ? e.amt : 0);
+      if (amt > atkBuff) atkBuff = amt;
+    }
+  });
+  const bf = 1 + atkBuff;          // 大招几乎总在 buff 生效时施放
+  const bn = 1 + atkBuff * 0.5;    // 普通技能约一半时间带 buff
+  const isDmg = s => { const e = s.effect; return !e || e.kind === 'dmg'; };   // 只有 dmg / 无 effect 才造成伤害
+  const ultSkill = ults.length ? ults.reduce((a, b) => ((b.mult || 1) > (a.mult || 1) ? b : a)) : null;
+  const um = ultSkill ? (ultSkill.mult || 1) * bf : 0;
+  const ultSpirit = !!(ultSkill && ultSkill.type === 'spirit');
+  let nm = 1, normSpirit = false;
+  if (norms.length) {
+    // 非伤害型技能（增益 / 减益 / 僵直 / 护盾）仍占用回合但不造成伤害 → 按「伤害型占比」折算期望倍率
+    const dmgNorms = norms.filter(isDmg);
+    const avg = dmgNorms.length ? dmgNorms.reduce((s, x) => s + (x.mult || 1), 0) / dmgNorms.length : 0;
+    nm = avg * (dmgNorms.length / norms.length) * bn;
+    const sp = norms.filter(s => s.type === 'spirit').length;
+    normSpirit = sp > (norms.length - sp);
+  }
+  const seq = [];
+  let cd = 0;
+  for (let t = 1; t <= rounds; t++) {
+    // 第 1 回合先铺垫（增益 / 减益），第 2 回合起才开大 —— 给玩家一个应对窗口
+    if (um && cd <= 0 && t >= 2) { seq.push({ m: um, spirit: ultSpirit }); cd = (ultCd == null ? 2 : ultCd); }
+    else seq.push({ m: nm, spirit: normSpirit });
+    cd--;
+  }
+  return { seq: seq, ultMult: um, ultSpirit: ultSpirit };
+}
+
+// 敌人攻击（2026-10-13 重写）：按「实际技能序列」二分求解攻击力，
+//   使目标回合内的名义总伤害 = 玩家气血 × pressure ÷ 命中率。
+// 为什么不能用平均倍率：damage() 是减法公式，低倍率技能常被玩家防御完全吃掉（下限 max(1,...)），
+//   用平均值反推会把这部分算成有效伤害 → 实际总伤害远低于目标；
+//   反之若按大招倍率反推则平时挠痒、开大必秒。逐发求和才能同时满足「有压力」和「不秒杀」。
+function pacingEnemyAtkSeq(mode, skills, pressure, defFactor, enemyHitRate) {
+  const maxHp = (player && player.maxHp) || 1000;
+  const rounds = pacingTargetRounds(mode);
+  const info = pacingEnemySkillSeq(skills, rounds, PACING_ULT_CD[mode]);
+  const df = (defFactor == null ? 1.0 : defFactor);
+  const effDefP = ((player && player.def) || 0) * df;
+  const effDefS = ((player && player.spiDef) || 0) * df;   // 精神系按 spiDef 抵扣（常远低于 def）
+  const acc = Math.max(0.30, Math.min(1.0, (enemyHitRate || 1.2) - ((player && player.eva) || 0)));
+  const targetTotal = maxHp * (pressure == null ? 0.7 : pressure) / acc / 1.08;   // 1.08 = 敌人平均暴击加成
+  let lo = 1, hi = Math.max(10000, effDefP * 20 + targetTotal * 4);
+  for (let i = 0; i < 60; i++) {
+    const mid = (lo + hi) / 2;
+    let dmg = 0;
+    for (let j = 0; j < info.seq.length; j++) {
+      dmg += Math.max(1, mid * info.seq[j].m - (info.seq[j].spirit ? effDefS : effDefP));
+    }
+    if (dmg < targetTotal) lo = mid; else hi = mid;
+  }
+  let atk = (lo + hi) / 2;
+  if (info.ultMult > 0) {
+    // 单发上限（2026-10-13）：封顶的是「期望单次伤害」而非「命中后伤害」。
+    // 玩家堆闪避时命中率很低，若按命中后的伤害封顶会把敌人压到毫无威胁；
+    // acc 折算下限 0.6 → 命中时最多约 75% 气血，足以致命但不会一击秒杀。
+    const accCap = Math.max(0.6, acc);
+    const cap = (maxHp * PACING_MAX_SINGLE / accCap + (info.ultSpirit ? effDefS : effDefP)) / info.ultMult;
+    if (atk > cap) atk = cap;
+  }
+  return Math.max(1, Math.round(atk));
 }
 
 function makeEnemy(node) {
@@ -368,6 +456,8 @@ function beginRound() {
   [p, e].forEach(u => { if (u.hp > 0) { u.mp = Math.min(u.maxMp, u.mp + 5); u.defending = false; } });
   // 衰减 buff/debuff/shield 持续时间
   [p, e].forEach(tickDurations);
+  // 敌人大招冷却递减（2026-10-13）：配合 pickEnemySkill 实现「每 4 回合一次大招」
+  if (e && e._ultCd > 0) e._ultCd--;
   // 装备特效：每回合回血/回蓝、积威累加暴击、灼烧结算
   const m = battle.mods;
   if (m) {
@@ -432,13 +522,11 @@ function beginRound() {
     const faster = pInit >= eInit ? p : e;
     const slower = faster === p ? e : p;
     const ratio = faster.init / Math.max(1, slower.init);
-    // 连动上限 2 次（2026-10-12 战斗节奏修复）：
-    // 原公式 floor(ratio/2)+1 无上限，先攻碾压时（如玩家先攻 3602 vs 敌 210 = 17 倍）
-    // 一回合可出手 9 次，功法/buff/被动根本来不及登场，战斗一回合结束。
-    // 现改为：先攻 >=4 倍才多出手 1 次；装备 extraActions 仍可追加，总封顶 3 次。
-    let n = ratio >= 4 ? 2 : 1;
+    // 连动阶梯（2026-10-13 用户拍板）：先攻 >=2 倍 → 多出手 1 次；>=3 倍 → +2；>=4 倍 → +3；>=5 倍 → +4。
+    // 对 ratio 取整即天然对应阶梯（2.x→2, 3.x→3, 4.x→4, >=5→封顶 4）。
+    // 极品装备 extraActions 仍可在封顶之外追加，保留装备价值。
+    let n = linkCountFromRatio(ratio);
     n += (faster.extraActions || 0);
-    if (n > 3) n = 3;
     for (let i = 0; i < n; i++) queue.push(faster);
     queue.push(slower);
   } else if (alive.length === 1) {
@@ -495,11 +583,11 @@ function damage(attacker, target, mult, type) {
   const targetEva = target.eva || 0;
   // 装备命中率已永久并入 player.hitRate（recalcStats 处理）；此处仅叠加功法临时命中率buff
   const accBuff = (battle._tempHitRateBuff || 0); // 功法临时命中率buff（单次生效，攻击后消费）
-  const effectiveHR = Math.min(1.0, attackerHR + accBuff);
+  const effectiveHR = Math.min(1.5, attackerHR + accBuff);   // 命中率上限 150%（2026-10-13：可对冲对手 100% 闪避）
   const actualHitRate = effectiveHR - targetEva;
   let hitChance;
   if (actualHitRate >= 0.5) {
-    hitChance = Math.min(0.95, actualHitRate);       // 高命中率时上限95%（保留一点随机性）
+    hitChance = Math.min(1.5, actualHitRate);       // 上限 150%（2026-10-13：原 95% 封顶使高命中无法压制高闪避）
   } else if (actualHitRate > 0) {
     hitChance = actualHitRate;                         // 正常区间
   } else {
@@ -824,27 +912,111 @@ function battleUseItem(tid) {
   nextTurn();
 }
 
+// ====== 敌人情境智能（2026-10-13 用户拍板：把「照固定脚本念台词」换成「按战场状态决策」）======
+// 三类敌人（副本 / 竞技场 / 世界BOSS）共用同一套决策。
+// 每只敌人有性格 _ai：
+//   brute   莽夫：偏爱高倍率输出，残血就开大，正面硬刚
+//   cunning 阴毒：偏爱减益 / 僵直 / 中毒，先削弱再收割
+//   steady  稳健：先自保（护盾 / 回血 / 增益），血线安全才输出
+// 评分制：所有「当前可用」的技能各自打分，取最高分施放；全部不可用才普攻。
+// 原 _script 保留为兜底顺序（AI 无解时回退），不再是主要驱动。
+function enemySkillKind(sk) {
+  const e = sk.effect || null;
+  if (!e) return 'dmg';
+  if (e.kind === 'heal_hp' || e.kind === 'heal_mp' || e.kind === 'regen') return 'heal';
+  if (e.kind === 'shield') return 'shield';
+  if (e.kind === 'buff') return 'buff';
+  if (e.kind === 'debuff') return 'debuff';
+  if (e.kind === 'stun') return 'stun';
+  if (e.kind === 'poison') return 'poison';
+  return 'dmg';
+}
+
+function enemySkillScore(enemy, p, sk, turn) {
+  const kind = enemySkillKind(sk);
+  const mult = sk.mult || 1;
+  const myHp = enemy.hp / Math.max(1, enemy.maxHp);
+  const tHp = p.hp / Math.max(1, p.maxHp);
+  const ai = enemy._ai || 'brute';
+  let s = 0;
+  if (kind === 'dmg') {
+    s = mult;                                    // 倍率越高越想放
+    if (mult >= 4) s += (ai === 'brute' ? 3 : 0.5);
+    if (sk.ult) s += 8;                          // 大招是主要伤害来源：冷却好了优先放
+    if (myHp < 0.4) s += 4;                      // 自己残血 → 拼命开大
+    if (tHp < 0.25) s += 4;                      // 对手残血 → 追击收割
+    if (p.shield) s += 2;                        // 对手开盾 → 用高伤硬砸
+    if (p.defending) s -= 1.5;                   // 对手防御姿态（伤害减半）→ 性价比下降
+    if (sk.ult) {
+      // 先叠攻击增益再开大（2026-10-13）：pacing 反推假定大招是在增益下施放的，
+      // 若敌人裸放大招，实际伤害只有反推值的一半 → 战斗毫无压力。
+      const hasAtkBuff = (enemy.skills || []).some(x => x.effect && x.effect.kind === 'buff'
+        && (x.effect.stat === 'atk' || (x.effect.stats && x.effect.stats.indexOf('atk') >= 0)));
+      const buffOn = (enemy.buffs || []).some(b => b.stat === 'atk');
+      if (hasAtkBuff && !buffOn) s -= 12;
+      if (turn <= 1) s -= 4;                     // 第 1 回合先铺垫（与 pacing 序列假设一致）
+    }
+  } else if (kind === 'heal') {
+    s = myHp < 0.4 ? 7 : (myHp < 0.7 ? 2 : -3);
+    if (ai === 'steady') s += 1.5;
+  } else if (kind === 'shield') {
+    s = myHp < 0.65 ? 4 : 0.5;
+    if (ai === 'steady') s += 2;
+    if (enemy.shield) s -= 6;                    // 已有护盾不重复开
+  } else if (kind === 'buff') {
+    s = turn <= 2 ? 4 : 1.5;                     // 开局铺增益最划算
+    if (ai === 'steady') s += 1.5;
+    const bst = sk.effect.stat || (sk.effect.stats && sk.effect.stats[0]);
+    if (bst === 'atk' && (enemy._ultCd || 0) <= 1) s += 5;   // 大招快好了 → 先把攻击叠起来
+    if (bst && (enemy.buffs || []).some(b => b.stat === bst)) s -= 4;   // 已生效不重复（否则会挤掉大招）
+  } else if (kind === 'debuff') {
+    s = turn <= 3 ? 3.5 : 1.5;                   // 开局铺减益
+    if (ai === 'cunning') s += 2.5;
+    const dst = sk.effect.stat || (sk.effect.stats && sk.effect.stats[0]);
+    if (dst && (p.debuffs || []).some(b => b.stat === dst)) s -= 4;     // 已生效不重复
+  } else if (kind === 'stun') {
+    s = (p.stun || 0) > 0 ? -5 : 3;              // 对手已被控 → 不浪费
+    if (ai === 'cunning') s += 2;
+    if (tHp < 0.3) s += 1.5;                     // 控住再收割
+  } else if (kind === 'poison') {
+    s = p.poison ? -4 : 3;                       // 已在中毒 → 不重复
+    if (ai === 'cunning') s += 2.5;
+  }
+  if (enemy._lastSkill === sk.name) s -= 3;      // 避免整场重复同一招
+  return s;
+}
+
+function pickEnemySkill(enemy, p) {
+  if (!enemy.skills || !enemy.skills.length) return null;
+  const turn = (enemy._turn || 0) + 1;
+  let best = null, bestScore = -Infinity;
+  enemy.skills.forEach(sk => {
+    if (enemy.mp < (sk.cost || 0)) return;                       // 内力不足
+    if (sk.ult && (enemy._ultCd || 0) > 0) return;               // 大招冷却中
+    if (enemy.silenceRecovery > 0 && enemySkillKind(sk) === 'heal') return;  // 被沉默禁恢复
+    const sc = enemySkillScore(enemy, p, sk, turn);
+    if (sc > bestScore) { bestScore = sc; best = sk; }
+  });
+  return best;
+}
+
 function enemyAct(enemy) {
   const p = battle.player;
-  // 世界BOSS：使用多技能组合（中毒/灼烧/减益/僵直/护盾/大招），按战况择优施放
-  if ((battle.mode === 'worldboss' || battle.mode === 'arena') && enemy.skills && enemy.skills.length) {
-    enemy._turn = (enemy._turn || 0) + 1;
-    // 固定 10 回合出手脚本（用户逐回合指定），按 _script[_turn-1] 精确施放：确定性、无随机、无冷却
+  enemy._turn = (enemy._turn || 0) + 1;
+  if (enemy.skills && enemy.skills.length) {
+    const sk = pickEnemySkill(enemy, p);
+    if (sk) { enemy._lastSkill = sk.name; if (sk.ult) enemy._ultCd = (PACING_ULT_CD[battle.mode] || 2); applySkill(enemy, p, sk); nextTurn(); return; }
+    // 无可用技能（内力不足 / 全被判负分）→ 回退 _script 兜底顺序
     const name = (enemy._script && enemy._script[enemy._turn - 1]) || null;
-    const sk = name ? enemy.skills.find(s => s.name === name) : null;
-    const _silenced = enemy.silenceRecovery > 0;
-    const _recovery = sk && sk.effect && (sk.effect.kind === 'heal_hp' || sk.effect.kind === 'heal_mp' || sk.effect.kind === 'regen');
-    if (sk && enemy.mp >= sk.cost && !(_silenced && _recovery)) {
-      applySkill(enemy, p, sk);
-    } else {
-      applyAction(enemy, p, 'attack');   // 兜底：内力不足 / 脚本缺失 / 被沉默禁恢复时普攻
+    const fb = name ? enemy.skills.find(s => s.name === name) : null;
+    const _recovery = fb && fb.effect && (fb.effect.kind === 'heal_hp' || fb.effect.kind === 'heal_mp' || fb.effect.kind === 'regen');
+    if (fb && enemy.mp >= (fb.cost || 0) && !(enemy.silenceRecovery > 0 && _recovery)) {
+      enemy._lastSkill = fb.name; applySkill(enemy, p, fb); nextTurn(); return;
     }
-    nextTurn();
-    return;
   }
-  // 普通剧情敌人：维持原有「50% 功法 / 50% 普攻」行为
-  const act = (enemy.mp >= enemy.skill.cost && Math.random() < 0.5) ? 'skill' : 'attack';
-  applyAction(enemy, p, act);
+  // 最底层兜底：单技能 / 普攻（普通剧情敌人维持原 50% 概率）
+  if (enemy.skill && enemy.mp >= (enemy.skill.cost || 0) && Math.random() < 0.5) applyAction(enemy, p, 'skill');
+  else applyAction(enemy, p, 'attack');
   nextTurn();
 }
 

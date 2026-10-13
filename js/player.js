@@ -305,8 +305,8 @@ function recalcStats(p) {
   p.spiDef = spiDef;
   p.spd = spd;
   p.init = Math.round(init);
-  p.eva = Math.min(0.30, eva);                     // 闪避率上限 30%（2026-10-12 战斗节奏修复：原 100% 上限使后期玩家闪避堆满，敌人命中率仅 2% 打不中，战斗毫无压力）
-  p.hitRate = Math.min(1.0, hitR);                      // 命中率上限100%
+  p.eva = Math.min(1.0, eva);                      // 闪避率上限 100%（2026-10-13 用户拍板恢复：不削玩家流派，改为把命中率上限提到 150% 并大幅提高敌人命中率来对冲）
+  p.hitRate = Math.min(1.5, hitR);                      // 命中率上限 150%（2026-10-13：原 100% 封顶在对手高闪避时无法反制，放宽到 150% 让「堆命中」成为有效解法）
   p.extraActions = extraActions;
   p.luck = p.des;                                        // 幸运值
   p.xpBonus = (p.com + p.des) * 0.002;                     // 挂机经验加成 = 悟性×0.2% + 天命×0.2%（每点属性各 0.2%）
@@ -342,7 +342,7 @@ function recalcStats(p) {
   //              导致「暴击率 +X%」「暴击伤害 +X%」类被动功法面板上涨、实战不生效。
   p.pasCritTotal = pasCR;
   p.pasCritDmgTotal = pasCD;
-  p.critRate = Math.min(0.65, cr);   // 暴击率上限 65%（2026-10-12 战斗节奏修复：原 100% 上限使后期每击必暴，伤害方差消失）
+  p.critRate = Math.min(1.0, cr);   // 暴击率上限 100%（2026-10-13 用户拍板恢复：暴击流派是玩家的 build 选择，难度改由敌人血量/防御承担）
   p.critDmg = cd;                    // 暴击伤害倍率（面板展示时 ×100% 即总倍率）
   return p;
 }
