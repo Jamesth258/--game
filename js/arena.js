@@ -48,6 +48,7 @@ function ensureArenaDaily() {
       settledDate: prev.settledDate || null,     // 已结算的「名次日」
       lastReward: prev.lastReward || null,
       lastSwap: prev.lastSwap || null,
+      defends: prev.defends || 0,              // 守擂（登顶后）累计卫冕成功次数，跨天不清零
       _lastOpp: null,
     };
   }
@@ -313,14 +314,25 @@ function endArenaBattle(win) {
   const oppRank = player.arena._lastOpp;
   const oldRank = player.arena.rank;
   const oldLabel = oldRank > ARENA_SIZE ? '榜外' : ('第 ' + oldRank + ' 名');
-  let msg, took = false;
+  let msg, took = false, defend = 0;
   if (win && oppRank && oppRank < oldRank) {
     player.arena.rank = oppRank;
     player.arena.lastSwap = { from: oldRank, to: oppRank, date: arenaTodayStr() };
     msg = '★ 胜！夺取第 ' + oppRank + ' 名（原 ' + oldLabel + '）';
     took = true;
+  } else if (win && oldRank === 1) {
+    // 守擂成功：保住第 1 名，累计卫冕次数（2026-10-13 用户拍板）
+    player.arena.defends = (player.arena.defends || 0) + 1;
+    msg = '★ 守擂成功！第 1 名稳固（累计卫冕 ' + player.arena.defends + ' 次）';
+    defend = 1;
   } else if (win) {
     msg = '★ 胜！对手排名在你之后，名次保持不变（' + oldLabel + '）';
+  } else if (oldRank === 1 && oppRank && oppRank > 1) {
+    // 守擂失败：挑战者夺走榜首，双方互换位置（延续 §4 互换语义）
+    player.arena.rank = oppRank;
+    player.arena.lastSwap = { from: 1, to: oppRank, date: arenaTodayStr() };
+    msg = '守擂失败！第 ' + oppRank + ' 名挑战者夺走榜首之位，你跌至第 ' + oppRank + ' 名';
+    defend = 2;
   } else {
     msg = '败北……名次不变（挑战次数 -1）';
   }
@@ -328,7 +340,7 @@ function endArenaBattle(win) {
   if (typeof saveGame === 'function') saveGame();
   state = win ? 'win' : 'lose';
   toast = msg;
-  openArenaResult(win, oppRank, took);
+  openArenaResult(win, oppRank, took, defend);
 }
 
 // ====== 界面 ======
@@ -371,12 +383,12 @@ function openArenaScreen() {
   } else {
     const opps = arenaOpponents();
     const hint = onBoard
-      ? (my === 1 ? '你已登顶 · 对手皆在你之后' : '1 名在你之后 · 4 名在你之前')
+      ? (my === 1 ? ('你已登顶 · 守擂战（败则失位）· 累计卫冕 ' + (player.arena.defends || 0) + ' 次') : '1 名在你之后 · 4 名在你之前')
       : '你尚在榜外 · 全为榜尾对手';
     html += `<div class="equip-sec-title">可挑战对手（${opps.length}）　<span style="font-size:11px;color:rgba(241,239,232,.55);font-weight:400">${hint}</span></div><div class="bag-list">`;
     opps.forEach(o => {
       const av = (typeof AVATAR_MAP !== 'undefined' && AVATAR_MAP[o.avatarId]) ? AVATAR_MAP[o.avatarId].img : '';
-      const dir = onBoard ? (o.rank > my ? '在你之后' : '在你之前') : '榜尾';
+      const dir = !onBoard ? '榜尾' : (my === 1 ? '守擂挑战者' : (o.rank > my ? '在你之后' : '在你之前'));
       html += `<div class="bag-item" style="align-items:center">`
         + `<img src="${av}" style="width:34px;height:34px;border-radius:8px;margin-right:8px;border:1px solid rgba(212,168,67,.35);object-fit:cover" alt="">`
         + `<div class="bag-info"><span class="bag-name">第 ${o.rank} 名 · ${esc(o.name)}</span>`
@@ -390,13 +402,15 @@ function openArenaScreen() {
   openModal(html);
 }
 
-function openArenaResult(win, oppRank, took) {
+function openArenaResult(win, oppRank, took, defend) {
   ensureArenaDaily();
   const my = player.arena.rank;
   const onBoard = my <= ARENA_SIZE;
   const remain = player.arena.attempts;
   let html = `<div class="hub-modal-title"><img src="assets/icons/icon_arena.png?v=12" style="width:22px;height:22px;vertical-align:-4px;margin-right:6px" alt=""><h3 style="margin:0">神魔竞技场 · 战果</h3></div>`;
-  if (win && took)      html += `<p style="margin:6px 0;font-size:15px;font-weight:700;color:#D4A843">★ 胜利！你已夺取第 ${my} 名</p>`;
+  if (defend === 1)     html += `<p style="margin:6px 0;font-size:15px;font-weight:700;color:#D4A843">★ 守擂成功！第 1 名稳固（累计卫冕 ${(player.arena.defends || 0)} 次）</p>`;
+  else if (defend === 2) html += `<p style="margin:6px 0;font-size:15px;font-weight:700;color:#E87B7B">守擂失败 — 第 ${oppRank} 名挑战者夺走榜首，你跌至第 ${my} 名</p>`;
+  else if (win && took) html += `<p style="margin:6px 0;font-size:15px;font-weight:700;color:#D4A843">★ 胜利！你已夺取第 ${my} 名</p>`;
   else if (win)         html += `<p style="margin:6px 0;font-size:15px;font-weight:700;color:#D4A843">★ 胜利！对手排名在你之后，名次保持${onBoard ? ('第 ' + my + ' 名') : '榜外'}</p>`;
   else                  html += `<p style="margin:6px 0;font-size:15px;font-weight:700;color:#E87B7B">败北 — 名次不变，再战可期</p>`;
   html += `<p style="margin:2px 0;font-size:12px;color:rgba(241,239,232,.7)">当前名次：<b style="color:#D4A843">${onBoard ? ('第 ' + my + ' 名') : '榜外（第 1001）'}</b> ｜ 剩余挑战：<b>${remain}</b> 次</p>`;
