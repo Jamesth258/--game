@@ -51,6 +51,71 @@ const BOSS_SPRITES = {
   4: 'assets/battle/boss_4.png?v=1', 5: 'assets/battle/boss_5.png?v=1',
 };
 
+// ===== 战斗节奏（Pacing）——目标回合数驱动（2026-10-12 战斗节奏修复）=====
+// 背景（问题根因）：敌人属性原按「玩家属性比例」线性缩放，完全没考虑玩家单回合实际输出，
+//   而玩家输出被 装备/被动心法/暴击/先攻连动 层层放大 → 副本一回合秒、竞技场被对手一回合秒。
+// 方案：敌人血量 = 玩家单回合期望输出 × 目标回合数；敌人攻击 = 让玩家在目标回合内承受预期压力。
+//   这样无论玩家战力如何膨胀，战斗长度都稳定在设计值附近，功法/buff/被动才有登场空间。
+const PACING_ROUNDS = { story: 4, arena: 6, worldboss: 10 };  // 各模式目标回合数（用户拍板）
+const PACING_LINK_RATIO = 4;      // 连动触发倍率（与 beginRound 保持一致）
+const PACING_LINK_CAP = 2;        // 连动后单回合出手次数上限（与 beginRound 保持一致）
+
+function pacingTargetRounds(mode) { return PACING_ROUNDS[mode] || 4; }
+
+// 玩家单回合可出手次数（必须与 beginRound 的连动规则一致，否则血量反推会失准）
+function pacingPlayerActions(enemyInit) {
+  const pi = (typeof player !== 'undefined' && player && player.init) ? player.init : 1;
+  const ratio = pi / Math.max(1, enemyInit || 1);
+  return ratio >= PACING_LINK_RATIO ? PACING_LINK_CAP : 1;
+}
+
+// 玩家单击期望伤害（含平均功法倍率与暴击期望；不含防御扣减，由调用方扣）
+// 主输出路线：按已装备功法的 phys/spirit 数量分布决定。
+//   2026-10-12 校准：此前 perHit 取 max(物理线, 精神线)，而玩家实战只用一条路线，
+//   导致估算偏高 → 敌人血量虚高、战斗比目标长一倍（竞技场实测 12.5 回合 vs 目标 6）。
+function pacingPlayerHit() {
+  let avgMult = 2.8;   // 兜底：全库主动功法倍率中位数
+  let physCnt = 0, spirCnt = 0;
+  if (typeof SKILLS_DB_MAP !== 'undefined' && typeof player !== 'undefined' && player && player.equippedSkills) {
+    const list = player.equippedSkills.map(id => SKILLS_DB_MAP[id]).filter(s => s && s.mult);
+    if (list.length) {
+      avgMult = list.reduce((s, x) => s + (x.mult || 1), 0) / list.length;
+      list.forEach(s => { if (s.type === 'spirit') spirCnt++; else physCnt++; });
+    }
+  }
+  const critF = 1 + ((player && player.critRate) || 0) * Math.max(0, ((player && player.critDmg) || 1.5) - 1);
+  return {
+    atk: (player && player.atk) || 0, spiAtk: (player && player.spiAtk) || 0,
+    avgMult: avgMult, critF: critF, useSpirit: spirCnt > physCnt,
+  };
+}
+
+// 敌人血量：让玩家按目标回合数打完（已计入玩家连动次数）
+function pacingEnemyHp(mode, enemyDef, enemySpiDef, enemyInit) {
+  const h = pacingPlayerHit();
+  const phys = Math.max(1, h.atk * h.avgMult * h.critF - (enemyDef || 0));
+  const spir = Math.max(1, h.spiAtk * h.avgMult * h.critF - (enemySpiDef || 0));
+  const perHit = h.useSpirit ? spir : phys;
+  const actions = pacingPlayerActions(enemyInit);
+  // 命中补偿：玩家命中率 = player.hitRate − 敌人闪避，未命中的回合不产生伤害，
+  // 若不计入会让敌人血量偏薄、战斗偏快。取保守值 0.82。
+  const acc = 0.82;
+  return Math.round(perHit * actions * pacingTargetRounds(mode) / acc);
+}
+
+// 敌人攻击：让玩家在目标回合内被消耗 pressure 比例的气血
+//   defFactor：玩家防御的有效抵扣比例（保留堆防收益，避免动态难度把防御收益完全抵消）
+function pacingEnemyAtk(mode, enemyMult, pressure, defFactor) {
+  const maxHp = (player && player.maxHp) || 1000;
+  const target = maxHp * (pressure == null ? 0.7 : pressure) / pacingTargetRounds(mode);
+  // defFactor = 1.0：damage() 是「攻击×倍率 − 防御」全额抵扣，若只按部分防御反推，
+  // 高防玩家的敌人攻击会被防御完全吃掉 → 敌人打不出伤害（2026-10-12 校准）。
+  const effDef = ((player && player.def) || 0) * (defFactor == null ? 1.0 : defFactor);
+  // 命中补偿：敌人命中率 = 敌人 hitRate(0.95) − 玩家闪避(上限 0.30) ≈ 0.65
+  const acc = 0.65;
+  return Math.max(1, Math.round((target / acc + effDef) / Math.max(0.5, enemyMult || 1)));
+}
+
 function makeEnemy(node) {
   const e = node.enemy;
   return {
@@ -367,8 +432,13 @@ function beginRound() {
     const faster = pInit >= eInit ? p : e;
     const slower = faster === p ? e : p;
     const ratio = faster.init / Math.max(1, slower.init);
-    let n = ratio >= 2 ? Math.floor(ratio / 2) + 1 : 1;
+    // 连动上限 2 次（2026-10-12 战斗节奏修复）：
+    // 原公式 floor(ratio/2)+1 无上限，先攻碾压时（如玩家先攻 3602 vs 敌 210 = 17 倍）
+    // 一回合可出手 9 次，功法/buff/被动根本来不及登场，战斗一回合结束。
+    // 现改为：先攻 >=4 倍才多出手 1 次；装备 extraActions 仍可追加，总封顶 3 次。
+    let n = ratio >= 4 ? 2 : 1;
     n += (faster.extraActions || 0);
+    if (n > 3) n = 3;
     for (let i = 0; i < n; i++) queue.push(faster);
     queue.push(slower);
   } else if (alive.length === 1) {
@@ -462,10 +532,17 @@ function damage(attacker, target, mult, type) {
   if (aMods) {
     critChance += aMods.critRate;
     if (aMods.lowHpCrit && attacker.hp / attacker.maxHp < 0.3) critChance += aMods.lowHpCrit;
-    if (battle._stackCrit) critChance += battle._stackCrit;
   }
+  // 被动心法·暴击率（pasCrit）：2026-10-12 修复——此前战斗内暴击判定不读被动功法，
+  // 导致「暴击率 +X%」类被动（残血焚血术/黄泉电光决/离火玄甲诀/残血湮灭指等）实战不生效。
+  if (!attacker.isEnemy && typeof player !== 'undefined' && player && player.pasCritTotal) {
+    critChance += player.pasCritTotal;
+  }
+  if (battle._stackCrit) critChance += battle._stackCrit;
   const crit = Math.random() < Math.min(1.0, critChance);
-  let critMul = 1.5 + (aMods ? aMods.critDmg : 0) + Math.max(0, buffMul(attacker, 'critdmg') - 1); // 会心：装备暴伤 + 功法暴伤buff
+  // 2026-10-12 修复：末尾追加「被动心法·暴击伤害（pasCritDmg）」，使「暴击伤害 +X%」类被动实战生效
+  let critMul = 1.5 + (aMods ? aMods.critDmg : 0) + Math.max(0, buffMul(attacker, 'critdmg') - 1)
+              + ((!attacker.isEnemy && typeof player !== 'undefined' && player && player.pasCritDmgTotal) ? player.pasCritDmgTotal : 0);
   if (crit) base *= critMul;
   if (target.defending) base *= 0.5;
   // 增伤（装备）/ 死战（血<30%）

@@ -305,7 +305,7 @@ function recalcStats(p) {
   p.spiDef = spiDef;
   p.spd = spd;
   p.init = Math.round(init);
-  p.eva = Math.min(1.0, eva);                      // 闪避率上限100%（与命中率一致）
+  p.eva = Math.min(0.30, eva);                     // 闪避率上限 30%（2026-10-12 战斗节奏修复：原 100% 上限使后期玩家闪避堆满，敌人命中率仅 2% 打不中，战斗毫无压力）
   p.hitRate = Math.min(1.0, hitR);                      // 命中率上限100%
   p.extraActions = extraActions;
   p.luck = p.des;                                        // 幸运值
@@ -337,7 +337,12 @@ function recalcStats(p) {
   }
   cr += pasCR;   // 被动心法·暴击率（习得即加成）
   cd += pasCD;   // 被动心法·暴击伤害（习得即加成，无封顶）
-  p.critRate = Math.min(1.0, cr);    // 暴击率上限 100%（与命中/闪避一致）
+  // 被动心法累计的暴击率/暴伤（未封顶原值）：供 battle.js 的 damage() 读取。
+  // 2026-10-12 修复：战斗内暴击判定此前只读「基础 + 装备特效 + 战斗 buff」，不含被动心法，
+  //              导致「暴击率 +X%」「暴击伤害 +X%」类被动功法面板上涨、实战不生效。
+  p.pasCritTotal = pasCR;
+  p.pasCritDmgTotal = pasCD;
+  p.critRate = Math.min(0.65, cr);   // 暴击率上限 65%（2026-10-12 战斗节奏修复：原 100% 上限使后期每击必暴，伤害方差消失）
   p.critDmg = cd;                    // 暴击伤害倍率（面板展示时 ×100% 即总倍率）
   return p;
 }

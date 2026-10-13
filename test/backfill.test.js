@@ -56,7 +56,7 @@ const sandbox = {
     setItem: (k, v) => { localStore[k] = String(v); },
     removeItem: k => { delete localStore[k]; },
   },
-  document: { getElementById: getEl, createElement: () => makeEl('dyn'), querySelectorAll: () => [], body: makeEl('body'), documentElement: makeEl('html'), addEventListener() {} },
+  document: { getElementById: getEl, createElement: () => makeEl('dyn'), querySelectorAll: () => [], querySelector: () => null, body: makeEl('body'), documentElement: makeEl('html'), addEventListener() {} },
   window: { addEventListener() {} },
 };
 sandbox.globalThis = sandbox;
@@ -133,11 +133,13 @@ code += `
     const bNew = oldEq('b4_1', 'boots', 'shen', { init: 46, eva: 0.38 }); // 新模板（已无境界缩放）
     assert('新神靴 模板闪避=0.38 不超上限 (实际=' + resolvedEquipBonus(bNew).eva + ')', Math.abs((resolvedEquipBonus(bNew).eva||0) - 0.38) < 1e-9);
 
-    // A9) 总闪避率封顶 100%：双件各被夹断到 0.50（神靴+神饰品），加基础后超 1.0 → 整体夹到 1.0
+    // A9) 总闪避率封顶 30%：双件各被夹断到 0.50（神靴+神饰品），加基础后远超上限 → 整体夹到 0.30
+    //     2026-10-12 战斗节奏修复：原上限 100% 会让后期玩家闪避堆满、敌人命中率仅 2% 打不中，
+    //     战斗毫无压力且拖沓，故下调为 30%（保留闪避流派收益但不允许免疫物理）。
     const cBloated = oldEq('c4_1', 'accessory', 'shen', { maxMp: 340, spiAtk: 56, eva: 0.98 });
     player.equipment = { weapon: null, armor: null, accessory: cBloated, boots: bOldBloated };
     recalcStats(player);
-    assert('总闪避率封顶 100% (双0.50+基础, 实际=' + player.eva.toFixed(3) + ')', Math.abs(player.eva - 1.0) < 1e-9);
+    assert('总闪避率封顶 30% (双0.50+基础, 实际=' + player.eva.toFixed(3) + ')', Math.abs(player.eva - 0.30) < 1e-9);
 
     // ---------- B) 功法实时查表（无需回填，但须守护旧习得功法拿到最新字段）----------
     const total = Object.keys(SKILLS_DB_MAP).length;

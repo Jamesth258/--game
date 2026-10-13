@@ -113,6 +113,12 @@ function arenaRankFactor(rank) {
   return ARENA_FACTOR_LO + (ARENA_FACTOR_HI - ARENA_FACTOR_LO) * Math.pow(tt, 1.15);
 }
 
+// 名次归一：rank=1 → 1（榜首），rank=ARENA_SIZE → 0（榜尾）
+function arenaNorm(rank) {
+  const t = (ARENA_SIZE - Math.max(1, Math.min(ARENA_SIZE, rank))) / (ARENA_SIZE - 1);
+  return Math.max(0, Math.min(1, t));
+}
+
 // 六种战斗风格各一套 skills + 10 回合固定出手脚本（effect 复用战斗引擎 applySkill 结构）
 function buildArenaSkills(schoolIdx, atk, spi) {
   const r = Math.round;
@@ -122,7 +128,7 @@ function buildArenaSkills(schoolIdx, atk, spi) {
         { name: '剑气斩', type: 'phys', mult: 2.2, cost: 10 },
         { name: '御剑护盾', type: 'phys', mult: 0.3, cost: 10, effect: { kind: 'shield', pct: 0.30, dur: 2 } },
         { name: '破锋式', type: 'phys', mult: 0.8, cost: 10, effect: { kind: 'debuff', stat: 'def', amt: 0.35, dur: 3 } },
-        { name: '万剑归宗', type: 'phys', mult: 6, cost: 20, effect: { kind: 'dmg', type: 'phys', mult: 6 }, ult: true },
+        { name: '万剑归宗', type: 'phys', mult: 3.4, cost: 20, effect: { kind: 'dmg', type: 'phys', mult: 3.4 }, ult: true },
       ],
       script: ['剑气斩','万剑归宗','剑气斩','破锋式','万剑归宗','剑气斩','御剑护盾','万剑归宗','剑气斩','万剑归宗'],
     };
@@ -133,7 +139,7 @@ function buildArenaSkills(schoolIdx, atk, spi) {
         { name: '蓄力斩', type: 'phys', mult: 1.2, cost: 10 },
         { name: '血刃回锋', type: 'phys', mult: 1.0, cost: 12, effect: { kind: 'dmg', type: 'phys', mult: 1.0, lifesteal: 1.2 } },
         { name: '狂刀诀', type: 'phys', mult: 0.4, cost: 8, effect: { kind: 'buff', stat: 'atk', amt: 0.8, dur: 3 } },
-        { name: '裂天斩', type: 'phys', mult: 11, cost: 22, effect: { kind: 'dmg', type: 'phys', mult: 11, lifesteal: 0.4 }, ult: true },
+        { name: '裂天斩', type: 'phys', mult: 4.5, cost: 22, effect: { kind: 'dmg', type: 'phys', mult: 4.5, lifesteal: 0.4 }, ult: true },
       ],
       script: ['狂刀诀','蓄力斩','裂天斩','裂天斩','血刃回锋','裂天斩','蓄力斩','裂天斩','血刃回锋','裂天斩'],
     };
@@ -144,7 +150,7 @@ function buildArenaSkills(schoolIdx, atk, spi) {
         { name: '寒星突刺', type: 'phys', mult: 2.6, cost: 10 },
         { name: '破军枪', type: 'phys', mult: 1.0, cost: 10, effect: { kind: 'debuff', stat: 'def', amt: 0.4, dur: 3 } },
         { name: '游龙连刺', type: 'phys', mult: 3.2, cost: 14 },
-        { name: '擎天一击', type: 'phys', mult: 9.5, cost: 20, effect: { kind: 'dmg', type: 'phys', mult: 9.5 }, ult: true },
+        { name: '擎天一击', type: 'phys', mult: 4.2, cost: 20, effect: { kind: 'dmg', type: 'phys', mult: 4.2 }, ult: true },
       ],
       script: ['寒星突刺','擎天一击','游龙连刺','破军枪','擎天一击','寒星突刺','游龙连刺','擎天一击','破军枪','擎天一击'],
     };
@@ -155,7 +161,7 @@ function buildArenaSkills(schoolIdx, atk, spi) {
         { name: '崩山拳', type: 'phys', mult: 2.8, cost: 12 },
         { name: '金刚体', type: 'phys', mult: 0.2, cost: 8, effect: { kind: 'buff', stat: 'def', amt: 1.0, dur: 3 } },
         { name: '震岳击', type: 'phys', mult: 1.2, cost: 12, effect: { kind: 'stun', dur: 2 } },
-        { name: '八荒破', type: 'phys', mult: 8.5, cost: 20, effect: { kind: 'dmg', type: 'phys', mult: 8.5 }, ult: true },
+        { name: '八荒破', type: 'phys', mult: 4, cost: 20, effect: { kind: 'dmg', type: 'phys', mult: 4 }, ult: true },
       ],
       script: ['金刚体','崩山拳','震岳击','八荒破','崩山拳','八荒破','震岳击','八荒破','崩山拳','八荒破'],
     };
@@ -166,7 +172,7 @@ function buildArenaSkills(schoolIdx, atk, spi) {
         { name: '雷引术', type: 'spirit', mult: 2.4, cost: 12 },
         { name: '玄冰封', type: 'spirit', mult: 0.9, cost: 12, effect: { kind: 'stun', dur: 2 } },
         { name: '灼魂咒', type: 'spirit', mult: 0.7, cost: 10, effect: { kind: 'debuff', stat: 'burn', amt: r(spi * 1.8), dur: 5 } },
-        { name: '九霄雷罚', type: 'spirit', mult: 9, cost: 22, effect: { kind: 'dmg', type: 'spirit', mult: 9 }, ult: true },
+        { name: '九霄雷罚', type: 'spirit', mult: 4, cost: 22, effect: { kind: 'dmg', type: 'spirit', mult: 4 }, ult: true },
       ],
       script: ['灼魂咒','雷引术','玄冰封','九霄雷罚','雷引术','九霄雷罚','雷引术','九霄雷罚','玄冰封','九霄雷罚'],
     };
@@ -177,7 +183,7 @@ function buildArenaSkills(schoolIdx, atk, spi) {
       { name: '蚀骨毒', type: 'spirit', mult: 0.8, cost: 10, effect: { kind: 'poison', dmg: r(spi * 2.0), dur: 5 } },
       { name: '蛊惑术', type: 'spirit', mult: 0.6, cost: 10, effect: { kind: 'debuff', stat: 'atk', amt: 0.4, dur: 3 } },
       { name: '万毒噬', type: 'spirit', mult: 1.6, cost: 12 },
-      { name: '毒煞归宗', type: 'spirit', mult: 7, cost: 20, effect: { kind: 'dmg', type: 'spirit', mult: 7, lifesteal: 0.5 }, ult: true },
+      { name: '毒煞归宗', type: 'spirit', mult: 3.6, cost: 20, effect: { kind: 'dmg', type: 'spirit', mult: 3.6, lifesteal: 0.5 }, ult: true },
     ],
     script: ['蚀骨毒','蛊惑术','万毒噬','毒煞归宗','万毒噬','毒煞归宗','蚀骨毒','毒煞归宗','蛊惑术','毒煞归宗'],
   };
@@ -194,22 +200,43 @@ function arenaVirtual(rank) {
   const f = arenaRankFactor(rank);
   const P = player || {};
   const jit = () => 0.90 + rng() * 0.20;
-  const maxHp  = Math.round((P.maxHp  || 1200) * f * jit());
-  const maxMp  = Math.round((P.maxMp  || 600)  * f * jit());
-  const atk    = Math.round((P.atk    || 120)  * f * jit());
-  const spiAtk = Math.round((P.spiAtk || 120)  * f * jit());
-  const def    = Math.round((P.def    || 60)   * f * jit());
-  const spiDef = Math.round((P.spiDef || 60)   * f * jit());
-  const init   = Math.round((P.init   || 60)   * f * (0.9 + rng() * 0.2));
-  const spd    = Math.round((P.spd    || 20)   * (0.9 + rng() * 0.2));
-  const eva    = Math.min(0.6, ((P.eva || 0.1) + 0.02) * (0.8 + rng() * 0.4));
-  const built = buildArenaSkills(schoolIdx, atk, spiAtk);
+  const maxMp     = Math.round((P.maxMp  || 600)  * f * jit());
+  const def       = Math.round((P.def    || 60)   * f * jit());
+  const spiDef    = Math.round((P.spiDef || 60)   * f * jit());
+  // 先攻与名次系数解耦（2026-10-12）：原 init = 玩家先攻 × f(最高 2.6)，
+  // 使榜首对手先攻碾压、玩家被压到每回合 1 次出手，战斗被拖到 10+ 回合。
+  // 现改为独立梯度 0.9~1.5 倍：保证对手仍有先手感，但不至于拉长战斗。
+  const init      = Math.round((P.init   || 60)   * (0.9 + arenaNorm(rank) * 0.6) * (0.9 + rng() * 0.2));
+  const spd       = Math.round((P.spd    || 20)   * (0.9 + rng() * 0.2));
+  const eva       = Math.min(0.25, ((P.eva || 0.1) + 0.02) * (0.8 + rng() * 0.4));
+  const atkBase    = Math.round((P.atk    || 120)  * f * jit());
+  const spiAtkBase = Math.round((P.spiAtk || 120)  * f * jit());
+  const built = buildArenaSkills(schoolIdx, atkBase, spiAtkBase);
   const ult = built.skills.find(s => s.ult) || built.skills[0];
+  // 战斗节奏（2026-10-12）：目标 6 回合（用户拍板）。
+  // 原实现让对手 atk = 玩家 atk × 名次系数(最高 2.6) 且大招倍率 7~11，
+  // 结果榜首对手一回合连动两次即可秒杀玩家，战斗两个回合就结束。
+  // 现改为：血量与攻击都按「玩家单回合实际输出 / 目标回合数」反推，
+  // 名次系数改为调节「压力」：越靠前的对手打得越痛（0.55→1.05），但战斗长度都稳定在 6 回合量级。
+  const tNorm = arenaNorm(rank);
+  const pressure = 0.35 + tNorm * 0.35;   // 2026-10-12 校准：原 0.55~1.05 使中期胜率仅 13~23%，竞技场变成打不赢
+  // 攻击力反推用「技能平均倍率」而非大招倍率：敌人按固定脚本混放普攻与大招，
+  // 若按大招倍率反推会让攻击力偏低、实战几乎打不动玩家（2026-10-12 校准）。
+  const ultMult = built.skills.reduce((s2, x) => s2 + (x.mult || 1), 0) / Math.max(1, built.skills.length);
+  const maxHp = (typeof pacingEnemyHp === 'function')
+    ? pacingEnemyHp('arena', def, spiDef, init)
+    : Math.round((P.maxHp || 1200) * f * jit());
+  const atk = (typeof pacingEnemyAtk === 'function')
+    ? pacingEnemyAtk('arena', ultMult, pressure, 0.7)
+    : atkBase;
+  const spiAtk = (typeof pacingEnemyAtk === 'function')
+    ? pacingEnemyAtk('arena', ultMult, pressure, 0.7)
+    : spiAtkBase;
   return {
     name: name, isEnemy: true, avatarId: avatarId,
     rank: rank,
     maxHp: maxHp, hp: maxHp, maxMp: maxMp, mp: maxMp,
-    atk: atk, def: def, spd: spd, init: init, eva: eva, spiAtk: spiAtk, spiDef: spiDef,
+    atk: atk, def: def, spd: spd, init: init, eva: eva, hitRate: 0.95, spiAtk: spiAtk, spiDef: spiDef,
     luck: 0, potions: 0, defending: false, extraActions: 0,
     buffs: [], debuffs: [], shield: null, stun: 0, poison: null,
     skills: built.skills, skill: ult, _script: built.script, _turn: 0,

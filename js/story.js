@@ -35,21 +35,30 @@ function makeStoryEnemy(ch, lv) {
   const isBoss = lv === 10;
   const D = 0.5 + ch * 0.05 + lv * 0.012;   // ch1≈0.56 → ch100≈5.62
   const p = player;
-  const hp = Math.round((p.maxHp * 0.55 + 90) * D * (isBoss ? 1.7 : 1));
-  const atk = Math.round((p.atk * 0.42 + 12) * D);
-  const def = Math.round((p.def * 0.45 + 6) * D);
-  const spd = Math.round(p.spd * 0.82 + ch * 0.22 + (isBoss ? 6 : 0));
+  const def    = Math.round((p.def * 0.45 + 6) * D);
+  const spiDef = Math.round((p.spiDef * 0.4 + 4) * D);
+  const spd    = Math.round(p.spd * 0.82 + ch * 0.22 + (isBoss ? 6 : 0));
+  const init   = Math.round(10 + spd * 2);
+  const skillMult = 1.7 + ch * 0.01;
+  // 战斗节奏（2026-10-12）：血量/攻击按「目标回合数 4」反推。
+  // 原公式只按玩家血量/攻击的固定比例缩放，未计入玩家连动与暴击放大 → 后期一回合秒杀。
+  const hp = (typeof pacingEnemyHp === 'function')
+    ? Math.round(pacingEnemyHp('story', def, spiDef, init) * (isBoss ? 1.2 : 1))
+    : Math.round((p.maxHp * 0.55 + 90) * D * (isBoss ? 1.7 : 1));
+  const atk = (typeof pacingEnemyAtk === 'function')
+    ? pacingEnemyAtk('story', skillMult, isBoss ? 0.75 : 0.7, 0.7)
+    : Math.round((p.atk * 0.42 + 12) * D);
   const mp = 40 + Math.floor(ch / 2);
   return {
     name: data.title + (isBoss ? '·守关boss' : '·第' + lv + '关'),
     isEnemy: true,
     maxHp: hp, hp: hp, maxMp: mp, mp: mp,
     atk, def, spd,
-    init: Math.round(10 + spd * 2), eva: Math.min(0.2, 0.05 + ch * 0.001),
-    spiAtk: Math.round(p.spiAtk * 0.4 * D), spiDef: Math.round((p.spiDef * 0.4 + 4) * D), luck: 0,
+    init: init, eva: Math.min(0.15, 0.05 + ch * 0.001), hitRate: 0.95,
+    spiAtk: Math.round(p.spiAtk * 0.4 * D), spiDef: spiDef, luck: 0,
     potions: 0, defending: false, extraActions: 0,
     buffs: [], debuffs: [], shield: null, stun: 0,
-    skill: { name: '敌袭', type: 'phys', mult: 1.7 + ch * 0.01, cost: 10 },
+    skill: { name: '敌袭', type: 'phys', mult: skillMult, cost: 10 },
   };
 }
 
