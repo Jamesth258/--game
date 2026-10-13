@@ -58,8 +58,11 @@ const BOSS_SPRITES = {
 //   这样无论玩家战力如何膨胀，战斗长度都稳定在设计值附近，功法/buff/被动才有登场空间。
 const PACING_ROUNDS = { story: 4, arena: 6, worldboss: 10 };  // 各模式目标回合数（用户拍板）
 const PACING_LINK_CAP = 4;        // 单回合出手次数封顶（2026-10-13 用户拍板：封顶 4 次）
-const PACING_ULT_CD = { story: 1, arena: 2, worldboss: 2 };  // 大招冷却（按模式：副本 4 回合内放 2 次，竞技场/BOSS 每 3 回合 1 次）
-const PACING_MAX_SINGLE = 0.34;   // 单发伤害上限（占玩家气血）：高倍率大招不能一击秒杀
+// 2026-10-13 用户拍板：去掉敌人大招冷却（原设计 §8 为按脚本确定性施放、无冷却）。
+//   常量保留为 0 以兼容 pacingEnemySkillSeq 的签名，运行时不再置位 / 递减 / 跳过。
+const PACING_ULT_CD = { story: 0, arena: 0, worldboss: 0 };
+const PACING_MAX_SINGLE = 0.60;   // 单发伤害上限（占玩家气血）：2026-10-13 用户拍板 0.34 -> 0.60，
+                                  //   避免高倍率大招（寂灭星陨 mult 18）被钳到倍率形同虚设
 const PACING_MIN_SINGLE = 0.22;   // 小技能最低输出（占「单发上限」的比例）：保证低倍率技能也能破防
 const PACING_HP_FIT = { story: 1.10, arena: 1.00, worldboss: 1.30 };  // 血量校准：把实际回合数拉回目标值
 
@@ -480,8 +483,7 @@ function beginRound() {
   [p, e].forEach(u => { if (u.hp > 0) { u.mp = Math.min(u.maxMp, u.mp + 5); u.defending = false; } });
   // 衰减 buff/debuff/shield 持续时间
   [p, e].forEach(tickDurations);
-  // 敌人大招冷却递减（2026-10-13）：配合 pickEnemySkill 实现「每 4 回合一次大招」
-  if (e && e._ultCd > 0) e._ultCd--;
+  // 2026-10-13 用户拍板：已去掉敌人大招冷却，此处不再递减 _ultCd
   // 装备特效：每回合回血/回蓝、积威累加暴击、灼烧结算
   const m = battle.mods;
   if (m) {
@@ -997,7 +999,7 @@ function enemySkillScore(enemy, p, sk, turn) {
     s = turn <= 2 ? 4 : 1.5;                     // 开局铺增益最划算
     if (ai === 'steady') s += 1.5;
     const bst = sk.effect.stat || (sk.effect.stats && sk.effect.stats[0]);
-    if (bst === 'atk' && (enemy._ultCd || 0) <= 1) s += 5;   // 大招快好了 → 先把攻击叠起来
+    if (bst === 'atk') s += 5;                              // 先把攻击叠起来再开大（无冷却，随时可开大）
     if (bst && (enemy.buffs || []).some(b => b.stat === bst)) s -= 4;   // 已生效不重复（否则会挤掉大招）
   } else if (kind === 'debuff') {
     s = turn <= 3 ? 2.0 : 0.8;                   // 开局铺减益
@@ -1022,7 +1024,6 @@ function pickEnemySkill(enemy, p) {
   let best = null, bestScore = -Infinity;
   enemy.skills.forEach(sk => {
     if (enemy.mp < (sk.cost || 0)) return;                       // 内力不足
-    if (sk.ult && (enemy._ultCd || 0) > 0) return;               // 大招冷却中
     if (enemy.silenceRecovery > 0 && enemySkillKind(sk) === 'heal') return;  // 被沉默禁恢复
     const sc = enemySkillScore(enemy, p, sk, turn);
     if (sc > bestScore) { bestScore = sc; best = sk; }
@@ -1035,7 +1036,7 @@ function enemyAct(enemy) {
   enemy._turn = (enemy._turn || 0) + 1;
   if (enemy.skills && enemy.skills.length) {
     const sk = pickEnemySkill(enemy, p);
-    if (sk) { enemy._lastSkill = sk.name; if (sk.ult) enemy._ultCd = (PACING_ULT_CD[battle.mode] || 2); applySkill(enemy, p, sk); nextTurn(); return; }
+    if (sk) { enemy._lastSkill = sk.name; applySkill(enemy, p, sk); nextTurn(); return; }
     // 无可用技能（内力不足 / 全被判负分）→ 回退 _script 兜底顺序
     const name = (enemy._script && enemy._script[enemy._turn - 1]) || null;
     const fb = name ? enemy.skills.find(s => s.name === name) : null;

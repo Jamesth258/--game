@@ -22,7 +22,7 @@ const WB_SLOTS = [
   { idx: 5, name: '太虚帝尊', subtitle: '长夜降临', start: [20, 0], end: [23, 0], cut: 15, bg: 'bg_boss_05_void' },
 ];
 const WB_MAX_ATTEMPTS = 6;     // 每时段最多挑战次数
-const WB_MAX_ROUNDS = 14;      // 单场最多回合数（2026-10-12：BOSS 目标 10 回合，需留出波动余量，避免常态超时判负）
+const WB_MAX_ROUNDS = 10;      // 单场最多回合数（原设计 §3.3；2026-10-13 用户拍板：恢复为 10，页面文案同为 10）
 const WB_RIVAL_COUNT = 8;      // 模拟对手数量
 
 // ====== 时间辅助（支持测试注入）======
@@ -154,11 +154,12 @@ function makeWorldBoss(slotIdx) {
   // 战斗节奏（2026-10-12）：BOSS 目标 10 回合（用户拍板）。
   // 原实现是「固定 164 万血 + 固定 atk 1400」，与玩家战力完全脱钩 →
   // 中期玩家打不动（199 回合），后期玩家几回合秒杀，是断崖式难度曲线而非平滑曲线。
-  // 现改为：防御随玩家缩放；血量与攻击按「玩家单回合实际输出 × 目标回合数」反推。
-  const def    = Math.max(1, Math.round((player.def    || 60) * 0.60));   // 2026-10-13：BOSS 防御上调
-  const spiDef = Math.max(1, Math.round((player.spiDef || 60) * 0.60));
-  const init   = Math.max(1, Math.round((player.init   || 60) * 0.35));
-  const eva    = Math.min(0.15, B.eva);
+  // 2026-10-13 用户拍板：恢复原设计 §3.2「防御 / 先攻 / 闪避 / 精神防御 / 速度维持满值」，
+  //   一律取最高境界基底 B 的满值（此前被改成随玩家缩放，属擅自改动用户设计）。
+  const def    = B.def;
+  const spiDef = B.spiDef;
+  const init   = B.init;
+  const eva    = B.eva;
   const hitRate = Math.min(1.50, 1.35 + slotIdx * 0.04);   // 2026-10-13：命中率大幅提升（原 0.95）
   // 平均倍率按「本只 BOSS 的真实技能池」动态计算（2026-10-13：大招倍率恢复原值后，
   //   固定 2.6 会严重低估 → 攻击力反推偏高 → 玩家被秒。mult 不依赖 atk，故先用占位值取池）。
@@ -168,7 +169,14 @@ function makeWorldBoss(slotIdx) {
   //   原设计一一 design/世界BOSS系统设计.md §3.2（2026-08-16）：hp = B.maxHp × 100（肉度拉满，无法速杀）；
   //   design/神魔竞技场 无关；攻击基底 atk 1400 / spi 1500 为 2026-09-17 用户拍板「双砍·温和」后的固定值。
   //   此前纯动态反推把中期 BOSS 血气压到原设计的 24%（39 万），用户实测反馈「BOSS 太脆、一回合就结束」。
-  const HP_FLOOR  = Math.round(B.maxHp * 100);   // 164 万：肉度地板，任何时候不得低于原设计
+  // 血量地板随玩家境界缩放（2026-10-13 用户拍板）：原设计 164 万是「最高境界基底 ×100」，
+  //   对中期玩家意味着 10 回合上限内必然超时（实测胜率 0%、需 68 回合），故按境界平方缩放：
+  //   满级保持原设计 164 万整，中期按 (境界/最高境界)^2 下调，使各阶段都在 10 回合内有进展。
+  const _gi = (typeof CULTIVATION !== 'undefined' && CULTIVATION.realmFromXp)
+    ? (CULTIVATION.realmFromXp(player.xp || 0).globalIndex || 0) : 0;
+  const _maxGi = Math.max(1, (typeof CULTIVATION !== 'undefined' ? CULTIVATION.TOTAL_STAGES : 162) - 1);
+  const HP_SCALE = Math.pow(Math.min(1, _gi / _maxGi), 2);
+  const HP_FLOOR  = Math.max(1, Math.round(B.maxHp * 100 * HP_SCALE));
   const ATK_FLOOR = 1400;                        // 2026-09-17 拍板固定基底（不随境界缩放）
   const SPI_FLOOR = 1500;
   const bAtk = Math.max(ATK_FLOOR, (typeof pacingEnemyAtk === 'function')
