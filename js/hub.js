@@ -133,7 +133,7 @@ function initHub() {
           <span style="font-size:11px;color:rgba(232,220,192,0.5)">查看功法/装备宝箱各品质掉落概率与保底机制</span>
         </button>
 
-        <button class="btn-full" onclick="openModal('<h3 style=color:#D4A843>清空存档</h3><p style=color:rgba(241,239,232,0.7)>确定要清空存档重新开始吗？所有进度将丢失！</p><button class=btn-full onclick=localStorage.removeItem(&apos;wuxia_save&apos;);location.reload(); style=margin-top:14px;background:rgba(232,123,123,0.15);border:1px solid rgba(232,123,123,0.4)>确认清空</button><button class=btn-full onclick=closeModal() style=margin-top:14px>取消</button>')">
+        <button class="btn-full" onclick="confirmClearSave()">
           <span style="font-size:14px;font-weight:600;color:#E87B7B">🗑️ 清空存档</span><br>
           <span style="font-size:11px;color:rgba(232,220,192,0.5)">删除所有游戏数据，重新创建角色（不可恢复）</span>
         </button>
@@ -152,6 +152,33 @@ function initHub() {
       <button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button>`, 'scroll');
   }
   window.showSettingsModal = showSettingsModal;
+
+  // 清空存档 —— 二次确认弹窗
+  // 【修复】原实现把确认弹窗整段 HTML 塞进按钮的 onclick 属性里，字符串用单引号包裹，
+  // 而内层 localStorage.removeItem 的那个单引号被写成 HTML 实体形式的撇号；
+  // HTML 解析属性值时会把实体还原成真实单引号，从而提前闭合外层字符串，
+  // 点击即抛 SyntaxError: missing ) after argument list。改为具名函数，彻底消除引号嵌套。
+  function confirmClearSave() {
+    openModal(
+      '<h3 style="color:#D4A843">清空存档</h3>' +
+      '<p style="color:rgba(241,239,232,0.7)">确定要清空存档重新开始吗？所有进度将丢失！</p>' +
+      '<button class="btn-full" onclick="doClearSave()" style="margin-top:14px;background:rgba(232,123,123,0.15);border:1px solid rgba(232,123,123,0.4)">确认清空</button>' +
+      '<button class="btn-full" onclick="closeModal()" style="margin-top:14px">取消</button>'
+    );
+  }
+  window.confirmClearSave = confirmClearSave;
+
+  // 真正执行清空：主存档 + 自动备份档一起删
+  // 只删主档的话，新建角色后的第一次写入会把旧档留在 wuxia_save_prev，
+  // 触发 checkBackupRecovery() 弹出「检测到旧存档备份」，把刚清掉的旧档又拉回来。
+  function doClearSave() {
+    try {
+      localStorage.removeItem('wuxia_save');
+      localStorage.removeItem('wuxia_save_prev');
+    } catch (e) { console.warn('[clearSave]', e); }
+    location.reload();
+  }
+  window.doClearSave = doClearSave;
 
   // ====== 全局：主页境界/进度条同步（弹窗和主页共用同一份数据） ======
   function syncRealmDOM() {
