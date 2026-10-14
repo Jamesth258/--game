@@ -13,7 +13,7 @@ const AVATAR_DB = [
   { id: 'm3',   name: '道骨仙风', cat: 'hero',   gender: 'male',
     desc: '中年大叔，道法深厚', img: 'assets/avatars/avatar_m3.png' },
   { id: 'f1',   name: '灵气萝莉', cat: 'hero',   gender: 'female',
-    desc: '可爱灵动，根骨奇佳', img: 'assets/avatars/avatar_f1.png' },
+    desc: '可爱灵动，根骨奇佳', img: 'assets/avatars/avatar_f1.png?v=1' },
   { id: 'f2',   name: '绝代佳人', cat: 'hero',   gender: 'female',
     desc: '性感热辣，魅惑众生', img: 'assets/avatars/avatar_f2.png' },
   { id: 'f3',   name: '温婉御姐', cat: 'hero',   gender: 'female',
