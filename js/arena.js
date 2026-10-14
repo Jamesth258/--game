@@ -12,7 +12,7 @@ const ARENA_SIZE = 1000;              // 榜单总席位数
 const ARENA_MAX_ATTEMPTS = 10;        // 每日挑战次数
 const ARENA_SETTLE_HOUR = 23;         // 每日结算时点（23:00）
 const ARENA_FACTOR_LO = 0.75;         // 榜尾强度系数（相对玩家战力）
-const ARENA_FACTOR_HI = 2.60;         // 榜首强度系数（相对玩家战力）
+const ARENA_FACTOR_HI = 2.00;         // 榜首强度系数（相对玩家战力）
 // 2026-10-14 用户拍板：对手「物理防御 / 精神防御太低，打中 1 次就掉半血」，防御额外加成。
 //   注意：伤害是减法 atk*mult-def，且敌方血量由 pacingEnemyHp 按玩家实际输出反推，
 //   所以单提防御只会让「伤害数字变小 + 血量同比缩小」，击数不变；

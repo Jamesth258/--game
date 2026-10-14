@@ -64,7 +64,7 @@ const PACING_ULT_CD = { story: 0, arena: 0, worldboss: 0 };
 const PACING_MAX_SINGLE = 0.60;   // 单发伤害上限（占玩家气血）：2026-10-13 用户拍板 0.34 -> 0.60，
                                   //   避免高倍率大招（寂灭星陨 mult 18）被钳到倍率形同虚设
 const PACING_MIN_SINGLE = 0.22;   // 小技能最低输出（占「单发上限」的比例）：保证低倍率技能也能破防
-const PACING_HP_FIT = { story: 1.10, arena: 1.00, worldboss: 1.30 };  // 血量校准：把实际回合数拉回目标值
+const PACING_HP_FIT = { story: 1.10, arena: 1.00, worldboss: 1.50 };  // 血量校准：把实际回合数拉回目标值（2026-10-14 用户拍板「BOSS 再慢一点」：worldboss 1.30 -> 1.50）
 
 // 连动次数：先攻比值 → 本回合出手次数（阶梯 >=2→2, >=3→3, >=4→4, >=5→4 封顶）
 // beginRound 与 pacing 血量反推共用此函数，保证「敌人血量」永远按玩家实际出手次数反推。
