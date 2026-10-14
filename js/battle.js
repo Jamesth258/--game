@@ -57,7 +57,7 @@ const BOSS_SPRITES = {
 // 方案：敌人血量 = 玩家单回合期望输出 × 目标回合数；敌人攻击 = 让玩家在目标回合内承受预期压力。
 //   这样无论玩家战力如何膨胀，战斗长度都稳定在设计值附近，功法/buff/被动才有登场空间。
 const PACING_ROUNDS = { story: 4, arena: 6, worldboss: 10 };  // 各模式目标回合数（用户拍板）
-const PACING_LINK_CAP = 4;        // 单回合出手次数封顶（2026-10-13 用户拍板：封顶 4 次）
+const PACING_LINK_CAP = 3;        // 单回合出手次数封顶（2026-10-14 用户拍板：砍掉「先攻>=5倍出手4次」，至多 3 次）
 // 2026-10-13 用户拍板：去掉敌人大招冷却（原设计 §8 为按脚本确定性施放、无冷却）。
 //   常量保留为 0 以兼容 pacingEnemySkillSeq 的签名，运行时不再置位 / 递减 / 跳过。
 const PACING_ULT_CD = { story: 0, arena: 0, worldboss: 0 };
@@ -172,8 +172,12 @@ function pacingEnemySkillSeq(skills, rounds, ultCd) {
   const seq = [];
   let cd = 0;
   for (let t = 1; t <= rounds; t++) {
-    // 第 1 回合先铺垫（增益 / 减益），第 2 回合起才开大 —— 给玩家一个应对窗口
-    if (um && cd <= 0 && t >= 2) { seq.push({ m: um, spirit: ultSpirit }); cd = (ultCd == null ? 2 : ultCd); }
+    // 第 1 回合先铺垫（增益 / 减益），第 2 回合起才开大 —— 给玩家一个应对窗口。
+    // 2026-10-14 修正：该假设只在「有大招冷却」时成立。冷却为 0 时 AI 评分（ult +8，
+    //   第 1 回合 -4）仍让大招高于普攻，AI 每回合都会开大；若序列仍按「平均倍率」生成，
+    //   反推算出的攻击力在实战中会打出 3~4 倍于预期的伤害（实测玩家 2~3 回合被秒）。
+    const canUltNow = um && cd <= 0 && (ultCd > 0 ? t >= 2 : true);
+    if (canUltNow) { seq.push({ m: um, spirit: ultSpirit }); cd = (ultCd == null ? 2 : ultCd); }
     else seq.push({ m: nm, spirit: normSpirit });
     cd--;
   }
@@ -188,7 +192,11 @@ function pacingEnemySkillSeq(skills, rounds, ultCd) {
 function pacingEnemyAtkSeq(mode, skills, pressure, defFactor, enemyHitRate) {
   const maxHp = (player && player.maxHp) || 1000;
   const rounds = pacingTargetRounds(mode);
-  const info = pacingEnemySkillSeq(skills, rounds, PACING_ULT_CD[mode]);
+  // 2026-10-14：只按「伤害型技能」反推攻击力。回血/护盾/增益类技能不产生输出，
+  //   若计入序列会把期望总伤害摊薄 -> 二分把 atk 顶高、敌人实际输出虚高。
+  const _all = skills || [];
+  const _dmg = _all.filter(function (s) { const e = s && s.effect; return !e || e.kind === 'dmg'; });
+  const info = pacingEnemySkillSeq(_dmg.length ? _dmg : _all, rounds, PACING_ULT_CD[mode]);
   const df = (defFactor == null ? 1.0 : defFactor);
   const effDefP = ((player && player.def) || 0) * df;
   const effDefS = ((player && player.spiDef) || 0) * df;   // 精神系按 spiDef 抵扣（常远低于 def）
@@ -548,8 +556,8 @@ function beginRound() {
     const faster = pInit >= eInit ? p : e;
     const slower = faster === p ? e : p;
     const ratio = faster.init / Math.max(1, slower.init);
-    // 连动阶梯（2026-10-13 用户拍板）：先攻 >=2 倍 → 多出手 1 次；>=3 倍 → +2；>=4 倍 → +3；>=5 倍 → +4。
-    // 对 ratio 取整即天然对应阶梯（2.x→2, 3.x→3, 4.x→4, >=5→封顶 4）。
+    // 连动阶梯（2026-10-14 用户拍板修订）：先攻 >=2 倍 → 多出手 1 次；>=3 倍 → +2；>=4 倍 → +3（封顶）。
+    // 原「>=5 倍 → +4」一档已取消：用户实测该档让战斗过快，出手至多 3 次。
     // 极品装备 extraActions 仍可在封顶之外追加，保留装备价值。
     let n = linkCountFromRatio(ratio);
     n += (faster.extraActions || 0);

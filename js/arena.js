@@ -13,6 +13,12 @@ const ARENA_MAX_ATTEMPTS = 10;        // 每日挑战次数
 const ARENA_SETTLE_HOUR = 23;         // 每日结算时点（23:00）
 const ARENA_FACTOR_LO = 0.75;         // 榜尾强度系数（相对玩家战力）
 const ARENA_FACTOR_HI = 2.60;         // 榜首强度系数（相对玩家战力）
+// 2026-10-14 用户拍板：对手「物理防御 / 精神防御太低，打中 1 次就掉半血」，防御额外加成。
+//   注意：伤害是减法 atk*mult-def，且敌方血量由 pacingEnemyHp 按玩家实际输出反推，
+//   所以单提防御只会让「伤害数字变小 + 血量同比缩小」，击数不变；
+//   真正拉长击数的是 ARENA_HP_MULT（独立于反推之外的血量加成）。
+const ARENA_DEF_MULT = 1.50;          // 对手防御 / 精防 额外倍率（观感：明显打不穿）
+const ARENA_HP_MULT  = 1.15;          // 对手血量 额外倍率（把「两下打死」拉到 3~4 击；2.0 在诊断模板下击数达 27，属过度修正）
 
 // ====== 时间辅助（支持测试注入）======
 function arenaNowMinutes() {
@@ -129,6 +135,7 @@ function buildArenaSkills(schoolIdx, atk, spi) {
         { name: '剑气斩', type: 'phys', mult: 2.2, cost: 10 },
         { name: '御剑护盾', type: 'phys', mult: 0.3, cost: 10, effect: { kind: 'shield', pct: 0.30, dur: 2 } },
         { name: '破锋式', type: 'phys', mult: 0.8, cost: 10, effect: { kind: 'debuff', stat: 'def', amt: 0.35, dur: 3 } },
+        { name: '归元剑息', type: 'phys', mult: 0, cost: 12, effect: { kind: 'heal_hp', pct: 0.12 } },
         { name: '万剑归宗', type: 'phys', mult: 6, cost: 20, effect: { kind: 'dmg', type: 'phys', mult: 6 }, ult: true },
       ],
       script: ['剑气斩','万剑归宗','剑气斩','破锋式','万剑归宗','剑气斩','御剑护盾','万剑归宗','剑气斩','万剑归宗'],
@@ -140,6 +147,7 @@ function buildArenaSkills(schoolIdx, atk, spi) {
         { name: '蓄力斩', type: 'phys', mult: 1.2, cost: 10 },
         { name: '血刃回锋', type: 'phys', mult: 1.0, cost: 12, effect: { kind: 'dmg', type: 'phys', mult: 1.0, lifesteal: 1.2 } },
         { name: '狂刀诀', type: 'phys', mult: 0.4, cost: 8, effect: { kind: 'buff', stat: 'atk', amt: 0.8, dur: 3 } },
+        { name: '血煞回元', type: 'phys', mult: 0, cost: 12, effect: { kind: 'heal_hp', pct: 0.12 } },
         { name: '裂天斩', type: 'phys', mult: 11, cost: 22, effect: { kind: 'dmg', type: 'phys', mult: 11, lifesteal: 0.4 }, ult: true },
       ],
       script: ['狂刀诀','蓄力斩','裂天斩','裂天斩','血刃回锋','裂天斩','蓄力斩','裂天斩','血刃回锋','裂天斩'],
@@ -151,6 +159,7 @@ function buildArenaSkills(schoolIdx, atk, spi) {
         { name: '寒星突刺', type: 'phys', mult: 2.6, cost: 10 },
         { name: '破军枪', type: 'phys', mult: 1.0, cost: 10, effect: { kind: 'debuff', stat: 'def', amt: 0.4, dur: 3 } },
         { name: '游龙连刺', type: 'phys', mult: 3.2, cost: 14 },
+        { name: '战息归元', type: 'phys', mult: 0, cost: 12, effect: { kind: 'heal_hp', pct: 0.12 } },
         { name: '擎天一击', type: 'phys', mult: 9.5, cost: 20, effect: { kind: 'dmg', type: 'phys', mult: 9.5 }, ult: true },
       ],
       script: ['寒星突刺','擎天一击','游龙连刺','破军枪','擎天一击','寒星突刺','游龙连刺','擎天一击','破军枪','擎天一击'],
@@ -162,6 +171,7 @@ function buildArenaSkills(schoolIdx, atk, spi) {
         { name: '崩山拳', type: 'phys', mult: 2.8, cost: 12 },
         { name: '金刚体', type: 'phys', mult: 0.2, cost: 8, effect: { kind: 'buff', stat: 'def', amt: 1.0, dur: 3 } },
         { name: '震岳击', type: 'phys', mult: 1.2, cost: 12, effect: { kind: 'stun', dur: 2 } },
+        { name: '铁骨回春', type: 'phys', mult: 0, cost: 12, effect: { kind: 'heal_hp', pct: 0.12 } },
         { name: '八荒破', type: 'phys', mult: 8.5, cost: 20, effect: { kind: 'dmg', type: 'phys', mult: 8.5 }, ult: true },
       ],
       script: ['金刚体','崩山拳','震岳击','八荒破','崩山拳','八荒破','震岳击','八荒破','崩山拳','八荒破'],
@@ -173,6 +183,7 @@ function buildArenaSkills(schoolIdx, atk, spi) {
         { name: '雷引术', type: 'spirit', mult: 2.4, cost: 12 },
         { name: '玄冰封', type: 'spirit', mult: 0.9, cost: 12, effect: { kind: 'stun', dur: 2 } },
         { name: '灼魂咒', type: 'spirit', mult: 0.7, cost: 10, effect: { kind: 'debuff', stat: 'burn', amt: r(spi * 1.8), dur: 5 } },
+        { name: '玄冰凝息', type: 'spirit', mult: 0, cost: 12, effect: { kind: 'heal_hp', pct: 0.12 } },
         { name: '九霄雷罚', type: 'spirit', mult: 9, cost: 22, effect: { kind: 'dmg', type: 'spirit', mult: 9 }, ult: true },
       ],
       script: ['灼魂咒','雷引术','玄冰封','九霄雷罚','雷引术','九霄雷罚','雷引术','九霄雷罚','玄冰封','九霄雷罚'],
@@ -184,6 +195,7 @@ function buildArenaSkills(schoolIdx, atk, spi) {
       { name: '蚀骨毒', type: 'spirit', mult: 0.8, cost: 10, effect: { kind: 'poison', dmg: r(spi * 2.0), dur: 5 } },
       { name: '蛊惑术', type: 'spirit', mult: 0.6, cost: 10, effect: { kind: 'debuff', stat: 'atk', amt: 0.4, dur: 3 } },
       { name: '万毒噬', type: 'spirit', mult: 1.6, cost: 12 },
+      { name: '蛊元回生', type: 'spirit', mult: 0, cost: 12, effect: { kind: 'heal_hp', pct: 0.12 } },
       { name: '毒煞归宗', type: 'spirit', mult: 7, cost: 20, effect: { kind: 'dmg', type: 'spirit', mult: 7, lifesteal: 0.5 }, ult: true },
     ],
     script: ['蚀骨毒','蛊惑术','万毒噬','毒煞归宗','万毒噬','毒煞归宗','蚀骨毒','毒煞归宗','蛊惑术','毒煞归宗'],
@@ -202,8 +214,9 @@ function arenaVirtual(rank) {
   const P = player || {};
   const jit = () => 0.90 + rng() * 0.20;
   const maxMp     = Math.round((P.maxMp  || 600)  * f * jit());
-  const def       = Math.round((P.def    || 60)   * f * jit());
-  const spiDef    = Math.round((P.spiDef || 60)   * f * jit());
+  // 2026-10-14 用户拍板：基础防御/精防额外 ×ARENA_DEF_MULT（原仅 ×f×jit 偏低）
+  const def       = Math.round((P.def    || 60)   * f * jit() * ARENA_DEF_MULT);
+  const spiDef    = Math.round((P.spiDef || 60)   * f * jit() * ARENA_DEF_MULT);
   // 2026-10-13 用户拍板：先攻恢复原设计（玩家 init × 名次系数 f × 抖动）。
   //   此前为压战斗长度改成独立梯度 0.9~1.5 倍，导致榜首对手的先手威慑消失（用户反馈「对手打不动我」）。
   const init      = Math.round((P.init   || 60)   * f * (0.9 + rng() * 0.2));
@@ -227,9 +240,13 @@ function arenaVirtual(rank) {
   // 2026-10-13：血量同样以原设计值（玩家 maxHp × f × 抖动）为下限，
   //   否则先攻恢复 f 倍后玩家每回合出手数下降，反推血量会同步缩水，反而让对手更脆。
   const hpBase = Math.round((P.maxHp || 1200) * f * (0.9 + rng() * 0.2));
-  const maxHp = Math.max(hpBase, (typeof pacingEnemyHp === 'function')
+  // 2026-10-14：在反推/原设计下限之上再 ×ARENA_HP_MULT。
+  //   反推本身按「玩家每回合输出 × 目标回合数」算，但 pacingPlayerHit 低估了玩家 AI 的真实输出
+  //   （AI 会优先选高倍率大招），实测第 1 名只需 7 击（约 2.3 回合）远低于目标 6 回合。
+  const _hpFit = (typeof pacingEnemyHp === 'function')
     ? pacingEnemyHp('arena', def, spiDef, init, eva)
-    : hpBase);
+    : hpBase;
+  const maxHp = Math.round(Math.max(hpBase, _hpFit) * ARENA_HP_MULT);
   // 2026-10-13 用户拍板：以原设计「玩家 atk × 名次系数 f × 抖动」为下限，动态反推只在玩家更强时上调。
   //   原设计见 design/神魔竞技场_系统设计.md §7.4（stat = base.stat × f × jit，f 最高 2.6）。
   //   此前纯动态反推把中期榜首对手攻击力压到原设计的约 57%（3408 -> 1927），用户反馈「站着挨打都不掉血」。
