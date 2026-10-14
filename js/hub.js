@@ -209,7 +209,7 @@ function initHub() {
     const HERO_MED_IDS = ['m1', 'm2', 'm3', 'f1', 'f2', 'f3'];
     const _own = HERO_MED_IDS.indexOf(player.avatarId) >= 0 ? player.avatarId : 'm2';
     const _aid = HERO_MED_IDS.indexOf(player.selectedAvatar) >= 0 ? player.selectedAvatar : _own;
-    const _vid = 'assets/select/' + _aid + '_med_h.mp4?v=23';
+    const _vid = 'assets/select/' + _aid + '_med_h.mp4?v=24';
     const _png = 'assets/select/' + _aid + '_med_h.webp?v=24';
     // 兜底网：视频 404 / 解码失败 → 回退到玩家本体(_own)的打坐画面，绝不留黑屏（只回退一次，防抖）。
     if (!charVideo._medErrWired) {
@@ -217,7 +217,7 @@ function initHub() {
       charVideo.addEventListener('error', function () {
         if (charVideo._medFellBack) return;
         charVideo._medFellBack = true;
-        const _fv = 'assets/select/' + _own + '_med_h.mp4?v=23';
+        const _fv = 'assets/select/' + _own + '_med_h.mp4?v=24';
         charVideo.dataset.src = _fv;
         charVideo.poster = 'assets/select/' + _own + '_med_h.webp?v=24';
         charVideo.src = _fv;
