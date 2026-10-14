@@ -4,7 +4,7 @@
 <meta charset="UTF-8" data-page-node-id="Eh6pjeYNCcQgb6A8gL9xHz">
 <meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="z7N9iDHp8Y1vQrwLs6g4or">
 <title>逍遥仙 · 修仙武侠</title>
-<link rel="stylesheet" href="css/style.css?v=41" data-page-node-id="5bFw2IMpRJ8muOAMgESEu9">
+<link rel="stylesheet" href="css/style.css?v=42" data-page-node-id="5bFw2IMpRJ8muOAMgESEu9">
 <link rel="stylesheet" href="css/scroll-panel.css?v=22" data-page-node-id="5RjumvKcbpx52gfFVHCA0p">
 </head>
 <body data-page-node-id="oCfNUBxkrXKVOHxDJClNNz">
@@ -97,6 +97,9 @@
   <div class="hub-char-area" id="hub-char-area" data-page-node-id="9sMDuo9IbJe9qDA6xyzesh">
     <!-- 视频等大定位参照容器：顶栏/底栏相对此层定位，确保浮在视频画面上而非黑边上 -->
     <div class="hub-video-wrap" id="hub-video-wrap" data-page-node-id="zNmmQs9ixebB8WCnuhADqg">
+      <!-- 兜底海报层：与视频同尺寸同裁切，压在视频之下。视频未就绪/解码失败时由它兜住画面，
+           彻底消除「主页中央黑屏」（新建角色首次进主页时海报尚未下载完 → 视频层透明 → 露出近黑底）。 -->
+      <img id="hub-char-poster" class="hub-char-poster" alt="" aria-hidden="true" data-page-node-id="pPaWfiPhSpbKe87EYHxBNC-poster">
       <video id="hub-char-video" class="hub-char-video" autoplay loop muted playsinline preload="auto" data-page-node-id="pPaWfiPhSpbKe87EYHxBNC"></video>
       <!-- 顶部悬浮信息栏（头像+战力+境界+经验条，浮在视频左上方） -->
       <div class="hub-top-float" id="hub-top-float" data-page-node-id="HcIkY8Gp7eG9B8fnJBcCP6">
@@ -134,9 +137,9 @@
 <script src="js/skills-data.js?v=40"></script>
 <script src="js/story-data.js?v=19"></script>
 <script src="js/battle.js?v=55"></script>
-<script src="js/hub.js?v=61"></script>
+<script src="js/hub.js?v=62"></script>
 <script src="js/avatars.js?v=42"></script>
-<script src="js/create.js?v=33"></script>
+<script src="js/create.js?v=34"></script>
 <script src="js/story.js?v=26"></script>
 <script src="js/worldboss.js?v=34"></script>
 <script src="js/arena.js?v=10"></script>

@@ -84,6 +84,15 @@ function renderAvatarGrid(gender) {
         art.hero.src = createData.avatar.img;
         art.hero.failed = false;
       }
+
+      // [v41 修复「新建角色进主页黑屏/要等很久」] 预热主页打坐海报。
+      // 新建角色不走 bootGame 首屏预载（peekHubMed 只读 localStorage 的 avatarId，此刻还没存档），
+      // 于是点「开始闯荡」后主页要现下 279KB 海报 + 3MB 视频，中央长时间是近黑底。
+      // 趁用户在创建界面停留的这几秒先把海报拉进 HTTP 缓存，进主页立即出图，视频随后无缝接上。
+      try {
+        const _warm = new Image();
+        _warm.src = 'assets/select/' + card.dataset.id + '_med_h.webp?v=24';
+      } catch (_) {}
     });
   });
 }
@@ -108,6 +117,10 @@ document.getElementById('avatar-confirm').addEventListener('click', () => {
   player.name = createData.name;
   player.sect = createData.avatar.desc; // 门派=形象描述标签（与 online.js 门派下拉列表语义不同，待后续门派系统统一）
   player.avatarId = createData.avatar.id;
+  // [v41] 显式初始化头像系统字段。原先依赖 initHub → initAvatarSystem 懒初始化，
+  // 调用顺序一变就会出现 selectedAvatar 为空（主页打坐形象取不到目标 id）。
+  player.selectedAvatar = player.avatarId;
+  player.unlockedAvatars = [player.avatarId];
   // 立绘已在选择时设置 (art.hero.src)
   applyStarterEquip(); // 赠送初始凡品套装（自动穿戴）
   player.learned = DEFAULT_LEARNED.slice();        // 初始功法库（涵盖攻/精/回灵/防御增益/回血/减益）

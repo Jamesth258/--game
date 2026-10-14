@@ -77,6 +77,7 @@ function initHub() {
   }
   const powerEl = document.getElementById('hub-power-num');
   const charVideo = document.getElementById('hub-char-video');
+  const charPoster = document.getElementById('hub-char-poster');
 
   // 统一悬浮菜单栏：底栏主功能(5) + 顶栏功能(6) = 11个图标一行
   // 排列顺序：属性/装备/背包/功法/副本 | 每日奖励/商店/图鉴/世界BOSS/排行榜/设置
@@ -211,6 +212,26 @@ function initHub() {
     const _aid = HERO_MED_IDS.indexOf(player.selectedAvatar) >= 0 ? player.selectedAvatar : _own;
     const _vid = 'assets/select/' + _aid + '_med_h.mp4?v=24';
     const _png = 'assets/select/' + _aid + '_med_h.webp?v=24';
+
+    // [v41 修复「新建角色进主页黑屏/要等很久/必须刷新」]
+    // 根因：bootGame 首屏预载(peekHubMed)只读 localStorage 里的 avatarId，而「新建角色」这条路径
+    // 点「开始闯荡」时存档尚未写入 → 海报与视频全都等主页显示后才开始下载。
+    // 海报(279KB)+视频(3MB)同时抢带宽，视频层未出画即透明，露出 #hub-char-area 的 #0a0a0c → 玩家看到纯黑。
+    // 刷新之所以「正常」，是因为那时 localStorage 已有存档，海报在 loading 阶段就下完了。
+    // 修法：① 立刻把静态海报挂到 video 之下兜底（video 的 poster 同 URL，只下载一次）；
+    //       ② 视频真正出画(canplay/playing)后才把海报淡出，宁可见静图也绝不留黑屏。
+    if (charPoster && charPoster.dataset.src !== _png) {
+      charPoster.dataset.src = _png;
+      charPoster.src = _png;
+      charPoster.classList.remove('ready'); // 换形象先复位，防止闪着上一个角色的图
+    }
+    if (!charVideo._medVisualWired) {
+      charVideo._medVisualWired = true;
+      const _fadePoster = function () { if (charPoster) charPoster.classList.add('ready'); };
+      charVideo.addEventListener('playing', _fadePoster);
+      charVideo.addEventListener('canplay', _fadePoster);
+    }
+
     // 兜底网：视频 404 / 解码失败 → 回退到玩家本体(_own)的打坐画面，绝不留黑屏（只回退一次，防抖）。
     if (!charVideo._medErrWired) {
       charVideo._medErrWired = true;
@@ -222,17 +243,40 @@ function initHub() {
         charVideo.poster = 'assets/select/' + _own + '_med_h.webp?v=24';
         charVideo.src = _fv;
         charVideo.load();
+        // 兜底海报必须跟着一起切到玩家本体，否则会出现「海报是新角色、视频是旧角色」的错位
+        if (charPoster) {
+          charPoster.dataset.src = charVideo.poster;
+          charPoster.src = charVideo.poster;
+          charPoster.classList.remove('ready');
+        }
         const _fp = charVideo.play();
         if (_fp && _fp.catch) _fp.catch(function () {});
       });
     }
-    if (charVideo.dataset.src !== _vid && !charVideo._medFellBack) {
+    // 启动播放：海报优先，视频随后。
+    // 海报仅 ~279KB、视频 ~3MB；若同时启动会互相抢带宽，慢网下海报迟迟不出 → 中央一直黑。
+    // 故先等海报就绪（最多 1.5s 兜底，超时也照常拉视频），再挂 video.src。
+    const _startVideo = function () {
+      if (charVideo.dataset.src === _vid) return;
       charVideo.dataset.src = _vid;
       charVideo.poster = _png;
       charVideo.src = _vid;
       charVideo.load();
       const _pp = charVideo.play();
-      if (_pp && _pp.catch) _pp.catch(() => {});
+      if (_pp && _pp.catch) _pp.catch(function () {});
+    };
+    if (charVideo.dataset.src !== _vid && !charVideo._medFellBack) {
+      // 严格判定「海报确实还在下载中」：complete === false（加载完/加载失败都是 true，不该等）
+      const _posterPending = !!(charPoster && charPoster.dataset.src === _png && charPoster.complete === false);
+      if (_posterPending) {
+        let _fired = false;
+        const _go = function () { if (_fired) return; _fired = true; _startVideo(); };
+        charPoster.addEventListener('load', _go, { once: true });
+        charPoster.addEventListener('error', _go, { once: true });
+        setTimeout(_go, 1500);
+      } else {
+        _startVideo();
+      }
     }
   }
 

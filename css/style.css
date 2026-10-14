@@ -410,6 +410,19 @@
     position: relative;
     width: 100%; height: 100%;
   }
+  /* 兜底海报层：视频未就绪时先显示静态打坐图，避免露出近黑底（消除黑屏）*/
+  .hub-char-poster {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: center 22%;
+    opacity: 1;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+  }
+  /* 视频已出画 → 海报淡出（避免两图叠影）*/
+  .hub-char-poster.ready { opacity: 0; }
+
   /* 视频铺满容器（cover 模式：无黑边，边缘可能轻微裁切，角色居中不受影响） */
   .hub-char-video {
     position: absolute; inset: 0;
