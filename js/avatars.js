@@ -114,7 +114,7 @@ function refreshHubAvatar() {
   const avatarEl = document.getElementById('hub-avatar');
   if (!avatarEl) return;
   const av = getCurrentAvatar();
-  avatarEl.src = av.img + '?v=2';
+  avatarEl.src = av.img;
   avatarEl.alt = av.name;
 }
 
@@ -158,7 +158,7 @@ function showAvatarModal() {
            data-avatar-id="${a.id}"
            onclick="${unlocked ? 'selectAvatar(\'' + a.id + '\');showAvatarModal()' : ''}">
         <div class="avatar-img-wrap">
-          <img class="avatar-thumb" src="${a.img}?v=1" alt="${a.name}" onerror="this.style.opacity=0.2">
+          <img class="avatar-thumb" src="${a.img}" alt="${a.name}" onerror="this.style.opacity=0.2">
           ${!unlocked ? '<div class="avatar-lock-overlay">🔒</div>' : ''}
           ${selected ? '<div class="avatar-check-mark">✓</div>' : ''}
         </div>
