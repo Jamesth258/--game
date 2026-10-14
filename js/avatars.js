@@ -7,7 +7,7 @@
 const AVATAR_DB = [
   // ── 主角（6个，创建角色时默认解锁当前角色） ──
   { id: 'm1',   name: '铁骨武者', cat: 'hero',   gender: 'male',
-    desc: '强壮刚毅，体修入道', img: 'assets/avatars/avatar_m1.png' },
+    desc: '强壮刚毅，体修入道', img: 'assets/avatars/avatar_m1.png?v=1' },
   { id: 'm2',   name: '少年侠客', cat: 'hero',   gender: 'male',
     desc: '年轻俊朗，天赋异禀', img: 'assets/avatars/avatar_m2.png' },
   { id: 'm3',   name: '道骨仙风', cat: 'hero',   gender: 'male',
