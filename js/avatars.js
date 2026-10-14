@@ -17,7 +17,7 @@ const AVATAR_DB = [
   { id: 'f2',   name: '绝代佳人', cat: 'hero',   gender: 'female',
     desc: '性感热辣，魅惑众生', img: 'assets/avatars/avatar_f2.png' },
   { id: 'f3',   name: '温婉御姐', cat: 'hero',   gender: 'female',
-    desc: '成熟丰满，气质出众', img: 'assets/avatars/avatar_f3.png' },
+    desc: '成熟丰满，气质出众', img: 'assets/avatars/avatar_f3.png?v=1' },
 
   // ── 副本敌人（10个，通关对应卷即解锁） ──
   { id: 'enemy_v1',  name: '山贼',     cat: 'enemy',  volume: 1,
