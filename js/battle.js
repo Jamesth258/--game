@@ -40,6 +40,13 @@ const HERO_SPRITES = {
   m1: 'assets/battle/hero_m1.png?v=1', m2: 'assets/battle/hero_m2.png?v=1', m3: 'assets/battle/hero_m3.png?v=1',
   f1: 'assets/battle/hero_f1.png?v=1', f2: 'assets/battle/hero_f2.png?v=1', f3: 'assets/battle/hero_f3.png?v=1',
 };
+// [成仙化身] 解析战斗立绘/头像应显示的主角 id：selectedAvatar 命中 6 主角则用所选外形；
+// 否则（选了敌人/BOSS 头像，或无所选）回退创建角色 avatarId，避免立绘 404 回退 m1 的错乱。
+function resolveHeroDisplayId(selectedAvatar, avatarId) {
+  const ids = (typeof window !== 'undefined' && window.HERO_MED_IDS) || ['m1', 'm2', 'm3', 'f1', 'f2', 'f3'];
+  return ids.indexOf(selectedAvatar) >= 0 ? selectedAvatar : avatarId;
+}
+window.resolveHeroDisplayId = resolveHeroDisplayId;
 const ENEMY_SPRITES = {
   1: 'assets/battle/enemy_v1.png?v=1', 2: 'assets/battle/enemy_v2.png?v=1', 3: 'assets/battle/enemy_v3.png?v=1',
   4: 'assets/battle/enemy_v4.png?v=1', 5: 'assets/battle/enemy_v5.png?v=1', 6: 'assets/battle/enemy_v6.png?v=1',
@@ -355,9 +362,12 @@ function startBattle(node, mode) {
     msg: (isWB ? '世界BOSS · ' : '遭遇 ') + enemy.name + '！',
   };
   // 立绘（方案A）：按 avatarId / 卷 / BOSS 动态加载写实古风立绘，挂到 battle 上（不污染 art.hero / art.enemy）
-  battle.heroSprite = loadImg(HERO_SPRITES[player.avatarId] || HERO_SPRITES.m1);
+  // [成仙化身] 若玩家已切换外形(selectedAvatar 命中 6 主角)，战斗立绘 + 头像同步用所选外形；
+  // 否则回退到创建角色(avatarId)。selectedAvatar 若为敌人/BOSS 头像（无打坐立绘）则回退 avatarId，避免 404。
+  const _heroDisplayId = resolveHeroDisplayId(player.selectedAvatar, player.avatarId);
+  battle.heroSprite = loadImg(HERO_SPRITES[_heroDisplayId] || HERO_SPRITES.m1);
   // 头像 portrait（用于战斗 UI 卡片圆形小头像，与主页头像图鉴 assets/avatars/ 同步）
-  const _pAv = (typeof AVATAR_MAP !== 'undefined' && AVATAR_MAP[player.avatarId]) || null;
+  const _pAv = (typeof AVATAR_MAP !== 'undefined' && AVATAR_MAP[_heroDisplayId]) || null;
   battle.heroAvatar = loadImg(_pAv ? _pAv.img : 'assets/avatars/avatar_m2.png');
   let _enemySrc;
   if (isWB) {

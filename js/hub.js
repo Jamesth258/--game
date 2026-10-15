@@ -22,7 +22,16 @@ const HUB_BOTTOM_ITEMS = [
   { id: 'bag',    label: '背包', icon: '<img class="hub-ico" src="assets/icons/icon_bag.png?v=14" alt="背包">', action: 'modal_bag' },
   { id: 'skill',  label: '功法', icon: '<img class="hub-ico" src="assets/icons/icon_skill.png?v=15" alt="功法">', action: 'modal_skills' },
   { id: 'story',  label: '副本', icon: '<img class="hub-ico" src="assets/icons/icon_story.png?v=15" alt="副本">', action: 'go_story' },
+  // [成仙化身] 进入人仙境后出现的「化身」按钮：immortalOnly 标记，浮栏按境界显隐
+  { id: 'form',   label: '化身', icon: '<span class="hub-ico-glyph">🦚</span>', action: 'modal_form', immortalOnly: true },
 ];
+
+// ===== 成仙化身系统 =====
+// 进入「人仙境」(realmIndex = 10，全部 165 小阶里第一个带"仙"字的境界) 后，主页浮栏出现「化身」按钮，
+// 可在 6 个主角外形(m1-m3 / f1-f3)间任意切换，主页打坐视频 + 战斗立绘同步更换。
+const IMMORTAL_REALM_INDEX = 10;
+const HERO_MED_IDS = ['m1', 'm2', 'm3', 'f1', 'f2', 'f3'];
+window.HERO_MED_IDS = HERO_MED_IDS; // 供 battle.js 读取（battle.js 在本文件之前加载，运行时才用到）
 
 function calcCombatPower(p) {
   return Math.floor(
@@ -79,22 +88,49 @@ function initHub() {
   const charVideo = document.getElementById('hub-char-video');
   const charPoster = document.getElementById('hub-char-poster');
 
-  // 统一悬浮菜单栏：底栏主功能(5) + 顶栏功能(6) = 11个图标一行
-  // 排列顺序：属性/装备/背包/功法/副本 | 每日奖励/商店/图鉴/世界BOSS/排行榜/设置
+  // 统一悬浮菜单栏：底栏主功能(5) + 顶栏功能(6) = 11 个图标（成仙后再 +1「化身」= 12）
+  // 排列顺序：属性/装备/背包/功法/副本 | 每日奖励/商店/图鉴/世界BOSS/排行榜/设置/化身
   const ALL_HUB_ITEMS = [...HUB_BOTTOM_ITEMS, ...HUB_TOP_ITEMS];
 
-  floatIconContainer.innerHTML = ALL_HUB_ITEMS.map(item =>
-    `<button class="hub-float-btn" data-hub="${item.id}" title="${item.label}">${item.icon}<h3 style="margin:0">${item.label}</h3></button>`
-  ).join('');
-
-  // 统一事件绑定（全部 11 个图标在悬浮栏内）
-  floatIconContainer.querySelectorAll('[data-hub]').forEach(btn => {
+  // 是否已成仙（进入人仙境 realmIndex >= 10）
+  function isImmortal() {
+    return CULTIVATION.realmFromXp(player.xp).realmIndex >= IMMORTAL_REALM_INDEX;
+  }
+  // 成仙时把 6 主角外形一次性解锁进 unlockedAvatars（幂等：仅新增、绝不覆盖已解锁的敌人/BOSS 头像）
+  function unlockImmortalForms() {
+    if (!isImmortal()) return;
+    if (!Array.isArray(player.unlockedAvatars)) player.unlockedAvatars = [];
+    let changed = false;
+    HERO_MED_IDS.forEach(id => {
+      if (player.unlockedAvatars.indexOf(id) < 0) { player.unlockedAvatars.push(id); changed = true; }
+    });
+    if (changed) saveGame();
+  }
+  // 控制「化身」按钮显隐 + 成仙解锁（仅境界状态变化时才重绘浮栏，避免每秒 tick 反复重绘）
+  let _immortalFormShown = null;
+  function updateImmortalFormAccess() {
+    const immortal = isImmortal();
+    if (immortal) unlockImmortalForms();
+    if (immortal !== _immortalFormShown) {
+      _immortalFormShown = immortal;
+      renderFloatBar();
+    }
+  }
+  // 重绘浮栏（成仙前隐藏 immortalOnly 项；成仙后显示「化身」）
+  function renderFloatBar() {
+    const items = ALL_HUB_ITEMS.filter(it => !it.immortalOnly || isImmortal());
+    floatIconContainer.innerHTML = items.map(item =>
+      `<button class="hub-float-btn" data-hub="${item.id}" title="${item.label}">${item.icon}<h3 style="margin:0">${item.label}</h3></button>`
+    ).join('');
+    floatIconContainer.querySelectorAll('[data-hub]').forEach(btn => {
       btn.addEventListener('click', () => {
         const item = ALL_HUB_ITEMS.find(i => i.id === btn.dataset.hub);
         if (!item) return;
         handleHubAction(item);
       });
     });
+  }
+  updateImmortalFormAccess(); // 初始化：按当前境界渲染浮栏（含/不含「化身」）
 
   // 统一动作分发
   function handleHubAction(item) {
@@ -115,10 +151,42 @@ function initHub() {
       case 'modal_codex':   openCodex(); break;
       case 'modal_chestinfo':openChestInfo(); break;
       case 'modal_settings':showSettingsModal(); break;
+      case 'modal_form':    openFormSwitch(); break;
       default:
         openModal(`<div class="hub-modal-title"><h3 style="margin:0">${item.label}</h3></div><p style="color:rgba(241,239,232,0.7)">「${item.label}」功能正在开发中，敬请期待！</p><button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button></div>`);
     }
   }
+
+  // 成仙化身切换弹窗：在 6 个主角外形间任意切换（主页打坐视频 + 战斗立绘同步）
+  function openFormSwitch() {
+    if (!isImmortal()) return; // 安全闸：未成仙不应出现本入口
+    if (!Array.isArray(player.unlockedAvatars)) player.unlockedAvatars = [];
+    const cards = HERO_MED_IDS.map(id => {
+      const cur = player.selectedAvatar === id;
+      const nm = (window.AVATAR_MAP && window.AVATAR_MAP[id]) ? window.AVATAR_MAP[id].name : id;
+      return `<div class="form-card${cur ? ' active' : ''}" data-form="${id}">
+          <img class="form-portrait" src="assets/select/${id}_med_h.webp?v=24" alt="${esc(nm)}" onerror="this.style.opacity=0.25">
+          <span class="form-name">${esc(nm)}</span>
+          ${cur ? '<span class="form-cur">当前</span>' : ''}
+        </div>`;
+    }).join('');
+    const curName = (window.AVATAR_MAP && window.AVATAR_MAP[player.selectedAvatar]) ? window.AVATAR_MAP[player.selectedAvatar].name : player.selectedAvatar;
+    openModal(`<div class="scroll-panel"><div class="scroll-rod"></div><div class="scroll-silk"></div><div class="scroll-painting"></div><div class="scroll-paper"><div class="scroll-inner">
+        <h3 style="margin:0">化身 · 选择外形</h3>
+        <p style="color:rgba(241,239,232,0.7)">成仙后可任意切换主角外形，主页打坐与战斗立绘同步更换。当前外形：<b style="color:#D4A843">${esc(curName)}</b></p>
+        <div class="form-grid">${cards}</div>
+        <button class="btn-full" onclick="closeModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">关闭</button>
+      </div></div>`);
+    // 绑定卡片点击：选中即切换（selectAvatar 内部已 refreshHub + saveGame），随后关弹窗
+    document.querySelectorAll('[data-form]').forEach(el => {
+      el.addEventListener('click', () => {
+        const id = el.dataset.form;
+        if (typeof selectAvatar === 'function') selectAvatar(id);
+        closeModal();
+      });
+    });
+  }
+  window.openFormSwitch = openFormSwitch; // 测试钩子：供回归测试直接调用化身弹窗
 
   // 设置弹窗（含抽奖概率入口）
   function showSettingsModal() {
@@ -207,7 +275,7 @@ function initHub() {
     // avatars.js 的头像图鉴另有 15 个敌人/BOSS 头像（enemy_v1..v10 / boss_1..5），它们只是"名片头像"，
     // assets/select 里根本没有对应打坐文件。若直接拿 selectedAvatar 拼路径 → 404 → 视频与 poster 双双失败，
     // 视频层无帧即透明，露出 #hub-screen 的近黑底(#0a0a0c) → 就是玩家看到的"主页背景全黑"。
-    const HERO_MED_IDS = ['m1', 'm2', 'm3', 'f1', 'f2', 'f3'];
+    // 注：HERO_MED_IDS 已提升为模块级常量（见文件顶部「成仙化身系统」），此处直接复用。
     const _own = HERO_MED_IDS.indexOf(player.avatarId) >= 0 ? player.avatarId : 'm2';
     const _aid = HERO_MED_IDS.indexOf(player.selectedAvatar) >= 0 ? player.selectedAvatar : _own;
     const _vid = 'assets/select/' + _aid + '_med_h.mp4?v=24';
@@ -278,6 +346,7 @@ function initHub() {
         _startVideo();
       }
     }
+    updateImmortalFormAccess(); // 境界变化（如在线挂机成仙）后同步「化身」按钮显隐
   }
 
   // 挂机：在线停留即自动累加修为（主页/地图/战斗画面）
@@ -289,6 +358,7 @@ function initHub() {
         gainXp(ONLINE_XP_PER_SEC * (1 + player.xpBonus), false);
         powerEl.textContent = formatNum(calcCombatPower(player));
         syncRealmDOM(); // 每秒同步境界+进度条
+        updateImmortalFormAccess(); // 成仙瞬间即时出现「化身」按钮（仅状态变化才重绘）
       }
       player.lastSeen = Date.now();
       if (++_saveTick % 5 === 0) saveGame(); // 每 5 秒落盘一次
