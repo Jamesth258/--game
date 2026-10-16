@@ -15,6 +15,8 @@ const HUB_TOP_ITEMS = [
   { id: 'settings', label: '设置', icon: '<img class="hub-ico" src="assets/icons/icon_settings.png?v=15" alt="设置">', action: 'modal_settings' },
 ];
 
+// 「化身」按钮图标：写实古风「羽化·六相」(assets/icons/icon_form.png)，与浮栏其它写实器物图标同调，常驻第 12 位
+
 // 底栏主功能按钮（从左到右）
 const HUB_BOTTOM_ITEMS = [
   { id: 'attr',   label: '属性', icon: '<img class="hub-ico" src="assets/icons/icon_attr.png?v=12" alt="属性">', action: 'modal_attr' },
@@ -22,8 +24,8 @@ const HUB_BOTTOM_ITEMS = [
   { id: 'bag',    label: '背包', icon: '<img class="hub-ico" src="assets/icons/icon_bag.png?v=14" alt="背包">', action: 'modal_bag' },
   { id: 'skill',  label: '功法', icon: '<img class="hub-ico" src="assets/icons/icon_skill.png?v=15" alt="功法">', action: 'modal_skills' },
   { id: 'story',  label: '副本', icon: '<img class="hub-ico" src="assets/icons/icon_story.png?v=15" alt="副本">', action: 'go_story' },
-  // [成仙化身] 进入人仙境后出现的「化身」按钮：immortalOnly 标记，浮栏按境界显隐
-  { id: 'form',   label: '化身', icon: '<span class="hub-ico-glyph">🦚</span>', action: 'modal_form', immortalOnly: true },
+  // [成仙化身] 主页常驻「化身」按钮：始终显示；未成仙点击给提示，成仙后可切换 6 外形
+  { id: 'form',   label: '化身', icon: '<img class="hub-ico" src="assets/icons/icon_form.png?v=1" alt="化身">', action: 'modal_form' },
 ];
 
 // ===== 成仙化身系统 =====
@@ -88,7 +90,7 @@ function initHub() {
   const charVideo = document.getElementById('hub-char-video');
   const charPoster = document.getElementById('hub-char-poster');
 
-  // 统一悬浮菜单栏：底栏主功能(5) + 顶栏功能(6) = 11 个图标（成仙后再 +1「化身」= 12）
+  // 统一悬浮菜单栏：属性/装备/背包/功法/副本(5) + 每日奖励/商店/图鉴/世界BOSS/排行榜/设置(6) + 常驻「化身」= 12 个图标
   // 排列顺序：属性/装备/背包/功法/副本 | 每日奖励/商店/图鉴/世界BOSS/排行榜/设置/化身
   const ALL_HUB_ITEMS = [...HUB_BOTTOM_ITEMS, ...HUB_TOP_ITEMS];
 
@@ -106,20 +108,13 @@ function initHub() {
     });
     if (changed) saveGame();
   }
-  // 控制「化身」按钮显隐 + 成仙解锁（仅境界状态变化时才重绘浮栏，避免每秒 tick 反复重绘）
-  let _immortalFormShown = null;
+  // 成仙解锁 6 主角外形（幂等：仅新增、绝不覆盖已解锁的敌人/BOSS 头像）；按钮常驻，无需按境界重绘
   function updateImmortalFormAccess() {
-    const immortal = isImmortal();
-    if (immortal) unlockImmortalForms();
-    if (immortal !== _immortalFormShown) {
-      _immortalFormShown = immortal;
-      renderFloatBar();
-    }
+    if (isImmortal()) unlockImmortalForms();
   }
-  // 重绘浮栏（成仙前隐藏 immortalOnly 项；成仙后显示「化身」）
+  // 渲染浮栏（「化身」按钮常驻第 12 位，未成仙也可点击 → 给提示）
   function renderFloatBar() {
-    const items = ALL_HUB_ITEMS.filter(it => !it.immortalOnly || isImmortal());
-    floatIconContainer.innerHTML = items.map(item =>
+    floatIconContainer.innerHTML = ALL_HUB_ITEMS.map(item =>
       `<button class="hub-float-btn" data-hub="${item.id}" title="${item.label}">${item.icon}<h3 style="margin:0">${item.label}</h3></button>`
     ).join('');
     floatIconContainer.querySelectorAll('[data-hub]').forEach(btn => {
@@ -130,7 +125,8 @@ function initHub() {
       });
     });
   }
-  updateImmortalFormAccess(); // 初始化：按当前境界渲染浮栏（含/不含「化身」）
+  renderFloatBar();          // 初始化浮栏（含常驻「化身」按钮）
+  updateImmortalFormAccess(); // 成仙则解锁 6 外形（幂等）
 
   // 统一动作分发
   function handleHubAction(item) {
@@ -151,7 +147,18 @@ function initHub() {
       case 'modal_codex':   openCodex(); break;
       case 'modal_chestinfo':openChestInfo(); break;
       case 'modal_settings':showSettingsModal(); break;
-      case 'modal_form':    openFormSwitch(); break;
+      case 'modal_form':
+        if (!isImmortal()) {
+          // 未成仙：给盼头提示，不进切换弹窗
+          openModal('<div class="scroll-panel"><div class="scroll-rod"></div><div class="scroll-silk"></div><div class="scroll-painting"></div><div class="scroll-paper"><div class="scroll-inner">'
+            + '<h3 style="margin:0">化身 · 未解锁</h3>'
+            + '<p style="color:rgba(241,239,232,0.82);line-height:1.8">玩家修炼成仙至「人仙」境界后可随意切换六大化身。</p>'
+            + '<button class="btn-full" onclick="closeModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">知道了</button>'
+            + '</div></div>');
+        } else {
+          openFormSwitch();
+        }
+        break;
       default:
         openModal(`<div class="hub-modal-title"><h3 style="margin:0">${item.label}</h3></div><p style="color:rgba(241,239,232,0.7)">「${item.label}」功能正在开发中，敬请期待！</p><button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button></div>`);
     }
