@@ -10,7 +10,7 @@ const HUB_TOP_ITEMS = [
   { id: 'shop',   label: '商店', icon: '<img class="hub-ico" src="assets/icons/icon_shop.png?v=15" alt="商店">', action: 'modal_shop' },
   { id: 'codex',  label: '图鉴', icon: '<img class="hub-ico" src="assets/icons/icon_codex.png?v=14" alt="图鉴">', action: 'modal_codex' },
   { id: 'worldboss', label: '世界BOSS', icon: '<img class="hub-ico" src="assets/icons/icon_worldboss.png?v=15" alt="世界BOSS">', action: 'go_worldboss' },
-  { id: 'arena',  label: '神魔竞技场', icon: '<img class="hub-ico" src="assets/icons/icon_arena.png?v=14" alt="神魔竞技场">', action: 'go_arena' },
+  { id: 'arena',  label: '神魔竞技场', icon: '<img class="hub-ico" src="assets/icons/icon_arena.png?v=15" alt="神魔竞技场">', action: 'go_arena' },
   // { id: 'rank',   label: '排行榜', icon: '<img class="hub-ico" src="assets/icons/icon_rank.png?v=15" alt="排行榜">', action: 'go_rank' },  // [暂移除] 排行榜：联网功能尚未开启，待腾讯云配置后取消本行注释即可恢复
   { id: 'settings', label: '设置', icon: '<img class="hub-ico" src="assets/icons/icon_settings.png?v=15" alt="设置">', action: 'modal_settings' },
 ];
