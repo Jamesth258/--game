@@ -1111,7 +1111,7 @@ function tryPlayerDeathWard() {
 function evaluatePassiveTriggers(u) {
   if (!u.passiveTriggers || !u.passiveTriggers.length) return;
   u.passiveTriggers.forEach(t => {
-    if (t.lifestealNext) { // 逆鳞补天诀：低血下次吸血，每场限一次
+    if (t.lifestealNext) { // 逆鳞固本诀：低血下次吸血，每场限一次
       if (battle._passiveLifestealUsed) return;
       if (u.hp > 0 && u.hp < u.maxHp * (t.hpBelow || 0.7) && !u.lowHpLifesteal) {
         u.lowHpLifesteal = t.lifestealNext;
@@ -1186,7 +1186,7 @@ function evaluatePassiveTriggers(u) {
     }
   });
 }
-// 低气血下次吸血（逆鳞补天诀）：玩家造成伤害时触发一次，吸血后本场不再触发
+// 低气血下次吸血（逆鳞固本诀）：玩家造成伤害时触发一次，吸血后本场不再触发
 function tryLowHpLifesteal(attacker, dmg) {
   if (attacker.isEnemy || !attacker.lowHpLifesteal || dmg <= 0) return;
   if (battle._passiveLifestealUsed) { attacker.lowHpLifesteal = null; return; }
@@ -1505,7 +1505,7 @@ function drawAvatarGlow(x, y, r, color) {
   ctx.restore();
 }
 
-// ===== 梦幻西游风格战斗画面 =====
+// ===== 经典回合制战斗画面（通用 RPG 表现）=====
 // 核心范式：小型站姿精灵站在透视地面上，头顶悬浮血条，脚下名字标签
 // 与旧方案差异：不再是大头立绘+角落卡片，而是"角色在战场中"
 
@@ -1583,7 +1583,7 @@ function drawBattle() {
   function drawBattleSprite(img, cx, cy, lungX, bobY, isHero) {
     const sx = cx + lungX;
     const sy = cy + bobY;
-    // ★ 光圈底座（梦幻西游标志性元素：脚下圆形发光平台）
+    // ★ 光圈底座（通用 RPG 表现：脚下圆形发光平台）
     const pedR = spW * 0.48; // 底座半径
     const pedY = cy + 3;     // 底座中心 Y（略低于脚底）
     ctx.save();

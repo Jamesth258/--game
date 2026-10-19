@@ -264,7 +264,7 @@ const STORY_CHAPTERS = [
     "rarity": 0,
     "rarityName": "凡品",
     "title": "荒原求生",
-    "plot": "被卷入荒古禁地绝灵之地，挣扎求存。",
+    "plot": "被卷入上古绝地绝灵之地，挣扎求存。",
     "levels": [116, 122, 128, 133, 139, 145, 151, 157, 162, 252],
     "reward": {
       "skills": ["bu057", "re064", "at071"],
@@ -396,7 +396,7 @@ const STORY_CHAPTERS = [
     "rarity": 1,
     "rarityName": "灵品",
     "title": "虚影显圣",
-    "plot": "修炼有成惊现圣体虚影，四方震动。",
+    "plot": "修炼有成惊现灵体虚影，四方震动。",
     "levels": [164, 172, 180, 189, 197, 205, 213, 221, 230, 357],
     "reward": {
       "skills": ["re044", "at051", "bu058"],
@@ -461,7 +461,7 @@ const STORY_CHAPTERS = [
     "tierName": "玄阶",
     "rarity": 1,
     "rarityName": "灵品",
-    "title": "化凡历练",
+    "title": "凡尘历练",
     "plot": "踏入凡尘历练心境，于红尘中修心。",
     "levels": [188, 197, 207, 216, 226, 235, 244, 254, 263, 410],
     "reward": {
@@ -505,8 +505,8 @@ const STORY_CHAPTERS = [
     "tierName": "玄阶",
     "rarity": 1,
     "rarityName": "灵品",
-    "title": "戮仙残篇",
-    "plot": "得戮仙残篇，杀伐决断更甚从前。",
+    "title": "断仙遗篇",
+    "plot": "得断仙遗篇，杀伐决断更甚从前。",
     "levels": [204, 214, 224, 235, 245, 255, 265, 275, 286, 444],
     "reward": {
       "skills": ["sp030", "re044", "at051"],
@@ -681,8 +681,8 @@ const STORY_CHAPTERS = [
     "tierName": "地阶",
     "rarity": 1,
     "rarityName": "灵品",
-    "title": "退婚羞辱",
-    "plot": "遭世家退婚羞辱，立三年翻身之约。",
+    "title": "退亲羞辱",
+    "plot": "遭世家退亲羞辱，立三年翻身之约。",
     "levels": [268, 281, 295, 308, 322, 335, 348, 362, 375, 584],
     "reward": {
       "skills": ["at122", "de129", "de003"],
@@ -726,7 +726,7 @@ const STORY_CHAPTERS = [
     "rarity": 1,
     "rarityName": "灵品",
     "title": "戒中之秘",
-    "plot": "纳灵戒内藏异火种子，等待觉醒时机。",
+    "plot": "纳灵戒内藏灵焰种子，等待觉醒时机。",
     "levels": [284, 298, 312, 327, 341, 355, 369, 383, 398, 618],
     "reward": {
       "skills": ["de059", "sp080", "bu087"],
@@ -747,8 +747,8 @@ const STORY_CHAPTERS = [
     "tierName": "地阶",
     "rarity": 1,
     "rarityName": "灵品",
-    "title": "异火苏醒",
-    "plot": "体内异火初次苏醒，险被反噬吞噬。",
+    "title": "灵焰苏醒",
+    "plot": "体内灵焰初次苏醒，险被反噬吞噬。",
     "levels": [292, 307, 321, 336, 350, 365, 380, 394, 409, 635],
     "reward": {
       "skills": ["bu108", "re115", "sp010"],
@@ -770,7 +770,7 @@ const STORY_CHAPTERS = [
     "rarity": 1,
     "rarityName": "灵品",
     "title": "焚身淬体",
-    "plot": "以异火淬炼肉身，筋骨坚如精铁。",
+    "plot": "以灵焰淬炼肉身，筋骨坚如精铁。",
     "levels": [300, 315, 330, 345, 360, 375, 390, 405, 420, 653],
     "reward": {
       "skills": ["bu017", "bu038", "re045"],
@@ -836,7 +836,7 @@ const STORY_CHAPTERS = [
     "rarity": 2,
     "rarityName": "宝品",
     "title": "烈焰复仇",
-    "plot": "以异火之力雪前耻，让轻视者付出代价。",
+    "plot": "以灵焰之力雪前耻，让轻视者付出代价。",
     "levels": [324, 340, 356, 373, 389, 405, 421, 437, 454, 705],
     "reward": {
       "skills": ["de003", "re024", "at031"],
@@ -945,8 +945,8 @@ const STORY_CHAPTERS = [
     "tierName": "地阶",
     "rarity": 2,
     "rarityName": "宝品",
-    "title": "搬血极致",
-    "plot": "进入搬血秘境将肉身淬炼到极限。",
+    "title": "淬血极致",
+    "plot": "进入淬血秘境将肉身淬炼到极限。",
     "levels": [364, 382, 400, 419, 437, 455, 473, 491, 510, 792],
     "reward": {
       "skills": ["re094", "at101", "at122"],
@@ -989,8 +989,8 @@ const STORY_CHAPTERS = [
     "tierName": "地阶",
     "rarity": 2,
     "rarityName": "宝品",
-    "title": "补天之术",
-    "plot": "获得上古补天之术修复受损道基。",
+    "title": "固基之术",
+    "plot": "获得上古固基之术，修复受损道基。",
     "levels": [380, 399, 418, 437, 456, 475, 494, 513, 532, 827],
     "reward": {
       "skills": ["at031", "at052", "de059"],
@@ -1825,7 +1825,7 @@ const STORY_CHAPTERS = [
     "tierName": "皇阶",
     "rarity": 4,
     "rarityName": "神品",
-    "title": "弑神之兵",
+    "title": "斩神之兵",
     "plot": "铸造专属于弑神者的终极兵器。",
     "levels": [684, 718, 752, 787, 821, 855, 889, 923, 958, 1488],
     "reward": {
