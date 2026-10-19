@@ -29,7 +29,7 @@ const HUB_BOTTOM_ITEMS = [
 ];
 
 // ===== 成仙化身系统 =====
-// 进入「人仙境」(realmIndex = 10，全部 165 小阶里第一个带"仙"字的境界) 后，主页浮栏出现「化身」按钮，
+// 进入「人仙境」(realmIndex = 10，全部 162 小阶里第一个带"仙"字的境界) 后，主页浮栏出现「化身」按钮，
 // 可在 6 个主角外形(m1-m3 / f1-f3)间任意切换，主页打坐视频 + 战斗立绘同步更换。
 const IMMORTAL_REALM_INDEX = 10;
 const HERO_MED_IDS = ['m1', 'm2', 'm3', 'f1', 'f2', 'f3'];
@@ -150,8 +150,10 @@ function initHub() {
       case 'modal_form':
         if (!isImmortal()) {
           // 未成仙：给盼头提示，不进切换弹窗
+          // 结构注意：.scroll-inner 是「图标+标题」横排 flex 行，只放 h3；
+          // 正文/按钮必须放在 .scroll-inner 之外，否则会被 flex 压成竖排窄条（2026-10-19 事故）
           openModal('<div class="scroll-panel"><div class="scroll-rod"></div><div class="scroll-silk"></div><div class="scroll-painting"></div><div class="scroll-paper"><div class="scroll-inner">'
-            + '<h3 style="margin:0">化身 · 未解锁</h3>'
+            + '<h3 style="margin:0">化身 · 未解锁</h3></div>'
             + '<p style="color:rgba(241,239,232,0.82);line-height:1.8">玩家修炼成仙至「人仙」境界后可随意切换六大化身。</p>'
             + '<button class="btn-full" onclick="closeModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">知道了</button>'
             + '</div></div>');
@@ -179,7 +181,7 @@ function initHub() {
     }).join('');
     const curName = (window.AVATAR_MAP && window.AVATAR_MAP[player.selectedAvatar]) ? window.AVATAR_MAP[player.selectedAvatar].name : player.selectedAvatar;
     openModal(`<div class="scroll-panel"><div class="scroll-rod"></div><div class="scroll-silk"></div><div class="scroll-painting"></div><div class="scroll-paper"><div class="scroll-inner">
-        <h3 style="margin:0">化身 · 选择外形</h3>
+        <h3 style="margin:0">化身 · 选择外形</h3></div>
         <p style="color:rgba(241,239,232,0.7)">成仙后可任意切换主角外形，主页打坐与战斗立绘同步更换。当前外形：<b style="color:#D4A843">${esc(curName)}</b></p>
         <div class="form-grid">${cards}</div>
         <button class="btn-full" onclick="closeModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">关闭</button>
