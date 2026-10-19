@@ -8,7 +8,7 @@
 const HUB_TOP_ITEMS = [
   { id: 'daily',  label: '每日奖励', icon: '<img class="hub-ico" src="assets/icons/icon_daily.png?v=16" alt="每日奖励">', action: 'modal_daily' },
   { id: 'shop',   label: '商店', icon: '<img class="hub-ico" src="assets/icons/icon_shop.png?v=15" alt="商店">', action: 'modal_shop' },
-  { id: 'codex',  label: '图鉴', icon: '<img class="hub-ico" src="assets/icons/icon_codex.png?v=15" alt="图鉴">', action: 'modal_codex' },
+  { id: 'codex',  label: '图鉴', icon: '<img class="hub-ico" src="assets/icons/icon_codex.png?v=16" alt="图鉴">', action: 'modal_codex' },
   { id: 'worldboss', label: '世界BOSS', icon: '<img class="hub-ico" src="assets/icons/icon_worldboss.png?v=15" alt="世界BOSS">', action: 'go_worldboss' },
   { id: 'arena',  label: '神魔竞技场', icon: '<img class="hub-ico" src="assets/icons/icon_arena.png?v=15" alt="神魔竞技场">', action: 'go_arena' },
   // { id: 'rank',   label: '排行榜', icon: '<img class="hub-ico" src="assets/icons/icon_rank.png?v=15" alt="排行榜">', action: 'go_rank' },  // [暂移除] 排行榜：联网功能尚未开启，待腾讯云配置后取消本行注释即可恢复
@@ -19,10 +19,10 @@ const HUB_TOP_ITEMS = [
 
 // 底栏主功能按钮（从左到右）
 const HUB_BOTTOM_ITEMS = [
-  { id: 'attr',   label: '属性', icon: '<img class="hub-ico" src="assets/icons/icon_attr.png?v=13" alt="属性">', action: 'modal_attr' },
+  { id: 'attr',   label: '属性', icon: '<img class="hub-ico" src="assets/icons/icon_attr.png?v=14" alt="属性">', action: 'modal_attr' },
   { id: 'equip',   label: '装备', icon: '<img class="hub-ico" src="assets/icons/icon_equip.png?v=16" alt="装备">', action: 'modal_equip' },
   { id: 'bag',    label: '背包', icon: '<img class="hub-ico" src="assets/icons/icon_bag.png?v=15" alt="背包">', action: 'modal_bag' },
-  { id: 'skill',  label: '功法', icon: '<img class="hub-ico" src="assets/icons/icon_skill.png?v=16" alt="功法">', action: 'modal_skills' },
+  { id: 'skill',  label: '功法', icon: '<img class="hub-ico" src="assets/icons/icon_skill.png?v=17" alt="功法">', action: 'modal_skills' },
   { id: 'story',  label: '副本', icon: '<img class="hub-ico" src="assets/icons/icon_story.png?v=16" alt="副本">', action: 'go_story' },
   // [成仙化身] 主页常驻「化身」按钮：始终显示；未成仙点击给提示，成仙后可切换 6 外形
   { id: 'form',   label: '化身', icon: '<img class="hub-ico" src="assets/icons/icon_form.png?v=3" alt="化身">', action: 'modal_form' },
