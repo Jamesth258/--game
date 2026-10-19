@@ -23,7 +23,7 @@ const HUB_BOTTOM_ITEMS = [
   { id: 'equip',   label: '装备', icon: '<img class="hub-ico" src="assets/icons/icon_equip.png?v=16" alt="装备">', action: 'modal_equip' },
   { id: 'bag',    label: '背包', icon: '<img class="hub-ico" src="assets/icons/icon_bag.png?v=15" alt="背包">', action: 'modal_bag' },
   { id: 'skill',  label: '功法', icon: '<img class="hub-ico" src="assets/icons/icon_skill.png?v=15" alt="功法">', action: 'modal_skills' },
-  { id: 'story',  label: '副本', icon: '<img class="hub-ico" src="assets/icons/icon_story.png?v=15" alt="副本">', action: 'go_story' },
+  { id: 'story',  label: '副本', icon: '<img class="hub-ico" src="assets/icons/icon_story.png?v=16" alt="副本">', action: 'go_story' },
   // [成仙化身] 主页常驻「化身」按钮：始终显示；未成仙点击给提示，成仙后可切换 6 外形
   { id: 'form',   label: '化身', icon: '<img class="hub-ico" src="assets/icons/icon_form.png?v=3" alt="化身">', action: 'modal_form' },
 ];
