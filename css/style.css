@@ -485,6 +485,10 @@
   .form-portrait { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: #0a0a0c; display: block; }
   .form-name { display: block; margin-top: 6px; font-family: "KaiTi","STKaiti","楷体","SimKai",serif; font-size: 14px; font-weight: 600; }
   .form-cur { position: absolute; top: 8px; right: 8px; background: #D4A843; color: #1a130a; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 8px; }
+  /* 化身卡：未到人仙的异性外形置灰锁住（tier3 同性别切换时） */
+  .form-card.locked { cursor: not-allowed; opacity: 0.38; filter: grayscale(0.7); }
+  .form-card.locked:hover { border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); transform: none; }
+  .form-lock { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.55); color: #cbb38a; font-size: 11px; font-weight: 600; padding: 1px 8px; border-radius: 8px; border: 1px solid rgba(212,168,67,0.4); white-space: nowrap; }
 
   /* 主页弹窗复用 modal 样式 */
   .hub-modal-title { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }

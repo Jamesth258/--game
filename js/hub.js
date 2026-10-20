@@ -28,10 +28,13 @@ const HUB_BOTTOM_ITEMS = [
   { id: 'form',   label: '化身', icon: '<img class="hub-ico" src="assets/icons/icon_form.png?v=3" alt="化身">', action: 'modal_form' },
 ];
 
-// ===== 成仙化身系统 =====
-// 进入「人仙境」(realmIndex = 10，全部 162 小阶里第一个带"仙"字的境界) 后，主页浮栏出现「化身」按钮，
-// 可在 6 个主角外形(m1-m3 / f1-f3)间任意切换，主页打坐视频 + 战斗立绘同步更换。
-const IMMORTAL_REALM_INDEX = 10;
+// ===== 成仙化身系统（三档解锁） =====
+//   tier 0（< 元婴）：未解锁，主页点击「化身」给提示
+//   tier 3（元婴~超脱，realmIndex 5~9）：同性别 3 主角外形可自由切换
+//   tier 6（人仙+，realmIndex >= 10）：6 主角外形全开
+// 外形 = 6 主角(m1-m3 男 / f1-f3 女)，切换时主页打坐视频 + 战斗立绘同步更换。
+const IMMORTAL_REALM_INDEX = 10;       // 人仙：6 外形全开
+const FORM_TIER3_REALM_INDEX = 5;      // 元婴：同性别 3 外形开放
 const HERO_MED_IDS = ['m1', 'm2', 'm3', 'f1', 'f2', 'f3'];
 window.HERO_MED_IDS = HERO_MED_IDS; // 供 battle.js 读取（battle.js 在本文件之前加载，运行时才用到）
 
@@ -94,23 +97,30 @@ function initHub() {
   // 排列顺序：属性/装备/背包/功法/副本 | 每日奖励/商店/图鉴/世界BOSS/排行榜/设置/化身
   const ALL_HUB_ITEMS = [...HUB_BOTTOM_ITEMS, ...HUB_TOP_ITEMS];
 
-  // 是否已成仙（进入人仙境 realmIndex >= 10）
-  function isImmortal() {
-    return CULTIVATION.realmFromXp(player.xp).realmIndex >= IMMORTAL_REALM_INDEX;
+  // 境界 → 化身解锁档位（0 未解锁 / 3 同性别 / 6 全开）
+  function formTier() {
+    const ri = CULTIVATION.realmFromXp(player.xp).realmIndex;
+    if (ri >= IMMORTAL_REALM_INDEX) return 6;
+    if (ri >= FORM_TIER3_REALM_INDEX) return 3;
+    return 0;
   }
-  // 成仙时把 6 主角外形一次性解锁进 unlockedAvatars（幂等：仅新增、绝不覆盖已解锁的敌人/BOSS 头像）
-  function unlockImmortalForms() {
-    if (!isImmortal()) return;
+  // 玩家性别对应的 3 主角外形（创建角色即定性别：m* 男 / f* 女）
+  function sameGenderHeroIds() {
+    const g = (player.selectedAvatar || 'm1')[0]; // 'm' | 'f'
+    return HERO_MED_IDS.filter(id => id[0] === g);
+  }
+  // 依据当前境界把「可切换外形」解锁进 player.unlockedAvatars（幂等，绝不覆盖敌人/BOSS 头像）
+  function updateFormAccess() {
+    const tier = formTier();
     if (!Array.isArray(player.unlockedAvatars)) player.unlockedAvatars = [];
+    const pool = tier >= 6 ? HERO_MED_IDS
+               : tier >= 3 ? sameGenderHeroIds()
+               : [];
     let changed = false;
-    HERO_MED_IDS.forEach(id => {
+    pool.forEach(id => {
       if (player.unlockedAvatars.indexOf(id) < 0) { player.unlockedAvatars.push(id); changed = true; }
     });
     if (changed) saveGame();
-  }
-  // 成仙解锁 6 主角外形（幂等：仅新增、绝不覆盖已解锁的敌人/BOSS 头像）；按钮常驻，无需按境界重绘
-  function updateImmortalFormAccess() {
-    if (isImmortal()) unlockImmortalForms();
   }
   // 渲染浮栏（「化身」按钮常驻第 12 位，未成仙也可点击 → 给提示）
   function renderFloatBar() {
@@ -126,7 +136,7 @@ function initHub() {
     });
   }
   renderFloatBar();          // 初始化浮栏（含常驻「化身」按钮）
-  updateImmortalFormAccess(); // 成仙则解锁 6 外形（幂等）
+  updateFormAccess();        // 按当前境界解锁可切换外形（幂等）
 
   // 统一动作分发
   function handleHubAction(item) {
@@ -147,47 +157,56 @@ function initHub() {
       case 'modal_codex':   openCodex(); break;
       case 'modal_chestinfo':openChestInfo(); break;
       case 'modal_settings':showSettingsModal(); break;
-      case 'modal_form':
-        if (!isImmortal()) {
-          // 未成仙：给盼头提示，不进切换弹窗
-          // 结构注意：.scroll-inner 是「图标+标题」横排 flex 行，只放 h3；
-          // 正文/按钮必须放在 .scroll-inner 之外，否则会被 flex 压成竖排窄条（2026-10-19 事故）
+      case 'modal_form': {
+        const tier = formTier();
+        if (tier < 3) {
+          // tier 0：未到元婴，给盼头提示（标题独占 scroll-inner 行，正文/按钮在外，防 2026-10-19 竖排事故）
           openModal('<div class="scroll-panel"><div class="scroll-rod"></div><div class="scroll-silk"></div><div class="scroll-painting"></div><div class="scroll-paper"><div class="scroll-inner">'
             + '<h3 style="margin:0">化身 · 未解锁</h3></div>'
-            + '<p style="color:rgba(241,239,232,0.82);line-height:1.8">玩家修炼成仙至「人仙」境界后可随意切换六大化身。</p>'
+            + '<p style="color:rgba(241,239,232,0.82);line-height:1.8">玩家修炼至「元婴境」后可解锁同性别化身切换，人仙后更可切换全部六大化身。</p>'
             + '<button class="btn-full" onclick="closeModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">知道了</button>'
             + '</div></div>');
         } else {
           openFormSwitch();
         }
         break;
+      }
       default:
         openModal(`<div class="hub-modal-title"><h3 style="margin:0">${item.label}</h3></div><p style="color:rgba(241,239,232,0.7)">「${item.label}」功能正在开发中，敬请期待！</p><button class="btn-full" onclick="returnToHub()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">返回主页</button></div>`);
     }
   }
 
-  // 成仙化身切换弹窗：在 6 个主角外形间任意切换（主页打坐视频 + 战斗立绘同步）
+  // 化身切换弹窗：tier 3 仅同性别 3 外形可切换（异性 3 张置灰锁住），tier 6 六外形全开
   function openFormSwitch() {
-    if (!isImmortal()) return; // 安全闸：未成仙不应出现本入口
+    const tier = formTier();
+    if (tier < 3) return; // 安全闸：未到元婴不应出现本入口
     if (!Array.isArray(player.unlockedAvatars)) player.unlockedAvatars = [];
+    const switchable = (tier >= 6) ? HERO_MED_IDS : sameGenderHeroIds();
     const cards = HERO_MED_IDS.map(id => {
+      const unlocked = switchable.indexOf(id) >= 0;
       const cur = player.selectedAvatar === id;
       const nm = (window.AVATAR_MAP && window.AVATAR_MAP[id]) ? window.AVATAR_MAP[id].name : id;
-      return `<div class="form-card${cur ? ' active' : ''}" data-form="${id}">
+      return `<div class="form-card${cur ? ' active' : ''}${unlocked ? '' : ' locked'}" data-form="${id}"${unlocked ? '' : ' data-locked="1"'}>
           <img class="form-portrait" src="assets/select/${id}_med_h.webp?v=24" alt="${esc(nm)}" onerror="this.style.opacity=0.25">
           <span class="form-name">${esc(nm)}</span>
           ${cur ? '<span class="form-cur">当前</span>' : ''}
+          ${!unlocked ? '<span class="form-lock">人仙解锁</span>' : ''}
         </div>`;
     }).join('');
     const curName = (window.AVATAR_MAP && window.AVATAR_MAP[player.selectedAvatar]) ? window.AVATAR_MAP[player.selectedAvatar].name : player.selectedAvatar;
+    const title = tier >= 6 ? '化身 · 选择外形' : '化身 · 同性别切换';
+    const sub = tier >= 6
+      ? `成仙后可任意切换主角外形，主页打坐与战斗立绘同步更换。当前外形：<b style="color:#D4A843">${esc(curName)}</b>`
+      : `元婴境起可切换同性别化身，人仙后可解锁全部六大化身。当前外形：<b style="color:#D4A843">${esc(curName)}</b>`;
     openModal(`<div class="scroll-panel"><div class="scroll-rod"></div><div class="scroll-silk"></div><div class="scroll-painting"></div><div class="scroll-paper"><div class="scroll-inner">
-        <h3 style="margin:0">化身 · 选择外形</h3></div>
-        <p style="color:rgba(241,239,232,0.7)">成仙后可任意切换主角外形，主页打坐与战斗立绘同步更换。当前外形：<b style="color:#D4A843">${esc(curName)}</b></p>
+        <h3 style="margin:0">${title}</h3></div>
+        <p style="color:rgba(241,239,232,0.7)">${sub}</p>
         <div class="form-grid">${cards}</div>
         <button class="btn-full" onclick="closeModal()" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">关闭</button>
       </div></div>`);
-    // 绑定卡片点击：选中即切换（selectAvatar 内部已 refreshHub + saveGame），随后关弹窗
+    // 绑定卡片点击：仅可切换的卡片生效，选中即切换（selectAvatar 内部已 refreshHub + saveGame），随后关弹窗
     document.querySelectorAll('[data-form]').forEach(el => {
+      if (el.dataset.locked) return; // 锁住的异性外形不可点
       el.addEventListener('click', () => {
         const id = el.dataset.form;
         if (typeof selectAvatar === 'function') selectAvatar(id);
@@ -355,7 +374,7 @@ function initHub() {
         _startVideo();
       }
     }
-    updateImmortalFormAccess(); // 境界变化（如在线挂机成仙）后同步「化身」按钮显隐
+    updateFormAccess(); // 境界变化（如在线挂机成仙/元婴）后同步可切换外形解锁
   }
 
   // 挂机：在线停留即自动累加修为（主页/地图/战斗画面）
@@ -367,7 +386,7 @@ function initHub() {
         gainXp(ONLINE_XP_PER_SEC * (1 + player.xpBonus), false);
         powerEl.textContent = formatNum(calcCombatPower(player));
         syncRealmDOM(); // 每秒同步境界+进度条
-        updateImmortalFormAccess(); // 成仙瞬间即时出现「化身」按钮（仅状态变化才重绘）
+        updateFormAccess(); // 境界变化（元婴/成仙瞬间）即时解锁对应外形（仅状态变化才重绘）
       }
       player.lastSeen = Date.now();
       if (++_saveTick % 5 === 0) saveGame(); // 每 5 秒落盘一次
