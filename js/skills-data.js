@@ -146,3 +146,14 @@ const SKILLS_DB = [
 // 用 var 而非 const：本文件在 player.js 之后加载，而 player.js 底部的 recalcStats 会引用 SKILLS_DB_MAP；
 // const 存在 TDZ（暂时性死区），在声明执行前访问会抛 ReferenceError，改用 var（提升且初始化为 undefined）规避。
 var SKILLS_DB_MAP = (function(){ var m = {}; for (var i=0;i<SKILLS_DB.length;i++){ m[SKILLS_DB[i].id] = SKILLS_DB[i]; } return m; })();
+
+// ===== 主动功法灵力消耗倍率（实验性调参，2026-10 用户要求）=====
+// 目的：让玩家在战斗中真正体会到"灵力不够用"，从而体现回蓝药/回蓝功法的价值。
+// 规则：仅对 kind:"active" 的【主动】功法生效；被动功法 cost 字段本就无意义，原样展示、从不参与消耗。
+// 调参只需改这一处常量（想回退设回 1 即可），不必改动技能库的原始设计值。
+const SKILL_MP_COST_MULT = 5;
+function skillMpCost(sk) {
+  if (!sk) return 0;
+  if (sk.kind !== 'active') return (sk.cost || 0);          // 被动：保持原值展示，绝不消耗
+  return Math.round((sk.cost || 0) * SKILL_MP_COST_MULT);   // 主动：×倍率（向上/向下取整）
+}

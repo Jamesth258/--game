@@ -476,7 +476,7 @@ function initHub() {
     return `<div class="bag-item"><div class="bag-info">
       <span class="equip-icon" style="color:${tierColor(s.tier)}">${s.tierName[0]}</span>
       <span class="bag-name">${esc(s.name)}</span>
-      <span class="equip-bonus">${esc(s.schoolCn)} · ${s.cost}灵 · ${esc(s.desc)}</span></div>
+      <span class="equip-bonus">${esc(s.schoolCn)} · ${skillMpCost(s)}灵 · ${esc(s.desc)}</span></div>
       ${right}</div>`;
   }
 
@@ -521,7 +521,7 @@ function initHub() {
         return `<div class="bag-item"><div class="bag-info">
           <span class="equip-icon" style="color:${tierColor(s.tier)}">${s.tierName[0]}</span>
           <span class="bag-name">${esc(s.name)}</span>
-          <span class="equip-bonus">${esc(s.schoolCn)} · ${s.cost}灵</span></div>
+          <span class="equip-bonus">${esc(s.schoolCn)} · ${skillMpCost(s)}灵</span></div>
           <button class="equip-btn danger" onclick="unequipSkill('${id}')">卸下</button></div>`;
       }
       return `<div class="equip-slot" style="opacity:.5;text-align:center;color:#5c5042;display:flex;align-items:center;justify-content:center">空槽位 ${i + 1}</div>`;

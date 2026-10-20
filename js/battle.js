@@ -283,7 +283,7 @@ function buildSkillBar() {
   let html = '<button class="battle-cmd attack" data-act="attack">' + CMD_ICONS.attack + '<span class="cmd-name">攻击</span></button>';
   skills.forEach(s => {
     const _used = (s.oncePerBattle && battle._usedOnce && battle._usedOnce[s.id]);
-    html += `<button class="battle-cmd skill" data-act="skill" data-skill="${s.id}" data-cost="${s.cost}"${_used ? ' disabled' : ''} title="${esc(s.desc)}"><span class="cmd-name">${esc(s.name)}</span><span class="cmd-cost">${s.cost}灵</span>${_used ? '<span class=\'cmd-used\'>已用</span>' : ''}</button>`;
+    html += `<button class="battle-cmd skill" data-act="skill" data-skill="${s.id}" data-cost="${skillMpCost(s)}"${_used ? ' disabled' : ''} title="${esc(s.desc)}"><span class="cmd-name">${esc(s.name)}</span><span class="cmd-cost">${skillMpCost(s)}灵</span>${_used ? '<span class=\'cmd-used\'>已用</span>' : ''}</button>`;
   });
   html += '<button class="battle-cmd item" data-act="item">' + CMD_ICONS.item + '<span class="cmd-name">道具</span></button>';
   cmdBar.innerHTML = html;
@@ -758,7 +758,7 @@ function damage(attacker, target, mult, type) {
 
 // 施展功法（player 的 SKILLS_DB 条目，含 effect）
 function applySkill(actor, target, sk) {
-  actor.mp -= sk.cost;
+  actor.mp -= skillMpCost(sk);
   // 功法临时命中率buff（仅对玩家生效，下次攻击时消耗）
   if (!actor.isEnemy && sk.buffHitRate && battle) {
     battle._tempHitRateBuff = sk.buffHitRate;
@@ -925,7 +925,7 @@ function applyAction(actor, target, act) {
   } else if (act === 'skill') {
     // 敌方专用（玩家功法走 applySkill）
     const sk = actor.skill;
-    actor.mp -= sk.cost;
+    actor.mp -= skillMpCost(sk);
     const d = damage(actor, target, sk.mult, sk.type);
     battle.msg = actor.name + ' 施展「' + sk.name + '」，造成 ' + d + ' 伤害';
   } else if (act === 'item') {
@@ -1041,7 +1041,7 @@ function pickEnemySkill(enemy, p) {
   const turn = (enemy._turn || 0) + 1;
   let best = null, bestScore = -Infinity;
   enemy.skills.forEach(sk => {
-    if (enemy.mp < (sk.cost || 0)) return;                       // 内力不足
+    if (enemy.mp < skillMpCost(sk)) return;                       // 内力不足
     if (enemy.silenceRecovery > 0 && enemySkillKind(sk) === 'heal') return;  // 被沉默禁恢复
     const sc = enemySkillScore(enemy, p, sk, turn);
     if (sc > bestScore) { bestScore = sc; best = sk; }
@@ -1059,12 +1059,12 @@ function enemyAct(enemy) {
     const name = (enemy._script && enemy._script[enemy._turn - 1]) || null;
     const fb = name ? enemy.skills.find(s => s.name === name) : null;
     const _recovery = fb && fb.effect && (fb.effect.kind === 'heal_hp' || fb.effect.kind === 'heal_mp' || fb.effect.kind === 'regen');
-    if (fb && enemy.mp >= (fb.cost || 0) && !(enemy.silenceRecovery > 0 && _recovery)) {
+    if (fb && enemy.mp >= skillMpCost(fb) && !(enemy.silenceRecovery > 0 && _recovery)) {
       enemy._lastSkill = fb.name; applySkill(enemy, p, fb); nextTurn(); return;
     }
   }
   // 最底层兜底：单技能 / 普攻（普通剧情敌人维持原 50% 概率）
-  if (enemy.skill && enemy.mp >= (enemy.skill.cost || 0) && Math.random() < 0.5) applyAction(enemy, p, 'skill');
+  if (enemy.skill && enemy.mp >= skillMpCost(enemy.skill) && Math.random() < 0.5) applyAction(enemy, p, 'skill');
   else applyAction(enemy, p, 'attack');
   nextTurn();
 }
@@ -1075,7 +1075,7 @@ function playerAct(act, skillId) {
   setButtons(false);
   if (act === 'skill') {
     const sk = skillId ? SKILLS_DB_MAP[skillId] : null;
-    if (sk && player.mp >= sk.cost && !(sk.oncePerBattle && battle._usedOnce && battle._usedOnce[sk.id])) {
+    if (sk && player.mp >= skillMpCost(sk) && !(sk.oncePerBattle && battle._usedOnce && battle._usedOnce[sk.id])) {
       battle._usedOnce[sk.id] = true; // 每场战斗只限一次
       applySkill(battle.player, battle.enemy, sk);
     } else {

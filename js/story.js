@@ -206,7 +206,7 @@ function showStoryReward(ch) {
     const owned = isSkillOwned(id);
     return `<div class="reward-card" data-kind="skill" data-id="${id}" onclick="storySelReward('skill','${id}')">
       <div style="color:${sTierColor(s.tier)};font-weight:700">${s.tierName}·${esc(s.name)}${owned ? ' <span class="owned-badge">已拥有</span>' : ''}</div>
-      <div style="font-size:11px;color:rgba(241,239,232,0.6)">${esc(s.schoolCn)} · ${s.cost}灵</div>
+      <div style="font-size:11px;color:rgba(241,239,232,0.6)">${esc(s.schoolCn)} · ${skillMpCost(s)}灵</div>
       <div style="font-size:11px;color:rgba(241,239,232,0.5)">${esc(s.desc)}</div>
       <span class="reward-tag" style="display:none">已选</span>
     </div>`;
