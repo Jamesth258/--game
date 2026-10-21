@@ -168,7 +168,7 @@ function makeWorldBoss(slotIdx) {
   const BOSS_INIT = 900;
   const init   = Math.max(B.init, BOSS_INIT);
   const eva    = B.eva;
-  const hitRate = Math.min(1.50, 1.35 + slotIdx * 0.04);   // 2026-10-13：命中率大幅提升（原 0.95）
+  const hitRate = 1.60;   // 2026-10-21 用户拍板：世界BOSS 基础命中率 160%（固定值，无 slot 缩放）
   // 平均倍率按「本只 BOSS 的真实技能池」动态计算（2026-10-13：大招倍率恢复原值后，
   //   固定 2.6 会严重低估 → 攻击力反推偏高 → 玩家被秒。mult 不依赖 atk，故先用占位值取池）。
   const _probe = buildBossSkills(slot.idx, 1000, 1000);
