@@ -221,7 +221,7 @@ function arenaVirtual(rank) {
   //   此前为压战斗长度改成独立梯度 0.9~1.5 倍，导致榜首对手的先手威慑消失（用户反馈「对手打不动我」）。
   const init      = Math.round((P.init   || 60)   * f * (0.9 + rng() * 0.2));
   const spd       = Math.round((P.spd    || 20)   * (0.9 + rng() * 0.2));
-  const eva       = Math.min(0.25, ((P.eva || 0.1) + 0.02) * (0.8 + rng() * 0.4));
+  const eva       = Math.min(1.3, 0.70 + rank * 0.001);   // 2026-10-21 用户拍板：神魔竞技场敌人闪避率 70% + 名次×0.1%，封顶 130%
   const atkBase    = Math.round((P.atk    || 120)  * f * jit());
   const spiAtkBase = Math.round((P.spiAtk || 120)  * f * jit());
   const built = buildArenaSkills(schoolIdx, atkBase, spiAtkBase);

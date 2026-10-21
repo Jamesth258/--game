@@ -305,7 +305,7 @@ function recalcStats(p) {
   p.spiDef = spiDef;
   p.spd = spd;
   p.init = Math.round(init);
-  p.eva = Math.min(1.0, eva);                      // 闪避率上限 100%（2026-10-13 用户拍板恢复：不削玩家流派，改为把命中率上限提到 200% 并大幅提高敌人命中率来对冲）
+  p.eva = Math.min(1.3, eva);                      // 闪避率上限 130%（2026-10-21 用户拍板：100%→130%；单件装备闪避硬上限仍 50%，需堆叠约 3 件满闪避装备方可触顶）
   p.hitRate = Math.min(2.0, hitR);                      // 命中率上限 200%（2026-10-21 用户拍板：150%→200%，让「堆命中」可彻底压死 100% 闪避敌人；战斗内封顶见 battle.js）
   p.extraActions = extraActions;
   p.luck = p.des;                                        // 幸运值

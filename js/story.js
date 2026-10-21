@@ -65,7 +65,7 @@ function makeStoryEnemy(ch, lv) {
   const init   = Math.round(10 + spd * 2);
   const skillMult = 1.7 + ch * 0.01;
   const built = buildStorySkills(ch, isBoss);   // 2026-10-13：技能组 + 性格（供情境智能 AI 使用）
-  const eva     = Math.min(0.15, 0.05 + ch * 0.001);
+  const eva     = isBoss ? 0.45 : 0.30;   // 2026-10-21 用户拍板：副本普通敌人闪避率 30%、副本BOSS 闪避率 45%（固定值，无章节缩放）
   const hitRate = isBoss ? 1.20 : 1.00;   // 2026-10-21 用户拍板：副本普通敌人基础命中率 100%、副本BOSS 基础命中率 120%（固定值，无章节缩放）
   // 战斗节奏（2026-10-12）：血量/攻击按「目标回合数 4」反推。
   // 原公式只按玩家血量/攻击的固定比例缩放，未计入玩家连动与暴击放大 → 后期一回合秒杀。
