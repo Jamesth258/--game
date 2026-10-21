@@ -227,7 +227,7 @@ const player = {
   maxHp: 0, hp: 0, maxMp: 0, mp: 0, atk: 0, def: 0, spd: 0,
   spiAtk: 0, spiDef: 0, eva: 0, init: 0, luck: 0,
   critRate: 0.15, critDmg: 1.5,                                // 常驻暴击率 / 暴伤倍率（属性面板展示用）
-  hitRate: 0.25,                                              // 命中率（基础25%+等级*0.5%+悟性*0.2%+装备加成，上限100%）
+  hitRate: 0.25,                                              // 命中率（基础25%+等级*0.5%+悟性*0.2%+装备加成，上限200%）
   items: [], defending: false, sect: '', score: 0, xp: 0,
   equipment: { weapon: null, armor: null, accessory: null, boots: null }, // 已穿戴装备（部位→item）
   bag: [], gold: 50, diamond: 0, materials: [0, 0, 0, 0, 0],                            // 背包 + 灵石（装备/商店货币） + 钻石（商城消费货币）
@@ -305,8 +305,8 @@ function recalcStats(p) {
   p.spiDef = spiDef;
   p.spd = spd;
   p.init = Math.round(init);
-  p.eva = Math.min(1.0, eva);                      // 闪避率上限 100%（2026-10-13 用户拍板恢复：不削玩家流派，改为把命中率上限提到 150% 并大幅提高敌人命中率来对冲）
-  p.hitRate = Math.min(1.5, hitR);                      // 命中率上限 150%（2026-10-13：原 100% 封顶在对手高闪避时无法反制，放宽到 150% 让「堆命中」成为有效解法）
+  p.eva = Math.min(1.0, eva);                      // 闪避率上限 100%（2026-10-13 用户拍板恢复：不削玩家流派，改为把命中率上限提到 200% 并大幅提高敌人命中率来对冲）
+  p.hitRate = Math.min(2.0, hitR);                      // 命中率上限 200%（2026-10-21 用户拍板：150%→200%，让「堆命中」可彻底压死 100% 闪避敌人；战斗内封顶见 battle.js）
   p.extraActions = extraActions;
   p.luck = p.des;                                        // 幸运值
   p.xpBonus = (p.com + p.des) * 0.002;                     // 挂机经验加成 = 悟性×0.2% + 天命×0.2%（每点属性各 0.2%）

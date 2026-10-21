@@ -627,11 +627,11 @@ function damage(attacker, target, mult, type) {
   const targetEva = target.eva || 0;
   // 装备命中率已永久并入 player.hitRate（recalcStats 处理）；此处仅叠加功法临时命中率buff
   const accBuff = (battle._tempHitRateBuff || 0); // 功法临时命中率buff（单次生效，攻击后消费）
-  const effectiveHR = Math.min(1.5, attackerHR + accBuff);   // 命中率上限 150%（2026-10-13：可对冲对手 100% 闪避）
+  const effectiveHR = Math.min(2.0, attackerHR + accBuff);   // 命中率上限 200%（2026-10-21 用户拍板：150%→200%，可彻底对冲对手 100% 闪避）
   const actualHitRate = effectiveHR - targetEva;
   let hitChance;
   if (actualHitRate >= 0.5) {
-    hitChance = Math.min(1.5, actualHitRate);       // 上限 150%（2026-10-13：原 95% 封顶使高命中无法压制高闪避）
+    hitChance = Math.min(2.0, actualHitRate);       // 上限 200%（2026-10-21 用户拍板：150%→200%）
   } else if (actualHitRate > 0) {
     hitChance = actualHitRate;                         // 正常区间
   } else {
